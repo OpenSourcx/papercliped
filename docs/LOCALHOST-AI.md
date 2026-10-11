@@ -12,7 +12,7 @@ A box you own where Paperclip is not an app running on the OS but the layer that
 2. **Agents propose, a broker executes.** No model ever holds host credentials. A small deterministic service performs a fixed allowlist of actions.
 3. **Everything is a connector.** Model access, the host itself, and apps (GitHub, Slack) all use the same Application, Connection, Profile, Binding and Gateway model Paperclip already has.
 4. **Secrets live in the Vault.** One server-wide place, with values never shown in the UI, logs or agent context.
-5. **Local-first, cloud-optional.** The box works with no outside accounts. Hosted models and remote access are connectors you add.
+5. **You own the box, not the models.** Resources, secrets and control live on your hardware. Models come through adapters and connectors, so the box needs at least one AI account to do agent work.
 6. **Recoverable.** A locked Vault, a dead model or a crashed Paperclip must never brick the machine.
 
 ## Architecture
@@ -86,7 +86,7 @@ Three families:
 | Family | Examples | Notes |
 | --- | --- | --- |
 | Apps | GitHub, Slack, mail | Existing Paperclip connectors and the `connection_request` flow |
-| Models | Local runtime, hosted provider API key, router | See section 4 |
+| Models | Provider subscription or API key bound to an adapter, optional router | See section 4 |
 | Host | The OS connector | New, always installed, see section 3 |
 
 Agents discover and request connections with `connections_search` and `connection_request`. The user completes setup in a card in the task thread, and the agent never sees credentials.
@@ -128,22 +128,20 @@ Paperclip already budgets spend. Extend budgets with resource dimensions (CPU, R
 
 Agents should not run imperative scripts against the host. The broker stores desired state per guest (template, resources, mounts, ports). Agents edit the desired state and the broker reconciles. This gives diffs, review and rollback.
 
-## 4. Models
+## 4. Models: adapters and connectors
 
-Model access is a connection, not a settings page. Paperclip's AI connections already model providers, subscription or API key sign-in, personal or shared accounts, and per-agent access.
+Localhost AI does not host models. Models arrive the way they do in Paperclip today: through **adapters** (the harness that runs an agent, such as the built-in Claude Code, Codex and Cursor adapters) and **connectors** (the account, key or endpoint the harness uses). The box brings no model of its own and needs no GPU.
 
-Three setups, all selected in the normal connection flow:
+- **Adapters are a system setting.** Paperclip's Settings > Adapters page lists built-in adapters, each with an enable switch, plus an area for installed external adapters (alpha). In Localhost AI the OS owns this page: the admin decides which adapters exist on the box, and disabled adapters disappear from every agent menu. Installing an external adapter runs third-party code with host-side trust (Paperclip's plugin SDK says worker and UI code should be treated as trusted), so installs go through an approval and an allowlist, never an agent.
+- **Connectors supply the credentials.** A subscription sign-in or API key for the chosen provider lives in the Vault and is bound to the adapter through Paperclip's AI connections, with personal or shared accounts and per-agent access. A connection choice never changes the harness or model.
+- **Everything is controlled from the OS.** Adapter set, connections, which agents may use which connection, and budgets are one admin surface, backed by the same audit log as every other action.
+- **Routing across accounts** is the existing AI connection router (experimental, off by default). It pools accounts, sees metadata only and never receives credentials. Difficulty-based escalation is not shipped and is out of scope for v1.
 
-1. **Local.** A connection to a local runtime (Ollama or vLLM) on the box.
-2. **Hosted.** A provider connection whose API key lives in the Vault.
-3. **Hybrid.** An AI connection router over both. The routing policy prefers local and escalates to hosted on a hard task, low confidence or failure, with Paperclip budgets as the limiter.
+Out of scope for v1: serving models on the box, GPU scheduling, and a local-model routing policy. The reference host this design was checked against has an old CPU and GPU, which is why this is a scoping decision as well as a preference.
 
-Notes:
+The section below is kept as verified background in case a user later points the box at an endpoint they run elsewhere (their own GPU machine, for example). It is not on the v1 path.
 
-- Routers are experimental and off by default in Paperclip. The shipped policy plugin is round robin and quota based. Difficulty-based escalation needs a new policy plugin against the `ai.connections.route` contract. A router sees metadata and proposes a member. It never receives credentials.
-- GPU scheduling is shared between serving the local model and guests that request GPUs. This needs an explicit policy and is an open problem.
-
-### Local endpoints (verified against Paperclip's docs, 2026-10)
+### Background: custom and local endpoints (verified against Paperclip's docs, 2026-10)
 
 Paperclip already supports local and custom model endpoints as first-class connections. They are rows on **Connectors** tagged `model-provider`, with a URL, protocol and optional auth. The harness decides which protocols work:
 
@@ -217,8 +215,8 @@ Sandbox boundary: Paperclip's sandbox requirements treat the sandbox as untruste
 | --- | --- | --- |
 | Secrets storage and delivery | Secrets service, providers, proposals, redaction | Root key, unlock modes, host-level scope |
 | Connections, policies, approvals, audit | Connections, gateway, profiles, `connection_request` | OS connector definition |
-| Model accounts | AI connections, saved keys, personal and shared accounts | Local runtime connection, verification of the OpenAI-compatible path |
-| Routing | AI connection routers (experimental) | Local-first escalation policy plugin |
+| Model accounts | AI connections, saved keys, personal and shared accounts | Onboarding step that connects the first account |
+| Adapters | Built-in adapters, enable switch, external adapter install (alpha) | OS-owned adapter settings, install allowlist and approval |
 | Sandboxes | Sandbox provider contract and SDK | Proxmox provider |
 | Runner and workspace UI | Runner (experimental), web UI, plugin SDK | Session lifecycle on LXC, workspace polish |
 | Budgets | Spend budgets | Resource dimensions |
@@ -231,7 +229,7 @@ Sandbox boundary: Paperclip's sandbox requirements treat the sandbox as untruste
 1. **Broker and OS connector, read-only.** Status, listing, and the audit pipeline. Prove the trust boundary.
 2. **Proxmox sandbox provider.** Sessions in LXC on an existing Proxmox host. No new OS yet.
 3. **Write actions with approvals and resource budgets.** Desired-state reconciliation, snapshots, kill switch.
-4. **Models.** Local runtime connection, hosted connection, hybrid router policy.
+4. **Models.** Adapter settings owned by the OS, first AI account connected in onboarding, optional router.
 5. **Vault root key and onboarding.**
 6. **Installer image and emergency console.** Only after the earlier phases are used for real.
 
@@ -242,6 +240,5 @@ Phases 1 to 3 work on any existing Proxmox box, which allows testing the idea be
 - Runner maturity. Read from Paperclip's ADR and compatibility docs (2026-10): the runner (`@paperclipai/paperclip-runner`, adapter `paperclip_runner`) is **experimental and behind a default-off instance flag**, and the ADR status is "Proposed". Qualified providers are Codex, OpenCode, Claude Managed, AWS AgentCore and pinned ACPX profiles for Claude and Codex. It is a good architectural fit (see section 5) but not a stable base. v1 should support the direct adapters too, and treat the runner as an opt-in. I read the architecture documents and the package layout, not the Rust runner internals.
 - TPM auto-unseal at v1 or later.
 - Single node only for v1, or a plan for clustering.
-- GPU sharing policy between the local model and guests.
 - Licensing and branding of redistributing a Proxmox-based image, and whether an overlay installer on stock Proxmox avoids the problem.
 - Whether this lives in this repository or in a new one. Papercliped is the remote-access bridge, and the broker and installer are a different product surface.
