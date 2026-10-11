@@ -60,6 +60,23 @@ What is new:
 
 Open question: whether TPM auto-unseal is offered at v1 or only passphrase unlock.
 
+### Who owns the tokens
+
+The user owns every system-wide token. They are entered, rotated and revoked by the user in the Vault, never by an agent.
+
+| Token | Set by | Delivered to |
+| --- | --- | --- |
+| Hypervisor API token | User (onboarding, rotated in Vault settings) | The host broker only |
+| GitHub, hosted model API keys, other connector credentials | User, through the normal connection setup | The connection runtime, per grant, per run |
+| Vault root key and recovery key | User, at install | Nobody; entered at unlock |
+
+Rules:
+
+- Agents can propose a change (a secret proposal or a connection request) and the user approves it. An agent can never set, read or widen a system-wide token.
+- Paperclip runs the system, but it holds the hypervisor token only by reference. The Vault delivers the value to the broker process, not to Paperclip's application code or any session. A compromised Paperclip server can ask the broker for allowlisted actions; it cannot walk away with hypervisor access.
+- Sessions never receive a system-wide token. Each run gets short-lived, run-bound credentials derived from what the actor is authorized for (Paperclip's runtime tokens already expire after an hour and are rejected once the heartbeat ends).
+- Changing or revoking a token takes effect on the next call. Revoking the hypervisor token is the kill switch described in section 7.
+
 ## 2. Connectors
 
 Everything an agent can touch is a connection in `/:company/apps`, governed by profiles, bindings, policies (`allow`, `block`, `require_approval`, `rate_limit`) and the call audit log. Tools are classed `read`, `write` or `destructive`.
@@ -136,6 +153,16 @@ A browser workspace served from the box, in the style of a hosted coding workspa
 - Each session runs in its own sandbox from the Proxmox sandbox provider (LXC by default, VM for riskier work). Sessions can be snapshotted, forked and paused, and survive closing the tab.
 - A session receives only the secrets and connections its actor is authorized for.
 - Papercliped is the remote door: an MCP client can create sessions, read status and approve cards on the same instance.
+
+### Fast sessions
+
+Paperclip creates sessions on demand, so lease time is a product requirement. Targets are to be measured, not assumed.
+
+- **Template clones.** One template per harness (agent CLI and toolchain preinstalled), kept as a ZFS snapshot. A lease is a linked clone, which is cheap and fast for LXC.
+- **Warm pool.** A small number of pre-started guests per template, sized by budget. Leases take one from the pool and the pool refills in the background.
+- **Nothing secret in the image.** Templates contain no credentials. Run-bound credentials are injected at lease time and die with the lease.
+- **Cheap teardown.** Releasing a lease destroys the clone. Snapshot first only when the user asked to keep the session.
+- **Admission control.** The broker's hard ceilings bound how many guests can exist, so a runaway agent cannot exhaust the host by creating sessions.
 
 Sandbox provider: Paperclip already defines a sandbox provider plugin shape (see the Kubernetes provider: lease lifecycle, pod exec, file sync, network policy, image allowlist, secret manager). A Proxmox provider implements the same contract: acquire a lease by cloning a template, run commands and sync files in, apply a network policy, release by destroying the guest. The provider talks to the broker, not to the hypervisor.
 
