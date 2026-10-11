@@ -143,7 +143,30 @@ Notes:
 - Routers are experimental and off by default in Paperclip. The shipped policy plugin is round robin and quota based. Difficulty-based escalation needs a new policy plugin against the `ai.connections.route` contract. A router sees metadata and proposes a member. It never receives credentials.
 - GPU scheduling is shared between serving the local model and guests that request GPUs. This needs an explicit policy and is an open problem.
 
-Open question: confirm how a local OpenAI-compatible endpoint fits Paperclip's provider list. The closest existing path is the OpenCode harness through OpenRouter. This must be verified before it is promised.
+### Local endpoints (verified against Paperclip's docs, 2026-10)
+
+Paperclip already supports local and custom model endpoints as first-class connections. They are rows on **Connectors** tagged `model-provider`, with a URL, protocol and optional auth. The harness decides which protocols work:
+
+| Harness | Custom or local route |
+| --- | --- |
+| OpenCode (legacy and new runner) | Chat Completions |
+| Hermes local | Chat Completions |
+| Codex (legacy and new runner) | Responses |
+| Claude (legacy and new runner) | Messages |
+| Gemini CLI, Grok | Native only |
+
+For a local runtime such as Ollama or vLLM, the practical path is the OpenCode or Hermes harness with a Chat Completions connection. That is the only combination I would expect to work without extra translation, and it has not been run end to end by us.
+
+Constraints that shape the design:
+
+- **"Localhost" means the agent's execution environment.** Paperclip documents that a loopback URL refers to the sandbox the agent runs in. A model server on the host is therefore not reachable at `localhost` from a session guest. Options: a loopback forwarder inside each guest (preferred, since it keeps the URL a loopback and needs no TLS), or serve the model over HTTPS on the private bridge. Paperclip requires HTTPS for non-loopback URLs, and plain HTTP is allowed only for loopback.
+- **The guest must not reach the broker or hypervisor network,** so the forwarder is the only extra route a guest gets, and it points at the model service only.
+- **Saving a custom connection proves nothing.** Only fixed official provider endpoints get a key check. A custom endpoint is verified by the **Run test** action using the real harness in the real environment. Onboarding should run it.
+- **No model catalog discovery for custom gateways.** Model IDs are entered by hand, so the local-runtime connector should supply them from the runtime's own model list.
+- **Keys stay out of the guest.** For native OpenCode custom gateways the key lives in the runner process, and the harness only receives a session-scoped loopback capability limited to that model's endpoint, with redirects rejected. A keyless local runtime needs none of this, but a remote hosted fallback benefits from it directly.
+- **Real-world signal.** The OpenCode adapter has retry logic for model listing against a shared Ollama daemon that is busy generating, so this setup is already exercised upstream. The same behavior means a single local model will queue concurrent sessions, which matters for the GPU scheduling question.
+
+Still unverified: tool-calling quality of local models under these harnesses. This is a model-capability question, not something the code answers, and it decides whether local-only is usable for agent work or only for routing and drafting.
 
 ## 5. Workspace
 
@@ -165,6 +188,8 @@ Paperclip creates sessions on demand, so lease time is a product requirement. Ta
 - **Admission control.** The broker's hard ceilings bound how many guests can exist, so a runaway agent cannot exhaust the host by creating sessions.
 
 Sandbox provider: Paperclip already defines a sandbox provider plugin shape (see the Kubernetes provider: lease lifecycle, pod exec, file sync, network policy, image allowlist, secret manager). A Proxmox provider implements the same contract: acquire a lease by cloning a template, run commands and sync files in, apply a network policy, release by destroying the guest. The provider talks to the broker, not to the hypervisor.
+
+Runner fit: with the experimental runner, the server launches `paperclip-runnerd` inside the realized execution environment (the guest). Runnerd opens an **outbound** authenticated WebSocket (PRP v1) back to the server using a short-lived, one-use ticket bound to the company, agent, issue, run, session and turn. It never receives a broad Paperclip API credential, and the browser never connects to it. Runs recover across runner or network interruption without repeating effects. That means a guest needs only an outbound route to Paperclip, which matches the sandbox boundary below and keeps guests off the management network. The direct adapters remain the fallback while the runner is behind its flag.
 
 Sandbox boundary: Paperclip's sandbox requirements treat the sandbox as untrusted and allow only two authorities across it: workspace file sync and the Paperclip HTTP bridge. The Proxmox provider must preserve that. Guests get no route to the broker or the hypervisor management network.
 
@@ -214,7 +239,7 @@ Phases 1 to 3 work on any existing Proxmox box, which allows testing the idea be
 
 ## 10. Open questions
 
-- Is Paperclip's runner mature enough to host workspace sessions, or does v1 use the direct adapters? Not yet verified.
+- Runner maturity. Read from Paperclip's ADR and compatibility docs (2026-10): the runner (`@paperclipai/paperclip-runner`, adapter `paperclip_runner`) is **experimental and behind a default-off instance flag**, and the ADR status is "Proposed". Qualified providers are Codex, OpenCode, Claude Managed, AWS AgentCore and pinned ACPX profiles for Claude and Codex. It is a good architectural fit (see section 5) but not a stable base. v1 should support the direct adapters too, and treat the runner as an opt-in. I read the architecture documents and the package layout, not the Rust runner internals.
 - TPM auto-unseal at v1 or later.
 - Single node only for v1, or a plan for clustering.
 - GPU sharing policy between the local model and guests.
