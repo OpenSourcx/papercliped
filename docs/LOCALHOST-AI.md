@@ -1,6 +1,8 @@
 # Localhost AI: design
 
-Status: draft. Nothing here is built. This is a design for a self-hosted appliance that merges a Proxmox-class host with Paperclip as its control plane, so the machine is managed by agents instead of by a person clicking through an admin UI.
+Status: superseded. This exploration moved to the `OpenSourcx/papercliped-engine` repository (docs/VISION.md and docs/ARCHITECTURE.md), which is now the source of truth. Kept here for the research notes on Paperclip's runner, connectors and sandbox providers.
+
+Original status: draft. Nothing here is built. This is a design for a self-hosted appliance that merges a Proxmox-class host with Paperclip as its control plane, so the machine is managed by agents instead of by a person clicking through an admin UI.
 
 ## One-line pitch
 
