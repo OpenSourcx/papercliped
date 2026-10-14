@@ -25,6 +25,9 @@ const seenAuth: (string | undefined)[] = [];
 const revoked: string[] = [];
 const challengeNames: string[] = [];
 const paused: string[] = [];
+// Board keys: what the key listing says about the sign-in key, and the keys made through /board-api-keys.
+const KEY_ID = "00000000-0000-4000-9000-000000000001";
+const keyState = { expiresAt: null as number | null, now: 0, posts: [] as { auth?: string; name: string }[] };
 
 function mockPaperclip(): Server {
   return createServer(async (req, res) => {
@@ -49,7 +52,12 @@ function mockPaperclip(): Server {
     }
     if (p === "/api/cli-auth/me") {
       const ch = [...challenges.values()].find((c) => `Bearer ${c.token}` === auth && c.status === "approved");
-      return ch ? send(200, { userId: `uid-${ch.token.replace("board-tok-", "")}` }) : send(401, { error: "Board authentication required" });
+      return ch ? send(200, { userId: `uid-${ch.token.replace("board-tok-", "")}`, keyId: KEY_ID }) : send(401, { error: "Board authentication required" });
+    }
+    if (p === "/api/board-api-keys" && req.method === "GET") return send(200, [{ id: KEY_ID, name: "cli", expiresAt: keyState.expiresAt === null ? null : new Date(keyState.expiresAt).toISOString() }]);
+    if (p === "/api/board-api-keys" && req.method === "POST") {
+      keyState.posts.push({ auth, name: JSON.parse(raw).name });
+      return send(201, { id: "00000000-0000-4000-9000-000000000002", name: "x", token: `pcp_board_rotated_${keyState.posts.length}`, expiresAt: new Date(keyState.now + 30 * 86_400_000).toISOString() });
     }
     if (p === "/api/cli-auth/revoke-current") return (revoked.push(auth ?? ""), send(200, { revoked: true }));
     seenAuth.push(auth);
@@ -114,7 +122,7 @@ async function rig(over: Partial<OAuthConfig> = {}, extra: { dataFile?: string; 
     ...over,
   };
   const bridgeToken = extra.bridgeToken === undefined ? "static-secret" : extra.bridgeToken;
-  const provider = new OAuthProvider({ config, oauth, bridgeToken, now: () => clock.t });
+  const provider = new OAuthProvider({ config, oauth, bridgeToken, now: () => clock.t, rotationGraceMs: 0 });
   const server = createHttpServer(config, { host: "127.0.0.1", port, bridgeToken, publicUrl: oauth.issuer, oauth }, { oauth: provider, audit: (e) => audit.push(e) });
   await new Promise<void>((r) => server.listen(port, "127.0.0.1", r));
   return { base: oauth.issuer, server, clock, audit, provider, oauth, close: () => server.close() };
@@ -481,6 +489,53 @@ describe("revocation", () => {
     const [g] = await r.provider.listGrants();
     await r.provider.revokeGrant(g.id);
     expect((await act(r, tokens.access_token, "paperclip_list_agents")).status).toBe(401);
+    r.close();
+  });
+});
+
+describe("Paperclip key rotation without accounts", () => {
+  const DAY = 86_400_000;
+  it("renews a sign-in key stored on a grant a week before Paperclip expires it", async () => {
+    const r = await rig({ accessTtlSec: 90 * 86400 });
+    const c = await connect(r);
+    const signIn = `board-tok-${challengeSeq}`;
+    keyState.posts.length = 0;
+    r.clock.t += 20 * DAY; // not due yet: nothing is asked
+    keyState.expiresAt = r.clock.t + 10 * DAY;
+    expect((await act(r, c.tokens.access_token, "paperclip_list_agents")).status).toBe(200);
+    expect(keyState.posts).toHaveLength(0);
+    r.clock.t += 4 * DAY; // inside the last week
+    keyState.now = r.clock.t;
+    keyState.expiresAt = r.clock.t + 6 * DAY;
+    expect((await act(r, c.tokens.access_token, "paperclip_list_agents")).status).toBe(200);
+    await r.provider.drainBackground();
+    expect(keyState.posts).toEqual([{ auth: `Bearer ${signIn}`, name: "Papercliped (c)" }]);
+    expect(seenAuth.at(-1)).toBe("Bearer pcp_board_rotated_1");
+    expect(revoked).toContain(`Bearer ${signIn}`);
+    expect((await act(r, c.tokens.access_token, "paperclip_list_agents")).status).toBe(200);
+    expect(keyState.posts).toHaveLength(1);
+    expect(seenAuth.at(-1)).toBe("Bearer pcp_board_rotated_1");
+    r.close();
+  });
+
+  it("never touches the operator's own PAPERCLIP_API_KEY", async () => {
+    const r = await rig({ login: "static", accessTtlSec: 90 * 86400 }, { apiKey: "configured-board-key" });
+    const reg = (await register(r)).body;
+    const { challenge, verifier } = pkce();
+    const q = new URLSearchParams({ response_type: "code", client_id: reg.client_id, redirect_uri: CLAUDE_CB, code_challenge: challenge, code_challenge_method: "S256", scope: "paperclip:read" });
+    const html = await (await fetch(`${r.base}/authorize?${q}`)).text();
+    const rid = /name="rid" value="([^"]+)"/.exec(html)![1];
+    const csrf = /name="csrf" value="([^"]+)"/.exec(html)![1];
+    const ok = await fetch(`${r.base}/authorize/decision`, form({ rid, csrf, action: "allow", level: "paperclip:read", password: "static-secret" }));
+    const code = new URL(ok.headers.get("location")!).searchParams.get("code")!;
+    const t: any = await (await tokenReq(r, { grant_type: "authorization_code", code, redirect_uri: CLAUDE_CB, code_verifier: verifier, client_id: reg.client_id })).json();
+    keyState.posts.length = 0;
+    r.clock.t += 25 * DAY; // inside what would be the last week of a sign-in key
+    await r.provider.sweep();
+    expect((await act(r, t.access_token, "paperclip_list_agents")).status).toBe(200);
+    expect(seenAuth.at(-1)).toBe("Bearer configured-board-key");
+    expect(keyState.posts).toHaveLength(0);
+    expect(revoked).not.toContain("Bearer configured-board-key");
     r.close();
   });
 });

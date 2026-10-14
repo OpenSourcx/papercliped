@@ -4,6 +4,7 @@ import { PaperclipClient } from "./client.js";
 import type { BridgeConfig, HttpConfig } from "./config.js";
 import { executeTool, type AuditEvent, type ExecOptions } from "./execute.js";
 import { createMcpServer } from "./mcp.js";
+import type { ExecPolicy } from "./access/policy.js";
 import { safeEqual } from "./oauth/crypto.js";
 import { OAuthProvider } from "./oauth/provider.js";
 import type { PublicApiRoutes } from "./public-api/routes.js";
@@ -70,7 +71,7 @@ async function readBody(req: IncomingMessage): Promise<unknown> {
 }
 
 /** Who is calling the protected endpoints. */
-type Principal = { kind: "static" } | { kind: "oauth"; grantId: string; client: string; userId: string | null; username?: string; instance?: string; scopes: string[]; paperclip: PaperclipClient };
+type Principal = { kind: "static" } | { kind: "oauth"; grantId: string; client: string; userId: string | null; username?: string; instance?: string; scopes: string[]; paperclip: PaperclipClient; policy: ExecPolicy };
 
 export function createHttpServer(config: BridgeConfig, http: HttpConfig, opts: ServerOptions = {}): Server {
   const baseClient = opts.client ?? new PaperclipClient(config);
@@ -96,13 +97,13 @@ export function createHttpServer(config: BridgeConfig, http: HttpConfig, opts: S
     } catch {
       return null; // unreadable credential, expired connection, or instance no longer allowed: an invalid token (the user reconnects)
     }
-    return { kind: "oauth", grantId: grant.id, client: grant.clientName, userId: grant.userId, username: grant.username ?? undefined, instance, scopes: grant.scopes, paperclip };
+    return { kind: "oauth", grantId: grant.id, client: grant.clientName, userId: grant.userId, username: grant.username ?? undefined, instance, scopes: grant.scopes, paperclip, policy: await oauth.policyFor(grant) };
   }
 
   const execFor = (p: Principal): { client: PaperclipClient; exec: ExecOptions } =>
     p.kind === "static"
       ? { client: baseClient, exec: { actor: { id: "static-token" }, audit } }
-      : { client: p.paperclip, exec: { scopes: p.scopes, actor: { id: p.grantId, client: p.client, userId: p.userId, instance: p.instance, username: p.username }, audit } };
+      : { client: p.paperclip, exec: { scopes: p.scopes, policy: p.policy, actor: { id: p.grantId, client: p.client, userId: p.userId, instance: p.instance, username: p.username }, audit } };
 
   const unauthorized = (res: ServerResponse, invalid: boolean) => {
     const challenge = oauth ? oauth.challengeHeader(invalid ? "invalid_token" : undefined) : "Bearer";

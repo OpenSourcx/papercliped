@@ -102,13 +102,13 @@ describe("components", () => {
 
 describe("community links", () => {
   it("the footer shows X, GitHub and Discord icons; unset networks point to the community page (no invented handles)", () => {
-    expect(liveSocials({ github: "https://github.com/OpenSourcx/papercliped", discord: "", x: "", discussions: "", forum: "" }).map((s) => s.key)).toEqual(["github"]);
+    expect(liveSocials({ github: "https://github.com/OpenSourcx/papercliped", discord: "", reddit: "", x: "", discussions: "", forum: "" }).map((s) => s.key)).toEqual(["github"]);
     inRouter(<Footer />);
     const social = within(screen.getByRole("list", { name: "Social" }));
     expect(social.getAllByRole("link")).toHaveLength(3);
     expect(social.getByRole("link", { name: "Papercliped on GitHub" })).toHaveAttribute("href", "https://github.com/OpenSourcx/papercliped");
     expect(social.getByRole("link", { name: "Papercliped on X (coming soon)" })).toHaveAttribute("href", "/community");
-    expect(social.getByRole("link", { name: "Papercliped on Discord (coming soon)" })).toHaveAttribute("href", "/community");
+    expect(social.getByRole("link", { name: "OpenSourcedd on Discord" })).toHaveAttribute("href", "https://discord.gg/cAECU68jSA");
   });
 });
 

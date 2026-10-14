@@ -1,24 +1,31 @@
 # Getting started
 
-Papercliped connects Claude (and ChatGPT) to **your** Paperclip. You keep control: you choose how much the AI may do, and you can cut access at any time.
+Papercliped connects Claude, ChatGPT, Codex and any MCP app to **your** Paperclip, so you can run it by asking instead of clicking through the dashboard. You keep control: you choose how much the AI may do, and you can cut access at any time.
 
 ## What you need
-- A Paperclip that is reachable over the internet at an `https://` address (for example `https://workforce.example.com`). Private, local and `http://` addresses are refused on purpose. No public address yet? See [Set up your Paperclip](/docs/connect-your-paperclip).
-- A Claude account that can add connectors, or Claude Code.
+- A Paperclip that is reachable over the internet at an `https://` address (for example `https://workforce.example.com`). Private, local and `http://` addresses are refused on purpose. No public address yet? See [Host your Paperclip](/docs/hosting).
+- An AI app that can add a remote MCP server: Claude (web, desktop or mobile), Claude Code, ChatGPT, Codex, or [another app](/docs/other-ai-apps).
 
 ## Connect from Claude
 1. In Claude open **Settings → Connectors → Add custom connector**.
 2. Use the address `{{MCP}}/mcp` and click **Connect**.
 3. On the Papercliped page choose **Connect your Paperclip**, enter your Paperclip's address, and approve the request in your Paperclip.
 4. Pick a **username** (see below). Papercliped then shows your **secret key once**. Save it in a password manager.
-5. Choose how much to allow (see [Permissions](/docs/permissions)) and click **Allow**.
-6. Ask Claude something like "List my Paperclip agents."
+5. Choose how much to allow (see [Permissions](/docs/permissions)) and click **Allow**. Leave **Also install the Papercliped plugin** ticked to get the [control room](/docs/control-room) inside your Paperclip.
+6. Ask Claude something like *"Catch me up on my Paperclip."* Then try more from the [prompt gallery](/docs/prompts).
 
 ## Claude Code
 ```
 claude mcp add --transport http papercliped {{MCP}}/mcp
 ```
 Or install the plugin: `/plugin marketplace add OpenSourcx/papercliped`, then `/plugin install papercliped@papercliped`.
+
+## Codex
+```
+codex plugin marketplace add OpenSourcx/papercliped
+codex plugin add papercliped@papercliped
+```
+Or just the MCP server: `codex mcp add paperclip --url {{MCP}}/mcp`.
 
 ## Run it yourself (npm)
 ```
@@ -30,10 +37,10 @@ This starts a local server for one Paperclip, using `PAPERCLIP_API_URL` and `PAP
 Any app that supports MCP can use Papercliped. See [Any AI app (MCP)](/docs/other-ai-apps).
 
 ## Inside your Paperclip
-The Papercliped plugin for Paperclip is where you manage everything: connected apps, levels, privacy and your account. See [Paperclip plugin](/docs/paperclip-plugin).
+The Papercliped plugin for Paperclip is where you manage everything: the [control room](/docs/control-room) for connected apps, what each may do and which agents it applies to, plus privacy and your account. See [Paperclip plugin](/docs/paperclip-plugin).
 
 ## ChatGPT
-Papercliped publishes an OpenAPI description at `{{MCP}}/openapi.json` for GPT Actions. See [ChatGPT setup](/docs/chatgpt).
+Add Papercliped as an MCP app in developer mode, or build a custom GPT with Actions. See [ChatGPT setup](/docs/chatgpt).
 
 See [Create your account](/docs/signup) for every screen in detail.
 

@@ -15,7 +15,12 @@ describe("changelog", () => {
     expect(rel.find((r) => r.version === "v2.0.0")!.entries.length).toBeGreaterThan(3);
   });
   it("every released version has a date from git, and none is invented", () => {
-    for (const r of rel.filter((x) => !x.unreleased)) expect((dates as Record<string, string>)[r.version], r.version).toMatch(/^2026-10-0[56]$/);
+    const today = new Date().toISOString().slice(0, 10);
+    for (const r of rel.filter((x) => !x.unreleased)) {
+      const d = (dates as Record<string, string>)[r.version];
+      expect(d, r.version).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(d >= "2026-10-05" && d <= today, `${r.version} dated ${d}: must be between the first release and today`).toBe(true);
+    }
   });
   it("classifies entries", () => {
     expect(kindOf("Fixed: the install command")).toBe("fixed");

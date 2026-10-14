@@ -18,17 +18,17 @@ export function LinkForm({ expired, onLink }: { expired: boolean; onLink: (usern
       .finally(() => setBusy(false));
   };
   return (
-    <form onSubmit={submit} style={panel} aria-labelledby="pcl-link-h">
-      <h2 id="pcl-link-h" style={h2}>Link your Papercliped account</h2>
-      {expired && <p role="status" style={muted}>Your link ended (for example after a new secret key). Sign in again to link.</p>}
-      <p style={muted}>Use the username and secret key you got when you first connected Claude or ChatGPT. Papercliped checks the key once; it is not stored in Paperclip.</p>
-      <div style={{ ...row, marginTop: 10 }}>
-        <input aria-label="Username" style={{ ...field, flex: "1 1 160px" }} value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" autoComplete="username" spellCheck={false} />
-        <input aria-label="Secret key" type="password" style={{ ...field, flex: "2 1 220px" }} value={secret} onChange={(e) => setSecret(e.target.value)} placeholder="pcs_XXXX-XXXX-XXXX-XXXX" autoComplete="current-password" spellCheck={false} />
-        <button type="submit" style={primary} disabled={busy || !username.trim() || !secret.trim()}>{busy ? "Linking…" : "Link"}</button>
+    <form onSubmit={submit} className={panel} aria-labelledby="pcl-link-h">
+      <h2 id="pcl-link-h" className={h2}>Link your Papercliped account</h2>
+      {expired && <p role="status" className={muted}>Your link ended (for example after a new secret key). Sign in again to link.</p>}
+      <p className={muted}>Use the username and secret key you got when you first connected Claude or ChatGPT. Papercliped checks the key once; it is not stored in Paperclip.</p>
+      <div className={`${row} mt-2.5`}>
+        <input aria-label="Username" name="papercliped-username" className={`${field} w-40 min-w-0`} value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" autoComplete="off" spellCheck={false} />
+        <input aria-label="Secret key" name="papercliped-secret-key" type="password" className={`${field} min-w-0 flex-1 basis-64`} value={secret} onChange={(e) => setSecret(e.target.value)} placeholder="pcs_XXXX-XXXX-XXXX-XXXX" autoComplete="new-password" spellCheck={false} />
+        <button type="submit" className={primary} disabled={busy || !username.trim() || !secret.trim()}>{busy ? "Linking…" : "Link"}</button>
       </div>
-      {msg && <p role="alert" style={{ margin: "10px 0 0" }}>{msg}</p>}
-      <p style={{ ...muted, marginTop: 12 }}>Lost your key? Connect from your AI app again and choose <strong>Connect your Paperclip</strong>: you keep your account and get a new key.</p>
+      {msg && <p role="alert" className="mt-2.5 text-sm text-destructive">{msg}</p>}
+      <p className={`${muted} mt-3`}>Lost your key? Connect from your AI app again and choose <strong>Connect your Paperclip</strong>: you keep your account and get a new key.</p>
     </form>
   );
 }

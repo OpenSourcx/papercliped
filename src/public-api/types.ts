@@ -16,7 +16,7 @@ export const AUTH_FAILURE_REASONS = ["bad_credentials", "rate_limited", "denied"
 export type AuthFailureReason = (typeof AUTH_FAILURE_REASONS)[number];
 
 /** Error classes of tool calls and protocol requests. Anything else is counted as `other`. */
-export const ERROR_CLASSES = ["invalid_input", "insufficient_scope", "read_only", "upstream_4xx", "upstream_5xx", "upstream_unreachable", "rate_limited", "unauthorized", "internal", "other"] as const;
+export const ERROR_CLASSES = ["invalid_input", "insufficient_scope", "read_only", "upstream_4xx", "upstream_5xx", "upstream_unreachable", "rate_limited", "unauthorized", "policy_blocked", "internal", "other"] as const;
 export type ErrorClass = (typeof ERROR_CLASSES)[number];
 
 /** ok: working normally (or idle). degraded: slower or more faults than usual. down: a major problem (database failing, many faults). */

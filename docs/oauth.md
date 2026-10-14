@@ -7,7 +7,7 @@ client ──401 + resource_metadata──▶ bridge /mcp
 client ──DCR /register──────────────▶ bridge
 client ──/authorize (PKCE S256)─────▶ bridge ──create challenge──▶ Paperclip /api/cli-auth/challenges
 user   ── opens approvalUrl, signs in to Paperclip, approves ─────▶ Paperclip
-user   ── picks Read / Control / Admin, presses Allow ───────────▶ bridge (verifies approval, checks token)
+user   ── picks Read only / Full control, presses Allow ────────▶ bridge (verifies approval, checks token)
 client ──/token (code + verifier)───▶ bridge ──▶ opaque access + rotating refresh token
 client ──/mcp  Bearer pcb_at_…──────▶ bridge ──user's board token──▶ Paperclip
 ```

@@ -4,6 +4,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 
 const root = resolve(import.meta.dirname, "..");
 const out = mkdtempSync(join(tmpdir(), "papercliped-pack-"));
@@ -37,7 +38,7 @@ for (const bin of ["papercliped", "papercliped-bridge", "papercliped-admin"]) if
 
 // The Paperclip plugin: its manifest loads and every entrypoint it names exists in the installed package.
 const pdir = join(app, "node_modules/papercliped-paperclip-plugin");
-const { default: manifest } = await import(join(pdir, "dist/manifest.js"));
+const { default: manifest } = await import(pathToFileURL(join(pdir, "dist/manifest.js")).href);
 if (manifest.id !== "papercliped.remote-control" || manifest.apiVersion !== 1) fail("plugin manifest looks wrong");
 for (const p of [manifest.entrypoints.worker, join(manifest.entrypoints.ui, "index.js")]) if (!existsSync(join(pdir, p))) fail(`plugin entrypoint ${p} is missing`);
 

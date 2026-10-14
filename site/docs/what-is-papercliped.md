@@ -1,6 +1,6 @@
 # What is Papercliped?
 
-Papercliped connects AI apps (Claude, ChatGPT and anything that speaks MCP) to **your** Paperclip, so you can run your AI-agent company by asking: "What are my agents doing?", "Pause the one that's over budget", "Give me this week's costs."
+Papercliped connects AI apps (Claude, ChatGPT, Codex and anything that speaks MCP) to **your** Paperclip, so you can run your AI-agent company by asking: "What are my agents doing?", "Pause the one that's over budget", "Give me this week's costs."
 
 Paperclip is an open-source orchestrator for companies of AI agents. Papercliped is an independent, open-source project (MIT); it isn't made by the Paperclip team.
 
@@ -34,4 +34,6 @@ See the [tool reference](/docs/tools) for all of them.
 - **Account**: your Papercliped username and secret key, used to sign in again and manage connections.
 - **Secret key**: a key starting with `pcs_`, shown once; Papercliped keeps only a one-way hash.
 - **Board token**: a Paperclip credential with operator rights. Papercliped stores it encrypted and only uses it within your level.
-- **Connection manager**: the [Paperclip plugin](/docs/paperclip-plugin), where you change levels, disconnect apps and manage your account.
+- **Control room**: the Papercliped page inside your Paperclip (from the [Paperclip plugin](/docs/paperclip-plugin)), where you manage sessions, access modes, agents and your account. See [The control room](/docs/control-room).
+- **Session**: one connected AI app. You can name it, change its level, and limit it to some tools or agents.
+- **Access mode**: API only, Full or Agent only: whether AI apps control Paperclip directly, work through agents, or both. See [Access modes](/docs/access-modes).

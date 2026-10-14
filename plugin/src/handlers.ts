@@ -1,9 +1,19 @@
-import { BridgeClient, BridgeError, normalizeBridgeUrl } from "./bridge.js";
+import { BridgeClient, BridgeError, normalizeBridgeUrl, type Policy, type SessionChange } from "./bridge.js";
 import { isStoredLink, linkScope, type StoredLink } from "./keys.js";
 
 export interface Actor {
   type: string;
   userId: string | null;
+  /** The company the host says this call is for. Never taken from the page's own parameters. */
+  companyId?: string | null;
+}
+/** What the control room shows of an agent. */
+export interface AgentInfo {
+  id: string;
+  name: string;
+  role: string | null;
+  title: string | null;
+  status: string;
 }
 export interface StateLike {
   get(k: ReturnType<typeof linkScope>): Promise<unknown>;
@@ -14,6 +24,8 @@ export interface Deps {
   state: StateLike;
   bridgeUrl: () => Promise<unknown>;
   fetch: (url: string, init?: RequestInit) => Promise<Response>;
+  /** The agents of one company, from Paperclip itself. */
+  listAgents?: (companyId: string) => Promise<AgentInfo[]>;
   allowInsecureLoopback?: boolean; // tests only
 }
 
@@ -23,6 +35,12 @@ function needSecret(p: Record<string, unknown>): string {
   if (!s) throw new Error("Enter your secret key to confirm.");
   return s;
 }
+
+/** A bounded list of short strings from the page; the bridge decides what is valid. */
+const strList = (v: unknown): string[] => {
+  if (!Array.isArray(v)) throw new Error("Expected a list.");
+  return v.slice(0, 500).map((x) => str(x, 80));
+};
 
 /** The user this call is for. Comes from the host's verified actor, never from params. */
 function who(actor: Actor): string {
@@ -140,6 +158,67 @@ export function createHandlers(d: Deps) {
       await authed(userId, (c, t) => c.deleteAccount(t, secret, confirm));
       await d.state.delete(linkScope(userId));
       return { linked: false as const };
+    },
+
+    // ───────────── the control room ─────────────
+
+    async sessions(_p: Record<string, unknown>, actor: Actor) {
+      return { sessions: await authed(who(actor), (c, t) => c.sessions(t)) };
+    },
+
+    /** Change one session's name, tools, agents or level. The bridge validates; this only passes known fields through. */
+    async setSession(p: Record<string, unknown>, actor: Actor) {
+      if (typeof p.id !== "string" || !p.id) throw new Error("Missing session id");
+      const id = p.id;
+      const change: SessionChange = {};
+      if ("label" in p) change.label = p.label === null ? null : str(p.label, 80);
+      if ("tools" in p) change.tools = p.tools === null ? null : strList(p.tools);
+      if ("agents" in p) change.agents = p.agents === null ? null : strList(p.agents);
+      if (p.level !== undefined) {
+        if (p.level !== "read" && p.level !== "control") throw new Error("level must be read or control");
+        change.level = p.level;
+      }
+      return authed(who(actor), (c, t) => c.setSession(t, id, change));
+    },
+
+    async policy(_p: Record<string, unknown>, actor: Actor) {
+      return authed(who(actor), (c, t) => c.policy(t));
+    },
+
+    /** Save the access switch and the per-agent overrides. */
+    async setPolicy(p: Record<string, unknown>, actor: Actor) {
+      const mode = p.mode;
+      if (mode !== "api" && mode !== "full" && mode !== "agent") throw new Error("mode must be api, full or agent");
+      const agents: Policy["agents"] = {};
+      if (p.agents !== undefined) {
+        if (!p.agents || typeof p.agents !== "object" || Array.isArray(p.agents)) throw new Error("agents must be an object of agent id to mode");
+        for (const [id, m] of Object.entries(p.agents as Record<string, unknown>)) {
+          if (m !== "api" && m !== "full" && m !== "agent" && m !== "off") throw new Error("an agent's mode must be api, full, agent or off");
+          agents[id.slice(0, 80)] = m;
+        }
+      }
+      return authed(who(actor), (c, t) => c.setPolicy(t, { mode, agents }));
+    },
+
+    async tools(_p: Record<string, unknown>, actor: Actor) {
+      return { tools: await authed(who(actor), (c, t) => c.tools(t)) };
+    },
+
+    async activity(p: Record<string, unknown>, actor: Actor) {
+      const session = typeof p.session === "string" && p.session ? p.session.slice(0, 80) : undefined;
+      const limit = typeof p.limit === "number" && Number.isFinite(p.limit) ? Math.min(Math.max(1, Math.trunc(p.limit)), 200) : 50;
+      return { calls: await authed(who(actor), (c, t) => c.activity(t, { session, limit })) };
+    },
+
+    /**
+     * The agents of the company the host says this call is for. Needs no link: it is Paperclip's own data, shown to a person
+     * Paperclip already let into that company (the host only runs the action for them).
+     */
+    async agents(_p: Record<string, unknown>, actor: Actor) {
+      who(actor);
+      if (!actor.companyId) throw new Error("Open a company to see its agents.");
+      if (!d.listAgents) throw new Error("This Paperclip can't list agents for plugins.");
+      return { agents: (await d.listAgents(actor.companyId)).slice(0, 500) };
     },
 
     /** The Papercliped service's public status (aggregate numbers only; no account or link needed). */

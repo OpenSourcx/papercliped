@@ -1,16 +1,30 @@
-import type { CSSProperties } from "react";
+// Paperclip's own classes, so the page looks like part of Paperclip in every theme (light, dark, seasonal): the same card,
+// input, button, tab and text styles it uses on its settings pages. They are the host's classes, not ours, and are read from
+// its pages; a test checks that every class used here exists in the host's stylesheet when run against a live instance.
+// Status, tables and metrics come from Paperclip's own components.
 
-// Neutral on purpose: everything inherits the host's colours and fonts, and borders are a tint of the text colour, so the
-// page looks native in any Paperclip theme. Status, tables and metrics use Paperclip's own components.
-const tint = (n: number) => `color-mix(in srgb, currentColor ${n}%, transparent)`;
-export const panel: CSSProperties = { border: `1px solid ${tint(18)}`, borderRadius: 10, padding: 16, margin: "12px 0" };
-export const row: CSSProperties = { display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" };
-export const muted: CSSProperties = { opacity: 0.68, fontSize: 13, margin: "4px 0" };
-export const h2: CSSProperties = { fontSize: 15, fontWeight: 600, margin: "0 0 8px" };
-export const field: CSSProperties = { font: "inherit", color: "inherit", background: "transparent", border: `1px solid ${tint(30)}`, borderRadius: 8, padding: "7px 10px", minHeight: 34 };
-export const button: CSSProperties = { ...field, cursor: "pointer", fontWeight: 500 };
-export const primary: CSSProperties = { ...button, borderColor: "currentColor", fontWeight: 600 };
-export const danger: CSSProperties = { ...button, borderColor: "color-mix(in srgb, #dc2626 60%, transparent)" };
-export const tabs: CSSProperties = { display: "flex", gap: 4, borderBottom: `1px solid ${tint(18)}`, margin: "16px 0 4px", overflowX: "auto" };
-export const tab = (on: boolean): CSSProperties => ({ font: "inherit", color: "inherit", background: "transparent", border: 0, borderBottom: `2px solid ${on ? "currentColor" : "transparent"}`, padding: "8px 12px", cursor: "pointer", opacity: on ? 1 : 0.65, fontWeight: on ? 600 : 500 });
-export const code: CSSProperties = { fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontSize: 13, padding: "2px 6px", borderRadius: 6, border: `1px solid ${tint(20)}`, userSelect: "all" };
+const BUTTON_BASE = "inline-flex items-center justify-center whitespace-nowrap text-sm font-medium shrink-0 outline-none transition-colors disabled:pointer-events-none disabled:opacity-50 h-9 rounded-md px-3 gap-2";
+
+/** A bordered card. */
+export const panel = "bg-card text-card-foreground rounded-lg border p-4 my-3";
+/** Items in a wrapping line. */
+export const row = "flex flex-wrap items-center gap-2";
+/** Secondary text. */
+export const muted = "text-sm text-muted-foreground my-1";
+/** A card heading. */
+export const h2 = "text-base font-semibold mb-2";
+/** The page title. */
+export const title = "text-xl font-semibold";
+/** Text inputs and selects. */
+export const field = "h-9 rounded-md border border-border bg-transparent px-2.5 text-sm outline-none";
+/** The main action. */
+export const primary = `${BUTTON_BASE} bg-primary text-primary-foreground hover:bg-primary/90`;
+/** Any other action. */
+export const button = `${BUTTON_BASE} border border-border hover:bg-accent hover:text-accent-foreground`;
+/** An action that removes something. */
+export const danger = `${BUTTON_BASE} border border-destructive/40 text-destructive hover:bg-destructive/10`;
+/** The tab strip and one tab. */
+export const tabs = "flex gap-1 border-b border-border mt-4 mb-1 overflow-x-auto";
+export const tab = (on: boolean) => `px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${on ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`;
+/** An inline value to copy, like a secret key. */
+export const code = "font-mono text-xs px-1.5 py-0.5 rounded-md border border-border select-all";

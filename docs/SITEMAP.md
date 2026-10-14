@@ -29,6 +29,8 @@ One service, routed by host (`PUBLIC_HOSTS`, `src/web/`): `papercliped.co` the w
 | `/docs/manage` | Manage connections |
 | `/docs/paperclip-plugin` | Paperclip plugin |
 | `/docs/permissions` | Permissions |
+| `/docs/control-room` | The control room |
+| `/docs/access-modes` | API only, Full or Agent only |
 | `/docs/anonymous-mode` | Anonymous mode |
 | `/docs/public-api` | Public API and status |
 | `/docs/security` | Security |
@@ -54,7 +56,7 @@ One service, routed by host (`PUBLIC_HOSTS`, `src/web/`): `papercliped.co` the w
 | Path | Purpose |
 | --- | --- |
 | `GET /manage` | Old address: redirects to `/docs/paperclip-plugin` |
-| `/api/manage/*` | JSON API used by the Paperclip plugin (bearer token only, no cookies): `plugin-link/sign-in`, `me`, `connections`, `connections/:id`, `privacy`, `plugin-links`, `plugin-links/:id`, `secret/rotate`, `paperclip/disconnect`, `account/delete` (the last three need the secret key again) |
+| `/api/manage/*` | JSON API used by the Paperclip plugin (bearer token only, no cookies): `plugin-link/sign-in`, `me`, `connections`, `connections/:id`, `sessions`, `sessions/:id`, `policy`, `tools`, `activity`, `privacy`, `plugin-links`, `plugin-links/:id`, `secret/rotate`, `paperclip/disconnect`, `account/delete` (the last three need the secret key again) |
 | Domain section in the plugin **(planned v3)** | Pro members: address, tunnel status, token, port, release |
 
 ## 4. AI client endpoints

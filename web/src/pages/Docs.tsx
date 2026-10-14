@@ -182,11 +182,11 @@ export function DocsShell({ current, children, aside }: { current?: string; chil
   );
 }
 
-const START: { slug: string; icon: "rocket" | "plug" | "book" | "code"; blurb: string }[] = [
+const START: { slug: string; icon: "rocket" | "plug" | "book" | "code" | "link"; blurb: string }[] = [
   { slug: "getting-started", icon: "rocket", blurb: "Connect Claude to your Paperclip in about a minute." },
+  { slug: "hosting", icon: "link", blurb: "Give Paperclip a public address: at home, a VPS, Railway, Render, Fly.io or Coolify." },
   { slug: "other-ai-apps", icon: "plug", blurb: "ChatGPT, Claude Code and any app that speaks MCP." },
-  { slug: "paperclip-plugin", icon: "book", blurb: "Manage apps, levels and your account inside Paperclip." },
-  { slug: "tools", icon: "code", blurb: "Every tool the AI gets, and the level it needs." },
+  { slug: "prompts", icon: "book", blurb: "Ready-to-copy prompts for running Paperclip in plain words." },
 ];
 
 /** The docs landing: search, the four places most people start, then every topic. */

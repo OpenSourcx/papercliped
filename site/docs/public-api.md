@@ -47,7 +47,7 @@ curl "{{URL}}/api/public/v1/stats?window=24h"
 
 **Sign-in failure reasons** (a fixed list): `bad_credentials`, `rate_limited`, `denied`, `expired`, `unreachable`, `invalid_instance`, `too_many_attempts`, `other`.
 
-**Error classes** (a fixed list): `invalid_input`, `insufficient_scope`, `read_only`, `upstream_4xx`, `upstream_5xx`, `upstream_unreachable`, `rate_limited`, `unauthorized`, `internal`, `other`. Anything the service records outside these lists is counted as `other`, never shown as text.
+**Error classes** (a fixed list): `invalid_input`, `insufficient_scope`, `read_only`, `policy_blocked`, `upstream_4xx`, `upstream_5xx`, `upstream_unreachable`, `rate_limited`, `unauthorized`, `internal`, `other`. Anything the service records outside these lists is counted as `other`, never shown as text.
 
 ## Series
 Each bucket has `t` (start time), `requests`, `errors`, `faults`, `p95Ms`, `authCompleted`, `authFailed` and `newUsers`. Every bucket in the window is present, with zeros when nothing happened.

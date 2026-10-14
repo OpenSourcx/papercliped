@@ -11,6 +11,28 @@ The app opens the Papercliped sign-in page. Choose **Connect your Paperclip** (o
 
 Where the setting lives differs per app (often "Connectors", "MCP servers" or "Tools"). Check your app's own docs for the menu.
 
+## Claude Code
+Install the plugin (adds the tools, a Paperclip skill and the `/paperclip-status`, `/paperclip-sync` and `/paperclip-report` commands):
+```
+/plugin marketplace add OpenSourcx/papercliped
+/plugin install papercliped@papercliped
+```
+Or add just the MCP server, then run `/mcp` to sign in:
+```
+claude mcp add --transport http paperclip {{MCP}}/mcp
+```
+
+## Codex
+Install the plugin:
+```
+codex plugin marketplace add OpenSourcx/papercliped
+codex plugin add papercliped@papercliped
+```
+Or add just the MCP server (Codex starts the sign-in for you):
+```
+codex mcp add paperclip --url {{MCP}}/mcp
+```
+
 ## Apps that only run local MCP servers
 Run Papercliped on your own computer instead. It talks straight to your Paperclip, with no account needed:
 ```
@@ -25,4 +47,4 @@ Self-host the bridge with a static key (`BRIDGE_TOKEN`) and send it as `Authoriz
 Use the custom MCP connector where your plan offers it, or GPT Actions with `{{MCP}}/openapi.json`. See [ChatGPT setup](/docs/chatgpt).
 
 ## What every app gets
-The same tools everywhere: list and control agents, issues, goals and approvals, sync what changed, and reports on status, costs, agent performance and activity. What an app may change depends on the level you chose; you can change it at any time on the [manage page]({{URL}}/manage).
+The same tools everywhere: list and control agents, issues, goals and approvals, sync what changed, and reports on status, costs, agent performance and activity. What an app may change depends on the level you chose and your [access mode](/docs/access-modes); change either at any time in the [control room](/docs/control-room) inside your Paperclip. Not sure what to ask? Try the [prompt gallery](/docs/prompts).

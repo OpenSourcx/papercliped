@@ -1,0 +1,44 @@
+name: Tester feedback
+description: You tried Papercliped. Tell us how it went, good or bad.
+labels: [feedback]
+body:
+  - type: markdown
+    attributes:
+      value: "Thanks for trying Papercliped! Five minutes here shapes what we fix and build next. **Never paste secret keys (`pcs_…`), tokens or Paperclip keys.**"
+  - type: dropdown
+    id: app
+    attributes:
+      label: Which AI app did you connect?
+      multiple: true
+      options: [Claude (web/desktop/mobile), Claude Code, ChatGPT, Codex, Another MCP app, Local (npx)]
+    validations: { required: true }
+  - type: dropdown
+    id: host
+    attributes:
+      label: Where does your Paperclip run?
+      options: [My computer + Cloudflare Tunnel, My computer + Tailscale Funnel, My computer + ngrok, VPS (Docker), Railway, Render, Fly.io, Coolify, Somewhere else]
+    validations: { required: true }
+  - type: dropdown
+    id: connected
+    attributes:
+      label: Did you get connected?
+      options: [Yes, first try, Yes, after some trouble, No]
+    validations: { required: true }
+  - type: textarea
+    id: stuck
+    attributes:
+      label: Where did you get stuck or confused? (setup, hosting guide, sign-in, control room…)
+  - type: textarea
+    id: prompts
+    attributes:
+      label: What did you ask your AI app, and did it do the right thing?
+      placeholder: '"Catch me up on my Paperclip" worked; "assign the onboarding issue to the CEO" picked the wrong issue…'
+  - type: dropdown
+    id: again
+    attributes:
+      label: Will you keep using it?
+      options: [Yes, Maybe, No]
+  - type: textarea
+    id: wish
+    attributes:
+      label: One thing that would make it better

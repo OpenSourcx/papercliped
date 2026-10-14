@@ -8,7 +8,7 @@ Thanks for helping! Papercliped is a free, open-source (MIT) bridge between AI a
 - **Suggest a feature** with the feature form, or on the [community page](https://papercliped.co/community).
 - **Fix something small:** look for issues labelled [`good first issue`](https://github.com/OpenSourcx/papercliped/labels/good%20first%20issue) or [`help wanted`](https://github.com/OpenSourcx/papercliped/labels/help%20wanted).
 - **Improve the docs:** every docs page has an "Edit this page on GitHub" link.
-- **Help others** in GitHub Discussions and on Discord.
+- **Help others** in GitHub Discussions, on the OpenSourcedd [Discord](https://discord.gg/cAECU68jSA) and on [r/OpenSourcedd](https://www.reddit.com/r/OpenSourcedd).
 
 Security problems go to [SECURITY.md](SECURITY.md), never a public issue.
 

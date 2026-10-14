@@ -1,0 +1,73 @@
+{
+  "categories": [
+    { "id": "start", "title": "Start your day", "intro": "Get the whole picture in one message instead of clicking through the dashboard." },
+    { "id": "work", "title": "Hand out work", "intro": "Create, assign and move issues by describing them. Assigning an issue to an agent with status todo is how you give it work." },
+    { "id": "agents", "title": "Run your agents", "intro": "Check on agents, wake them, pause them and get them out of error." },
+    { "id": "follow", "title": "Follow along", "intro": "Start something and let your AI app watch it to the end." },
+    { "id": "approvals", "title": "Approvals", "intro": "Hires, plans and budget overrides waiting on you." },
+    { "id": "goals", "title": "Goals and projects", "intro": "Keep the plan up to date in plain words." },
+    { "id": "money", "title": "Budgets and costs", "intro": "See where the money goes and set limits. Agents pause themselves at 100% of their budget." },
+    { "id": "reports", "title": "Reports", "intro": "Ready-made reports you can paste into a doc, email or chat." },
+    { "id": "recipes", "title": "Recipes", "intro": "Longer prompts that chain several steps. Copy, adjust the names, send." },
+    { "id": "more", "title": "Anything else", "intro": "For Paperclip features without a dedicated tool, and for checking the connection." }
+  ],
+  "prompts": [
+    { "category": "start", "title": "Morning catch-up", "prompt": "Catch me up on my Paperclip: what each agent is doing right now, anything blocked or in error, and approvals waiting on me.", "tools": ["paperclip_sync_snapshot", "paperclip_list_approvals"] },
+    { "category": "start", "title": "What changed overnight", "prompt": "What happened in my Paperclip since yesterday evening? Group it by agent and skip the routine heartbeats.", "tools": ["paperclip_report_activity"] },
+    { "category": "start", "title": "Needs my attention", "prompt": "Is anything in my Paperclip waiting on me? Approvals, agents in error, blocked issues, budgets close to the limit.", "tools": ["paperclip_report_status"] },
+    { "category": "start", "title": "Which company", "prompt": "Which Paperclip companies can you see? Use [company name] for the rest of this chat.", "tools": ["paperclip_list_companies"] },
+
+    { "category": "work", "title": "Give an agent a task", "prompt": "Create an issue \"[title]\" for [agent name]: [what you want done, and what done looks like]. Set it to todo so they pick it up.", "tools": ["paperclip_list_agents", "paperclip_create_issue"] },
+    { "category": "work", "title": "Turn notes into issues", "prompt": "Here are my notes from today's call. Turn each action item into an issue in [project name], assign each to the agent whose role fits best, and show me the list before creating them.\n\n[paste your notes]", "tools": ["paperclip_list_projects", "paperclip_list_agents", "paperclip_create_issue"] },
+    { "category": "work", "title": "What's open", "prompt": "List the open issues in [project name] by priority, with who's on each one.", "tools": ["paperclip_list_projects", "paperclip_list_issues"] },
+    { "category": "work", "title": "Explain an issue", "prompt": "Explain issue [issue number or title]: what it's for, which goal it serves, the plan, and where it's stuck.", "tools": ["paperclip_get_issue"] },
+    { "category": "work", "title": "Reassign", "prompt": "Move every todo issue from [agent A] to [agent B] and add a comment on each saying why: [reason].", "tools": ["paperclip_list_issues", "paperclip_update_issue"] },
+    { "category": "work", "title": "Unblock with a comment", "prompt": "On [issue], add a comment for the assignee: [your answer or decision]. Then set it back to in progress.", "tools": ["paperclip_comment_issue", "paperclip_update_issue"] },
+    { "category": "work", "title": "Bump priority", "prompt": "Make [issue] urgent and tell the assignee in a comment that it now comes before everything else.", "tools": ["paperclip_update_issue"] },
+    { "category": "work", "title": "Close what's done", "prompt": "Find issues in review that the assignee says are finished, show them to me, and mark the ones I confirm as done.", "tools": ["paperclip_list_issues", "paperclip_update_issue"] },
+
+    { "category": "agents", "title": "Who's doing what", "prompt": "List my agents with their status, role, and what each one is working on.", "tools": ["paperclip_list_agents"] },
+    { "category": "agents", "title": "Org chart", "prompt": "Show me my org chart: who reports to whom.", "tools": ["paperclip_org_chart"] },
+    { "category": "agents", "title": "Wake an agent", "prompt": "Wake [agent name] so they start on their queue now.", "tools": ["paperclip_wake_agent"] },
+    { "category": "agents", "title": "Pause for now", "prompt": "Pause [agent name] until I say otherwise.", "tools": ["paperclip_pause_agent"] },
+    { "category": "agents", "title": "Resume everyone", "prompt": "Resume every paused agent except [agent name].", "tools": ["paperclip_list_agents", "paperclip_resume_agent"] },
+    { "category": "agents", "title": "Fix agents in error", "prompt": "Which agents are in error, and what was the last thing each was doing? Clear the error on the ones I pick and wake them again.", "tools": ["paperclip_list_agents", "paperclip_get_agent", "paperclip_clear_agent_error", "paperclip_wake_agent"] },
+    { "category": "agents", "title": "One agent, in detail", "prompt": "Tell me everything about [agent name]: status, manager, budget, spend this month and current task.", "tools": ["paperclip_get_agent"] },
+    { "category": "agents", "title": "Let an agent go", "prompt": "I want to retire [agent name]. Reassign their open issues to [other agent], then terminate them. Ask me before the terminate step.", "tools": ["paperclip_list_issues", "paperclip_update_issue", "paperclip_terminate_agent"], "note": "Terminating can't be undone. Your AI app asks first; pausing is the reversible option." },
+
+    { "category": "follow", "title": "Wake and wait", "prompt": "Wake [agent name], wait until they finish their run, then tell me what they did.", "tools": ["paperclip_wake_agent", "paperclip_wait_for_agent", "paperclip_report_activity"] },
+    { "category": "follow", "title": "Hand off and watch", "prompt": "Give [agent name] this task: [task]. Wake them, follow the run to the end, and summarise the result and any comments they left.", "tools": ["paperclip_create_issue", "paperclip_wake_agent", "paperclip_wait_for_agent", "paperclip_get_issue"] },
+    { "category": "follow", "title": "Keep me posted", "prompt": "Check what changed in my Paperclip since you last looked and tell me only what's new.", "tools": ["paperclip_sync_changes"] },
+
+    { "category": "approvals", "title": "What's waiting", "prompt": "List pending approvals with who asked, what for, and what it would cost.", "tools": ["paperclip_list_approvals"] },
+    { "category": "approvals", "title": "Approve a hire", "prompt": "Approve [agent]'s request to hire a [role].", "tools": ["paperclip_list_approvals", "paperclip_decide_approval"] },
+    { "category": "approvals", "title": "Ask for changes", "prompt": "Send the [plan or request] back for revision with this note: [what to change].", "tools": ["paperclip_list_approvals", "paperclip_decide_approval"] },
+    { "category": "approvals", "title": "Review them one by one", "prompt": "Go through each pending approval with me one at a time: summarise it, give me your recommendation, and wait for my decision before moving on.", "tools": ["paperclip_list_approvals", "paperclip_decide_approval"] },
+
+    { "category": "goals", "title": "Goal tree", "prompt": "Show my goals as a tree, with status, and which ones have no open issues behind them.", "tools": ["paperclip_list_goals", "paperclip_list_issues"] },
+    { "category": "goals", "title": "New goal", "prompt": "Create a company goal: \"[goal]\". Then suggest three team goals under it and create the ones I approve.", "tools": ["paperclip_list_goals", "paperclip_create_goal"] },
+    { "category": "goals", "title": "Mark achieved", "prompt": "Mark the goal \"[goal]\" as achieved.", "tools": ["paperclip_list_goals", "paperclip_update_goal"] },
+    { "category": "goals", "title": "Projects overview", "prompt": "List my projects and, for each, how many issues are open, in progress and done.", "tools": ["paperclip_list_projects", "paperclip_list_issues"] },
+
+    { "category": "money", "title": "Spend this month", "prompt": "How much have my agents spent this month, against budget, per agent and per project?", "tools": ["paperclip_report_costs"] },
+    { "category": "money", "title": "Close to the limit", "prompt": "Which agents are above 80% of their monthly budget?", "tools": ["paperclip_list_agents"] },
+    { "category": "money", "title": "Set a budget", "prompt": "Set [agent name]'s monthly budget to $[amount].", "tools": ["paperclip_set_agent_budget"] },
+    { "category": "money", "title": "Pause the overspender", "prompt": "Pause any agent that's over budget and tell me what each one was working on.", "tools": ["paperclip_list_agents", "paperclip_pause_agent"] },
+    { "category": "money", "title": "Value for money", "prompt": "Which agents give me the most finished work per dollar, and which the least?", "tools": ["paperclip_report_agent_performance"] },
+
+    { "category": "reports", "title": "Executive summary", "prompt": "Write a short executive summary of my Paperclip: what got done, what's stuck, spend, and decisions I need to make.", "tools": ["paperclip_report_status"] },
+    { "category": "reports", "title": "Weekly review", "prompt": "Weekly report: issues closed and blocked per agent, spend against last week, and the three things I should look at.", "tools": ["paperclip_report_agent_performance", "paperclip_report_costs", "paperclip_report_activity"] },
+    { "category": "reports", "title": "Activity log", "prompt": "Give me today's activity as a timeline.", "tools": ["paperclip_report_activity"] },
+    { "category": "reports", "title": "Team table", "prompt": "Make a table of every agent: role, status, issues done this month, spend, and cost per finished issue.", "tools": ["paperclip_report_agent_performance"] },
+
+    { "category": "recipes", "title": "Daily stand-up", "prompt": "Run a stand-up for my Paperclip: for each agent, what they finished since yesterday, what they're on now, and what's blocking them. Then list approvals waiting on me and anything over budget. End with the three decisions I should make today.", "tools": ["paperclip_sync_snapshot", "paperclip_report_activity", "paperclip_list_approvals", "paperclip_report_costs"] },
+    { "category": "recipes", "title": "Kick off a project", "prompt": "I'm starting \"[project]\". Create a goal for it, break it into 5 to 8 issues, assign each to the best-fit agent as todo, and wake the agents who got work. Show me the plan before you create anything.", "tools": ["paperclip_list_agents", "paperclip_create_goal", "paperclip_create_issue", "paperclip_wake_agent"] },
+    { "category": "recipes", "title": "End-of-week tidy", "prompt": "Tidy up my Paperclip for the week: close issues that are finished, comment on anything stuck for more than 3 days asking the assignee what they need, and give me a cost summary.", "tools": ["paperclip_list_issues", "paperclip_update_issue", "paperclip_comment_issue", "paperclip_report_costs"] },
+    { "category": "recipes", "title": "Cost clamp", "prompt": "Keep this month under $[amount]: show the current spend and forecast, suggest new budgets per agent, and set the ones I approve.", "tools": ["paperclip_report_costs", "paperclip_list_agents", "paperclip_set_agent_budget"] },
+    { "category": "recipes", "title": "Incident mode", "prompt": "Something's wrong. Pause every agent except [agent name], list what each paused agent was doing, and tell me what changed in the last hour.", "tools": ["paperclip_list_agents", "paperclip_pause_agent", "paperclip_report_activity"] },
+
+    { "category": "more", "title": "Use any Paperclip feature", "prompt": "List the routines in my company. (There's no dedicated tool, so use the Paperclip API.)", "tools": ["paperclip_api_request"], "note": "Reading needs Read only. Anything that changes data needs Full control and your confirmation." },
+    { "category": "more", "title": "Is Papercliped up?", "prompt": "Is the Papercliped service working right now?", "tools": ["papercliped_service_status"] },
+    { "category": "more", "title": "What can you do?", "prompt": "What can you do with my Paperclip at my current access level? Give me five examples.", "tools": ["paperclip_list_companies"] }
+  ]
+}

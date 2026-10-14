@@ -1,7 +1,8 @@
 import pg from "pg";
+import type { AccountPolicy, SessionPolicy } from "../access/policy.js";
 import { AliasTakenError, type Account, type AccountLink, type NodeSample, type PrivacyChange, type UserEvent, type UserEventBucket } from "../accounts/types.js";
 import { FAULT_CLASSES, HIST_EDGES, type AuditRow, type BreakdownRow, type SeriesBucket, type Totals } from "../telemetry/types.js";
-import type { CodeRecord, CodeTake, Grant, OAuthClient, PendingRecord, Store, TokenRecord, UserCounts } from "./store.js";
+import type { CodeRecord, CodeTake, CredentialHolder, Grant, OAuthClient, PendingRecord, Store, TokenRecord, UserCounts } from "./store.js";
 
 const MAX_CLIENTS = 1000;
 const CLIENT_IDLE_MS = 7 * 24 * 3600 * 1000;
@@ -35,11 +36,13 @@ const toGrant = (r: any): Grant => ({
   resource: r.resource,
   instanceUrl: r.instance_url,
   sealedCredential: r.sealed_credential,
+  credentialExpiresAt: r.credential_expires_at == null ? null : num(r.credential_expires_at),
   accountId: r.account_id ?? null,
   username: r.username ?? null,
   createdAt: num(r.created_at),
   lastUsedAt: num(r.last_used_at),
   revoked: r.revoked,
+  policy: r.policy ?? null,
 });
 
 /**
@@ -93,10 +96,10 @@ export class PgStore implements Store {
 
   async putGrant(g: Grant) {
     await this.q(
-      `insert into bridge.grants (id, client_id, client_name, user_id, scopes, resource, instance_url, sealed_credential, created_at, last_used_at, revoked, account_id, username)
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
-       on conflict (id) do update set sealed_credential = excluded.sealed_credential, scopes = excluded.scopes, revoked = excluded.revoked, last_used_at = excluded.last_used_at`,
-      [g.id, g.clientId, g.clientName, g.userId, g.scopes, g.resource, g.instanceUrl, g.sealedCredential, g.createdAt, g.lastUsedAt, g.revoked, g.accountId ?? null, g.username ?? null],
+      `insert into bridge.grants (id, client_id, client_name, user_id, scopes, resource, instance_url, sealed_credential, created_at, last_used_at, revoked, account_id, username, credential_expires_at)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+       on conflict (id) do update set sealed_credential = excluded.sealed_credential, credential_expires_at = excluded.credential_expires_at, scopes = excluded.scopes, revoked = excluded.revoked, last_used_at = excluded.last_used_at`,
+      [g.id, g.clientId, g.clientName, g.userId, g.scopes, g.resource, g.instanceUrl, g.sealedCredential, g.createdAt, g.lastUsedAt, g.revoked, g.accountId ?? null, g.username ?? null, g.credentialExpiresAt ?? null],
     );
   }
   async getGrant(id: string) {
@@ -210,10 +213,10 @@ export class PgStore implements Store {
   // ───────────── accounts ─────────────
 
   private static toAccount(x: any): Account {
-    return { id: x.id, username: x.username, usernameKey: x.username_key, secretHash: x.secret_hash, createdAt: num(x.created_at), lastLoginAt: x.last_login_at == null ? null : num(x.last_login_at), disabled: x.disabled, anonymous: !!x.anonymous, alias: x.alias ?? null, beta: !!x.beta };
+    return { id: x.id, username: x.username, usernameKey: x.username_key, secretHash: x.secret_hash, createdAt: num(x.created_at), lastLoginAt: x.last_login_at == null ? null : num(x.last_login_at), disabled: x.disabled, anonymous: !!x.anonymous, alias: x.alias ?? null, beta: !!x.beta, policy: x.policy ?? null };
   }
   private static toLink(x: any): AccountLink {
-    return { accountId: x.account_id, instanceUrl: x.instance_url, paperclipUserId: x.paperclip_user_id, sealedCredential: x.sealed_credential, createdAt: num(x.created_at), connectedAt: num(x.connected_at), lastUsedAt: num(x.last_used_at), instanceLabel: x.instance_label ?? null };
+    return { accountId: x.account_id, instanceUrl: x.instance_url, paperclipUserId: x.paperclip_user_id, sealedCredential: x.sealed_credential, credentialExpiresAt: x.credential_expires_at == null ? null : num(x.credential_expires_at), createdAt: num(x.created_at), connectedAt: num(x.connected_at), lastUsedAt: num(x.last_used_at), instanceLabel: x.instance_label ?? null };
   }
 
   async createAccount(a: Account) {
@@ -236,6 +239,16 @@ export class PgStore implements Store {
   }
   async setGrantScopes(id: string, scopes: string[]) {
     return ((await this.q("update bridge.grants set scopes = $2 where id = $1 and not revoked", [id, scopes])).rowCount ?? 0) === 1;
+  }
+  async setGrantPolicy(id: string, policy: SessionPolicy | null) {
+    return ((await this.q("update bridge.grants set policy = $2 where id = $1 and not revoked", [id, policy === null ? null : JSON.stringify(policy)])).rowCount ?? 0) === 1;
+  }
+  async setAccountPolicy(id: string, policy: AccountPolicy) {
+    return ((await this.q("update bridge.accounts set policy = $2 where id = $1", [id, JSON.stringify(policy)])).rowCount ?? 0) === 1;
+  }
+  async recentCallsForGrants(grantIds: readonly string[], limit: number) {
+    if (grantIds.length === 0) return [];
+    return (await this.q("select * from bridge.audit_events where kind = 'tool' and grant_id = any($1) order by id desc limit $2", [[...grantIds], limit])).rows.map(PgStore.toRow);
   }
   async setAccountPrivacy(id: string, c: PrivacyChange) {
     const cl = await this.pool.connect();
@@ -305,9 +318,9 @@ export class PgStore implements Store {
   async putLink(l: AccountLink) {
     try {
       await this.q(
-        `insert into bridge.account_links (account_id, instance_url, paperclip_user_id, sealed_credential, created_at, connected_at, last_used_at, instance_label) values ($1,$2,$3,$4,$5,$6,$7,$8)
-         on conflict (account_id) do update set instance_url = excluded.instance_url, paperclip_user_id = excluded.paperclip_user_id, sealed_credential = excluded.sealed_credential, connected_at = excluded.connected_at, last_used_at = excluded.last_used_at, instance_label = excluded.instance_label`,
-        [l.accountId, l.instanceUrl, l.paperclipUserId, l.sealedCredential, l.createdAt, l.connectedAt, l.lastUsedAt, l.instanceLabel ?? null],
+        `insert into bridge.account_links (account_id, instance_url, paperclip_user_id, sealed_credential, created_at, connected_at, last_used_at, instance_label, credential_expires_at) values ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+         on conflict (account_id) do update set instance_url = excluded.instance_url, paperclip_user_id = excluded.paperclip_user_id, sealed_credential = excluded.sealed_credential, credential_expires_at = excluded.credential_expires_at, connected_at = excluded.connected_at, last_used_at = excluded.last_used_at, instance_label = excluded.instance_label`,
+        [l.accountId, l.instanceUrl, l.paperclipUserId, l.sealedCredential, l.createdAt, l.connectedAt, l.lastUsedAt, l.instanceLabel ?? null, l.credentialExpiresAt ?? null],
       );
       return true;
     } catch (e) {
@@ -336,6 +349,19 @@ export class PgStore implements Store {
   }
   async listIdleLinks(cutoff: number) {
     return (await this.q("select * from bridge.account_links where sealed_credential is not null and last_used_at < $1", [cutoff])).rows.map(PgStore.toLink);
+  }
+  async listExpiringLinks(before: number) {
+    return (await this.q("select * from bridge.account_links where sealed_credential is not null and credential_expires_at < $1", [before])).rows.map(PgStore.toLink);
+  }
+  async listExpiringGrants(before: number) {
+    return (await this.q("select * from bridge.grants where not revoked and sealed_credential is not null and credential_expires_at < $1", [before])).rows.map(toGrant);
+  }
+  async swapCredential(h: CredentialHolder, expect: string, next: string, expiresAt: number | null) {
+    const sql =
+      h.kind === "link"
+        ? "update bridge.account_links set sealed_credential = $3, credential_expires_at = $4 where account_id = $1 and sealed_credential = $2"
+        : "update bridge.grants set sealed_credential = $3, credential_expires_at = $4 where id = $1 and sealed_credential = $2 and not revoked";
+    return ((await this.q(sql, [h.id, expect, next, expiresAt])).rowCount ?? 0) === 1;
   }
   async revokeAccountGrants(accountId: string) {
     const c = await this.pool.connect();

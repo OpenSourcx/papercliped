@@ -21,6 +21,7 @@ Tool errors come back to your AI app with a message it can read. Over HTTP (Chat
 | --- | --- | --- | --- |
 | `400` | `invalid_input` | The request didn't match the tool's inputs | Usually the AI retries with fixed input |
 | `403` | `insufficient_scope` | The connection's level is too low for this tool | Switch the app to Full control in the [Paperclip plugin](/docs/paperclip-plugin) |
+| `403` | `policy_blocked` | Your settings don't allow this call: the access switch, an agent's setting, or the session's tool or agent list. The error carries a `policy` code (see [API only, Full or Agent only](/docs/access-modes)) | Change the setting in the [control room](/docs/control-room) if you want it allowed |
 | `403` | `read_only` | The bridge runs with `PAPERCLIP_READ_ONLY` | Ask the operator |
 | `401`, `403`, `404`, `409`… | `upstream_4xx` | Paperclip refused (e.g. your Paperclip key was revoked: reconnect) | Check the message |
 | `5xx` | `upstream_5xx` | Paperclip had an error | Try again later |

@@ -53,20 +53,37 @@ export function renderMarkdown(md: string): string {
       out.push(`<div class="tw"><table><thead><tr>${head.map((c) => `<th>${inline(c)}</th>`).join("")}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${inline(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`);
       continue;
     }
+    if (/^>/.test(line)) {
+      const buf: string[] = [];
+      while (i < lines.length && /^>/.test(lines[i])) buf.push(lines[i++].replace(/^>\s?/, ""));
+      out.push(`<blockquote>${renderMarkdown(buf.join("\n"))}</blockquote>`);
+      continue;
+    }
     const ul = /^[-*]\s+/.test(line), ol = /^\d+\.\s+/.test(line);
     if (ul || ol) {
       const items: string[] = [];
       const re = ul ? /^[-*]\s+(.*)$/ : /^\d+\.\s+(.*)$/;
       while (i < lines.length && re.test(lines[i])) {
-        let t = re.exec(lines[i++])![1];
-        while (i < lines.length && /^\s+\S/.test(lines[i]) && !re.test(lines[i])) t += " " + lines[i++].trim();
-        items.push(`<li>${inline(t)}</li>`);
+        const body = [re.exec(lines[i++])![1]];
+        // An item continues on indented lines, including fenced code and blank lines followed by more indented content.
+        while (i < lines.length && !re.test(lines[i])) {
+          if (/^\s+\S/.test(lines[i])) body.push(lines[i++]);
+          else if (!lines[i].trim() && /^\s+\S/.test(lines[i + 1] ?? "") && !re.test(lines[i + 1] ?? "")) body.push(lines[i++]);
+          else break;
+        }
+        const rich = body.some((l) => /^\s*```/.test(l) || !l.trim());
+        if (!rich) items.push(`<li>${inline(body.map((l) => l.trim()).join(" "))}</li>`);
+        else {
+          const rest = body.slice(1);
+          const pad = Math.min(...rest.filter((l) => l.trim()).map((l) => /^\s*/.exec(l)![0].length));
+          items.push(`<li>${renderMarkdown([body[0], ...rest.map((l) => l.slice(Math.min(pad, /^\s*/.exec(l)![0].length)))].join("\n"))}</li>`);
+        }
       }
       out.push(ul ? `<ul>${items.join("")}</ul>` : `<ol>${items.join("")}</ol>`);
       continue;
     }
     const para: string[] = [];
-    while (i < lines.length && lines[i].trim() && !/^(#{1,3}\s|```|[-*]\s|\d+\.\s)/.test(lines[i]) && !/^\|.*\|\s*$/.test(lines[i])) para.push(lines[i++].trim());
+    while (i < lines.length && lines[i].trim() && !/^(#{1,3}\s|```|[-*]\s|\d+\.\s|>)/.test(lines[i]) && !/^\|.*\|\s*$/.test(lines[i])) para.push(lines[i++].trim());
     out.push(`<p>${inline(para.join(" "))}</p>`);
   }
   return out.join("\n");

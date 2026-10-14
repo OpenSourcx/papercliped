@@ -1,5 +1,16 @@
 # ChatGPT setup
 
+There are two ways. The MCP connector is quicker and gives ChatGPT every tool; GPT Actions works on plans without developer mode.
+
+## Option 1: MCP connector (recommended)
+1. In ChatGPT open **Settings → Apps → Advanced settings** and turn on **Developer mode** (your plan and workspace must allow it).
+2. Choose **Create app** (or **Add connector**), name it Papercliped, and use the address `{{MCP}}/mcp` with **OAuth** sign-in.
+3. ChatGPT opens the Papercliped sign-in: choose **Connect your Paperclip**, approve in your Paperclip, and pick **Read only** or **Full control**.
+4. In a new chat, turn the Papercliped app on from the tools menu and ask *"Catch me up on my Paperclip."*
+
+ChatGPT renames these menus often. If yours look different, search ChatGPT's help for "developer mode" or "custom connectors".
+
+## Option 2: a custom GPT with Actions
 Requires a ChatGPT plan that can create GPTs with Actions.
 
 1. Create a GPT, then **Configure → Create new action**.

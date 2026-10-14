@@ -28,6 +28,11 @@ describe("markdown renderer", () => {
     expect(html).toContain("<th>h1</th>");
     expect(html).toContain("<pre><code>&lt;raw&gt;</code></pre>");
   });
+  it("renders code blocks inside list items and blockquotes, still escaped", () => {
+    const html = renderMarkdown("1. **Run:**\n   ```\n   a <b>\n\n   c\n   ```\n   Then wait.\n2. Next\n\n> Say <i>hi</i>\n> **now**");
+    expect(html).toContain("<ol><li><p><strong>Run:</strong></p>\n<pre><code>a &lt;b&gt;\n\nc</code></pre>\n<p>Then wait.</p></li><li>Next</li></ol>");
+    expect(html).toContain("<blockquote><p>Say &lt;i&gt;hi&lt;/i&gt; <strong>now</strong></p></blockquote>");
+  });
 });
 
 describe("public site", () => {
@@ -51,7 +56,7 @@ describe("public site", () => {
       expect(res.headers.get("content-security-policy")).toMatch(/frame-ancestors 'none'/);
       expect(html, p).not.toMatch(/<script(?![^>]*nonce=)/i); // any script carries the per-request nonce
       expect(html, p).not.toMatch(/(src|href)=["']https?:\/\/(?!github\.com|papercliped\.example\.com)/); // nothing third-party is loaded
-      expect(html, p).not.toContain("{{"); // every placeholder was filled
+      expect(html, p).not.toMatch(/\{\{[A-Z]+\}\}/); // every placeholder was filled
     }
   });
   it("/docs goes to the first guide and the privacy page shows the contact and date", async () => {
@@ -63,11 +68,19 @@ describe("public site", () => {
   });
   it("has a step-by-step page for exposing Paperclip, linked from the other guides", async () => {
     const html = await (await fetch(`${base}/docs/connect-your-paperclip`)).text();
-    for (const h of ["Set up your Paperclip for Papercliped", "What Papercliped needs from your Paperclip", "Path A: you own a domain", "Path B: you don&#39;t have a domain yet", "Connect to Papercliped", "Keep it safe", "Troubleshooting"]) expect(html, h).toContain(h);
+    for (const h of ["At home, with a tunnel", "Choose a tunnel", "Install Paperclip in public mode", "Cloudflare Tunnel (with your domain)", "Tailscale Funnel (no domain)", "Create your account", "Connect Papercliped", "Keep it safe", "Troubleshooting"]) expect(html, h).toContain(h);
     expect(html).toContain("cloudflared tunnel route dns");
     expect(html).toContain("tailscale funnel");
     expect(html).not.toMatch(/subdomain (provided|from) papercliped/i); // no such feature exists
-    for (const p of ["/docs/getting-started", "/docs/signup", "/docs/troubleshooting"]) expect(await (await fetch(`${base}${p}`)).text(), p).toContain('href="/docs/connect-your-paperclip"');
+    for (const p of ["/docs/getting-started", "/docs/signup", "/docs/troubleshooting"]) expect(await (await fetch(`${base}${p}`)).text(), p).toContain('href="/docs/hosting"');
+  });
+  it("has a hosting guide per provider, each ending in connecting Papercliped", async () => {
+    const hub = await (await fetch(`${base}/docs/hosting`)).text();
+    for (const slug of ["connect-your-paperclip", "host-vps", "host-railway", "host-render", "host-fly", "host-coolify"]) {
+      expect(hub, slug).toContain(`href="/docs/${slug}"`);
+      const html = await (await fetch(`${base}/docs/${slug}`)).text();
+      for (const want of ["PAPERCLIP_DEPLOYMENT_EXPOSURE", "bootstrap-ceo", "/api/health", "Catch me up on my Paperclip"]) expect(html, `${slug}: ${want}`).toContain(want);
+    }
   });
   it("every internal link on every page points at a page that exists", async () => {
     const known = new Set(site.paths());

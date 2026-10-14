@@ -274,6 +274,34 @@ update bridge.grants
    set scopes = array(select distinct s from unnest(array_replace(scopes, 'paperclip:admin', 'paperclip:control')) as s order by s desc)
  where 'paperclip:admin' = any(scopes);
 
+-- ───── 007_control_room.sql ─────
+-- Control room: who may do what through Papercliped.
+--   accounts.policy  the access switch (api | full | agent) and per-agent overrides, as JSON. Null = Full for every agent.
+--   grants.policy    one session's limits (a name, which tools, which agents), as JSON. Null = no limits beyond its access level.
+-- The app validates both on the way in and falls back to the safe default on anything it can't read, so old rows need no backfill.
+alter table bridge.accounts add column if not exists policy jsonb;
+alter table bridge.grants   add column if not exists policy jsonb;
+
+-- Audit rows now also record calls the policy refused (error_class = policy_blocked).
+comment on column bridge.audit_events.error_class is 'invalid_input | insufficient_scope | read_only | policy_blocked | upstream_4xx | upstream_5xx | upstream_unreachable | rate_limited | unauthorized | internal';
+
+-- ───── 008_key_rotation.sql ─────
+-- Paperclip key rotation: Paperclip expires the board keys it issues (30 days by default), so the bridge renews
+-- each stored key about a week before it lapses. credential_expires_at is when Paperclip expires the stored key
+-- (ms epoch); null = it never expires (older Paperclip, or a key Paperclip did not issue us), so it is never rotated.
+alter table bridge.account_links add column if not exists credential_expires_at bigint;
+alter table bridge.grants        add column if not exists credential_expires_at bigint;
+
+-- Keys stored before this migration came from an approved sign-in: assume Paperclip's default 30 days from then.
+-- The first rotation check reads the real expiry from Paperclip and corrects it (or clears it if the key never expires).
+update bridge.account_links set credential_expires_at = connected_at + 2592000000
+ where sealed_credential is not null and credential_expires_at is null;
+update bridge.grants set credential_expires_at = created_at + 2592000000
+ where sealed_credential is not null and not revoked and credential_expires_at is null;
+
+create index if not exists account_links_expiry_idx on bridge.account_links (credential_expires_at) where sealed_credential is not null;
+create index if not exists grants_expiry_idx on bridge.grants (credential_expires_at) where sealed_credential is not null and not revoked;
+
 -- ───── migration bookkeeping ─────
 create table if not exists bridge.schema_migrations (version text primary key, applied_at timestamptz not null default now());
 alter table bridge.schema_migrations enable row level security;
@@ -283,6 +311,6 @@ do $$ declare r text; begin
     if exists (select 1 from pg_roles where rolname = r) then execute format('revoke all on bridge.schema_migrations from %I', r); end if;
   end loop;
 end $$;
-insert into bridge.schema_migrations (version) values ('001_init.sql'), ('002_audit.sql'), ('003_accounts.sql'), ('004_privacy_panel.sql'), ('005_beta.sql'), ('006_two_levels.sql') on conflict (version) do nothing;
+insert into bridge.schema_migrations (version) values ('001_init.sql'), ('002_audit.sql'), ('003_accounts.sql'), ('004_privacy_panel.sql'), ('005_beta.sql'), ('006_two_levels.sql'), ('007_control_room.sql'), ('008_key_rotation.sql') on conflict (version) do nothing;
 
 commit;

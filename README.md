@@ -1,5 +1,12 @@
 # Papercliped
 
+<a href="https://papercliped.co">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/OpenSourcx/papercliped/main/web/public/brand/community/papercliped-launch-dark.png">
+    <img alt="Papercliped: run your Paperclip from any AI app. Claude, ChatGPT, Codex or any MCP app. Connector: https://mcp.papercliped.co/mcp" src="https://raw.githubusercontent.com/OpenSourcx/papercliped/main/web/public/brand/community/papercliped-launch-light.png">
+  </picture>
+</a>
+
 **Run your [Paperclip](https://github.com/paperclipai/paperclip) from any AI app.** Papercliped connects Claude, ChatGPT, Codex and any MCP app to your Paperclip, the open-source orchestrator for companies of AI agents. Check on agents, pause or wake them, assign issues, decide approvals and get status, cost and activity reports, without opening the dashboard.
 
 [![CI](https://github.com/OpenSourcx/papercliped/actions/workflows/ci.yml/badge.svg)](https://github.com/OpenSourcx/papercliped/actions/workflows/ci.yml)
@@ -12,7 +19,7 @@ Free and open source. Website: [papercliped.co](https://papercliped.co) · Docs:
 
 ## Add it to your AI app
 
-You need a Paperclip with a public `https` address ([no domain? see this](https://docs.papercliped.co/connect-your-paperclip)). The first time you connect, you approve the request inside your own Paperclip, pick a username, save the secret key you're shown once, and choose **Read only** or **Full control**.
+You need a Paperclip with a public `https` address. Don't have one yet? [Host your Paperclip](https://docs.papercliped.co/hosting) has step-by-step guides for your own computer (free tunnel), a VPS, Railway, Render, Fly.io and Coolify. The first time you connect, you approve the request inside your own Paperclip, pick a username, save the secret key you're shown once, and choose **Read only** or **Full control**.
 
 The connector address for every app is:
 
@@ -80,15 +87,19 @@ Add `--env PAPERCLIP_READ_ONLY=1` for reports and sync only.
 
 ## What you can ask
 
-- "What are my agents working on?" · "Which agents are over budget?"
-- "Pause the Web Engineer." · "Wake the CEO and assign it the onboarding issue."
-- "Approve the hire request." · "Weekly cost report, please."
+Talk to your AI app instead of clicking through the dashboard:
+
+- "Catch me up on my Paperclip." · "Which agents are over budget?"
+- "Give the Web Engineer an issue to fix the signup page, and wake them." · "Wake the CEO, wait until they finish, then summarise."
+- "Approve the hire request." · "Weekly report, please."
+
+More than 40 ready-to-copy prompts: [prompt gallery](https://papercliped.co/prompts).
 
 There are 30 tools ([full list](https://docs.papercliped.co/tools)). **Read only** can look at agents, issues, goals, costs and reports. **Full control** can use every tool. The AI asks before anything that can't be undone, and you can change the level or disconnect at any time.
 
 ## Manage your connections in Paperclip
 
-Install the **Papercliped plugin for Paperclip** (npm `papercliped-paperclip-plugin`, from **Settings → Plugins** in Paperclip). It adds a Papercliped page where you see every connected app, switch its level, disconnect it, go anonymous, and look after your account. [Plugin guide](https://docs.papercliped.co/paperclip-plugin).
+Install the **Papercliped plugin for Paperclip** (npm `papercliped-paperclip-plugin`, from **Settings → Plugins** in Paperclip). It adds a **control room**: see every connected app, choose which tools each may use and which agents it applies to, set **API only / Full / Agent only** for every agent or one at a time (or turn an agent off), read what was blocked, go anonymous, and look after your account. [Plugin guide](https://docs.papercliped.co/paperclip-plugin) · [The control room](https://docs.papercliped.co/control-room) · [API only, Full or Agent only](https://docs.papercliped.co/access-modes).
 
 ## Security and privacy
 
@@ -111,7 +122,8 @@ npm install && npm test
 
 ## Community and contributing
 
-- Questions and ideas: [GitHub Discussions](https://github.com/OpenSourcx/papercliped/discussions) and Discord ([papercliped.co/community](https://papercliped.co/community))
+- Questions and chat: the OpenSourcedd [Discord](https://discord.gg/cAECU68jSA) and [GitHub Discussions](https://github.com/OpenSourcx/papercliped/discussions)
+- Ideas, project shares and feedback: [r/OpenSourcedd](https://www.reddit.com/r/OpenSourcedd)
 - Bugs and feature requests: [issues](https://github.com/OpenSourcx/papercliped/issues/new/choose)
 - Contributing (setup, checks, the path from first PR to maintainer): [CONTRIBUTING.md](CONTRIBUTING.md)
 - Code of conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)

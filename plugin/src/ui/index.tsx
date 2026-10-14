@@ -1,60 +1,75 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { ErrorBoundary, Spinner, useHostNavigation, usePluginAction, usePluginToast } from "@paperclipai/plugin-sdk/ui";
-import { Dashboard } from "./Dashboard.js";
+import { useCallback, useEffect, useState } from "react";
+import { ErrorBoundary, Spinner, useHostContext, usePluginToast } from "@paperclipai/plugin-sdk/ui";
+import { ActivityView } from "./ActivityView.js";
+import { AgentsView } from "./AgentsView.js";
+import { Notice } from "./atoms.js";
+import { useCalls } from "./calls.js";
 import { errText } from "./format.js";
 import { LinkForm } from "./LinkForm.js";
-import { muted, panel } from "./look.js";
-import { ServicePanel } from "./Service.js";
-import type { Call, Status } from "./types.js";
+import { muted, title } from "./look.js";
+import { Overview } from "./Overview.js";
+import { RoomProvider, useSection } from "./room.js";
+import { Sessions } from "./Sessions.js";
+import { Settings } from "./Settings.js";
+import { PapercliedSidebar } from "./Sidebar.js";
+import { PapercliedAgentTab, PapercliedRouteSidebar, PapercliedWidget } from "./Slots.js";
+import { ToolsView } from "./ToolsView.js";
+import type { Me, Status } from "./types.js";
 
-export function PapercliedSidebar() {
-  const nav = useHostNavigation();
-  return <a {...nav.linkProps("/papercliped")} style={{ display: "block", padding: "6px 12px", color: "inherit", textDecoration: "none" }}>Papercliped</a>;
-}
+// Everything Paperclip mounts: the sidebar entry, the control room's left menu and page, an agent tab and a dashboard widget.
+export { PapercliedAgentTab, PapercliedRouteSidebar, PapercliedSidebar, PapercliedWidget };
 
-/** The Papercliped page inside Paperclip: link your account, then manage connected apps, privacy, links and your account. */
+/** The Papercliped control room inside Paperclip: link your account, then see and manage every session, agent and tool. */
 export function PapercliedPage() {
   return (
-    <ErrorBoundary fallback={<p role="alert" style={{ padding: 24 }}>Something went wrong on this page. Reload to try again.</p>}>
+    <ErrorBoundary fallback={<p role="alert" className="p-6">Something went wrong on this page. Reload to try again.</p>}>
       <Page />
     </ErrorBoundary>
   );
 }
 
-function useCalls(): Call {
-  const a = {
-    status: usePluginAction("status"), link: usePluginAction("link"), connections: usePluginAction("connections"),
-    setLevel: usePluginAction("setLevel"), disconnect: usePluginAction("disconnect"), privacy: usePluginAction("privacy"),
-    links: usePluginAction("links"), removeLink: usePluginAction("removeLink"), unlink: usePluginAction("unlink"),
-    rotateSecret: usePluginAction("rotateSecret"), disconnectPaperclip: usePluginAction("disconnectPaperclip"), deleteAccount: usePluginAction("deleteAccount"),
-    serviceStatus: usePluginAction("serviceStatus"),
-  };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  return useMemo(() => a, Object.values(a));
-}
-
 function Page() {
   const call = useCalls();
   const toast = usePluginToast();
+  const ctx = useHostContext();
   const [status, setStatus] = useState<Status | null>(null);
   const [error, setError] = useState<string | null>(null);
   const refresh = useCallback(() => {
     call.status().then((s) => { setStatus(s as Status); setError(null); }).catch((e) => setError(errText(e)));
   }, [call]);
   useEffect(refresh, [refresh]);
-  const loadService = useCallback(() => call.serviceStatus(), [call]);
+  const onMe = useCallback((me: Me) => setStatus({ linked: true, me }), []);
 
   return (
-    <div style={{ maxWidth: 880, padding: 24 }}>
-      <h1 style={{ fontSize: 22, fontWeight: 650, margin: "0 0 4px" }}>Papercliped</h1>
-      <p style={{ ...muted, margin: "0 0 8px" }}>Your Papercliped account, inside Paperclip: the AI apps connected to your Paperclip, what each may do, and your account.</p>
-      <ServicePanel load={loadService} />
-      {error && <div role="alert" style={panel}>{error} <button type="button" onClick={refresh} style={{ font: "inherit", color: "inherit", background: "none", border: 0, textDecoration: "underline", cursor: "pointer" }}>Try again</button></div>}
+    <div className="max-w-5xl p-6">
+      {error && (
+        <Notice tone="bad" action={<button type="button" onClick={refresh} className="underline underline-offset-2 hover:text-foreground">Try again</button>}>{error}</Notice>
+      )}
       {!status && !error && <Spinner label="Loading Papercliped" />}
       {status && !status.linked && (
-        <LinkForm expired={!!status.expired} onLink={(username, secret) => call.link({ username, secret, instanceHost: window.location.host }).then((r) => { setStatus(r as Status); toast({ title: "Linked", tone: "success" }); })} />
+        <>
+          <h1 className={title}>Papercliped</h1>
+          <p className={`${muted} mb-2`}>Connect Claude, ChatGPT or any MCP app to this Paperclip, and control exactly what each may do. Link your account to open the control room.</p>
+          <LinkForm expired={!!status.expired} onLink={(username, secret) => call.link({ username, secret, instanceHost: window.location.host }).then((r) => { setStatus(r as Status); toast({ title: "Linked", tone: "success" }); })} />
+        </>
       )}
-      {status && status.linked && <Dashboard me={status.me} call={call} onUnlinked={refresh} onMe={(me) => setStatus({ linked: true, me })} />}
+      {status && status.linked && (
+        <RoomProvider call={call} me={status.me} companyId={ctx.companyId} onUnlinked={refresh} onMe={onMe}>
+          <Section />
+        </RoomProvider>
+      )}
     </div>
   );
+}
+
+function Section() {
+  const { section } = useSection();
+  switch (section) {
+    case "sessions": return <Sessions />;
+    case "agents": return <AgentsView />;
+    case "tools": return <ToolsView />;
+    case "activity": return <ActivityView />;
+    case "settings": return <Settings />;
+    default: return <Overview />;
+  }
 }

@@ -2,7 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { createServer, type IncomingMessage, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import pg from "pg";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { ALIAS_RE } from "../src/accounts/alias.js";
 import { hostAllowed, readOAuthConfig, type BridgeConfig, type OAuthConfig } from "../src/config.js";
 import { migrate } from "../src/migrate.js";
@@ -11,6 +11,7 @@ import { OAuthProvider, clientIp } from "../src/oauth/provider.js";
 import { MemoryStore, type Store } from "../src/oauth/store.js";
 import type { AuditEvent } from "../src/execute.js";
 import { createHttpServer } from "../src/server.js";
+import { VERSION } from "../src/version.js";
 
 const DB = process.env.TEST_DATABASE_URL;
 const CB = "https://claude.ai/api/mcp/auth_callback";
@@ -25,7 +26,27 @@ const challengeNames: string[] = [];
 const deadTokens = new Set<string>(); // credentials that Paperclip no longer accepts
 const identity = new Map<string, string>(); // host → the Paperclip user id whoami reports (default user@host)
 const unreachable = new Set<string>(); // hosts the egress cannot connect to
+const plugins = new Map<string, string>(); // host → installed Papercliped plugin version
+const pluginCalls: { method: string; host: string; auth?: string; body?: any }[] = []; // every plugin API call Paperclip received
 let seq = 0;
+// Board keys (Paperclip's /board-api-keys): every challenge token and every key made through the API, with its expiry.
+const DAY = 24 * 3600 * 1000;
+const mockClock = { offset: 0 }; // moves the fake Paperclip's clock along with a rig's
+const mockNow = () => Date.now() + mockClock.offset;
+interface MockKey { id: string; host: string; token: string; expiresAt: number | null; revoked: boolean }
+const boardKeys = new Map<string, MockKey>(); // token → key
+const keyCalls: { method: string; host: string; auth?: string; body?: any }[] = []; // every /board-api-keys call
+const failCreate = new Set<string>(); // hosts whose key creation fails
+let keySeq = 0;
+const keyFor = (host: string, token: string): MockKey => {
+  let k = boardKeys.get(token);
+  if (!k) boardKeys.set(token, (k = { id: `00000000-0000-4000-9000-${String(++keySeq).padStart(12, "0")}`, host, token, expiresAt: mockNow() + 30 * DAY, revoked: false }));
+  return k;
+};
+const liveKey = (token: string) => {
+  const k = boardKeys.get(token);
+  return k && !k.revoked && (k.expiresAt === null || k.expiresAt > mockNow()) ? k : undefined;
+};
 
 function fleet(): Server {
   return createServer(async (req: IncomingMessage, res) => {
@@ -48,6 +69,8 @@ function fleet(): Server {
       const id = `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
       const ch = { host, token: `board-${host}-${n}`, secret: `secret-${n}-xxxxxxxx`, status: "pending" };
       challenges.set(id, ch);
+      const k = keyFor(host, ch.token);
+      if (host.includes("oldpaperclip")) k.expiresAt = null; // before Paperclip expired keys
       if (host.includes("badid")) return send(201, { id: "nope", token: ch.secret, boardApiToken: ch.token, approvalPath: `/cli-auth/${id}?token=${ch.secret}`, expiresAt: new Date(Date.now() + 6e5).toISOString() });
       const approvalPath = host.includes("evilpath") ? "@evil.com/x" : `/cli-auth/${id}?token=${ch.secret}`;
       return send(201, { id, token: ch.secret, boardApiToken: ch.token, approvalPath, expiresAt: new Date(Date.now() + 6e5).toISOString() });
@@ -60,11 +83,41 @@ function fleet(): Server {
     if (p === "/api/cli-auth/me") {
       const token = auth?.replace(/^Bearer /, "") ?? "";
       const ch = [...challenges.values()].find((c) => c.token === token && c.status === "approved");
-      if (!ch || deadTokens.has(token)) return send(401, { error: "auth" });
-      return send(200, { userId: identity.get(ch.host) ?? `user@${ch.host}` });
+      const made = boardKeys.get(token);
+      const owner = ch?.host ?? (made && ![...challenges.values()].some((c) => c.token === token) ? made.host : undefined);
+      if (!owner || deadTokens.has(token) || !liveKey(token)) return send(401, { error: "auth" });
+      return send(200, { userId: identity.get(owner) ?? `user@${owner}`, source: "board_key", keyId: host.includes("oldpaperclip") ? null : liveKey(token)!.id });
     }
-    if (p === "/api/cli-auth/revoke-current") return (revokedBy.push(`${host}|${auth}`), send(200, { revoked: true }));
-    if (deadTokens.has(auth?.replace(/^Bearer /, "") ?? "")) return send(401, { error: "auth" });
+    if (p === "/api/board-api-keys") {
+      keyCalls.push({ method: req.method!, host, auth, body: raw ? JSON.parse(raw) : undefined });
+      if (host.includes("oldpaperclip")) return send(404, { error: "no such route" });
+      const token = auth?.replace(/^Bearer /, "") ?? "";
+      if (deadTokens.has(token) || !liveKey(token)) return send(401, { error: "auth" });
+      if (req.method === "GET") return send(200, [...boardKeys.values()].filter((k) => k.host === host && liveKey(k.token)).map((k) => ({ id: k.id, name: "x", expiresAt: k.expiresAt === null ? null : new Date(k.expiresAt).toISOString() })));
+      if (failCreate.has(host)) return send(500, { error: "database is down" });
+      const made = keyFor(host, `pcp_board_${host}_${++keySeq}`);
+      return send(201, { id: made.id, name: JSON.parse(raw).name, token: made.token, expiresAt: new Date(made.expiresAt!).toISOString() });
+    }
+    if (p === "/api/cli-auth/revoke-current") {
+      const k = boardKeys.get(auth?.replace(/^Bearer /, "") ?? "");
+      if (k) k.revoked = true;
+      return (revokedBy.push(`${host}|${auth}`), send(200, { revoked: true }));
+    }
+    if (p === "/api/plugins" || p === "/api/plugins/install") {
+      pluginCalls.push({ method: req.method!, host, auth, body: raw ? JSON.parse(raw) : undefined });
+      if (host.includes("noplugins")) return send(404, { error: "no such route" });
+      if (p === "/api/plugins") {
+        const v = plugins.get(host);
+        return send(200, v ? [{ id: "p1", pluginKey: "papercliped.remote-control", packageName: "papercliped-paperclip-plugin", version: v, status: "ready" }] : []);
+      }
+      if (host.includes("notadmin")) return send(403, { error: "Instance admin access required" });
+      if (host.includes("installfail")) return send(400, { error: "npm install failed" });
+      const body = JSON.parse(raw);
+      plugins.set(host, body.version);
+      return send(200, { id: "p1", pluginKey: "papercliped.remote-control", packageName: body.packageName, version: body.version, status: "ready" });
+    }
+    const bearer = auth?.replace(/^Bearer /, "") ?? "";
+    if (deadTokens.has(bearer) || (boardKeys.has(bearer) && !liveKey(bearer))) return send(401, { error: "auth" });
     seen.push({ host, path: p, auth });
     if (p === `/api/companies/${CID}/agents`) return send(200, [{ id: "a1", name: `agent-of-${host}`, status: "idle" }]);
     if (p === "/api/companies") return send(200, [{ id: CID, name: host }]);
@@ -108,7 +161,7 @@ async function rig(over: Partial<OAuthConfig> = {}, opts: { store?: Store; secre
     instance: { allowedPorts: [443], denyHosts: ["localhost"], allowHosts: null }, ...over,
   };
   const store = opts.store ?? new MemoryStore(null, () => clock.t);
-  const provider = new OAuthProvider({ config, oauth, bridgeToken: null, store, now: () => clock.t, safeFetch: egress });
+  const provider = new OAuthProvider({ config, oauth, bridgeToken: null, store, now: () => clock.t, safeFetch: egress, rotationGraceMs: 0 });
   const server = createHttpServer(config, { host: "127.0.0.1", port, bridgeToken: null, publicUrl: oauth.issuer, oauth }, { oauth: provider, audit: (e) => audit.push(e) });
   await new Promise<void>((r) => server.listen(port, "127.0.0.1", r));
   return { base: oauth.issuer, server, provider, store, audit, clock, oauth, close: () => server.close() };
@@ -758,6 +811,83 @@ describe("tenant isolation", () => {
   });
 });
 
+/** Connect a brand-new user, optionally ticking the "install the plugin" box, and wait for the background install to finish. */
+async function connectWithPlugin(r: Rig, host: string, username: string, tick: boolean) {
+  plugins.delete(host);
+  const s = await start(r);
+  await toInstance(r, s);
+  await step(r, s, "instance", { instance: host, ...(tick ? { install_plugin: "on" } : {}) });
+  approve(host);
+  await step(r, s, "approved");
+  await step(r, s, "username", { username });
+  await step(r, s, "continue");
+  const tokens = await exchange(r, s, await step(r, s, "decision", { level: "paperclip:control" }));
+  await r.provider.drainBackground();
+  return { s, tokens };
+}
+
+describe("installing the Papercliped plugin during setup", () => {
+  it("offers the checkbox, ticked by default", async () => {
+    const r = await rig();
+    const s = await start(r);
+    const html = await toInstance(r, s);
+    expect(html).toMatch(/name="install_plugin"[^>]* checked/);
+    r.close();
+  });
+
+  it("installs the pinned package once, with the user's own approved key, and records one short event", async () => {
+    const r = await rig();
+    pluginCalls.length = 0;
+    const { tokens } = await connectWithPlugin(r, "plug-a.example.com", "plug.user1", true);
+    expect(tokens.access_token).toBeTruthy(); // the connection itself is unaffected
+    const installs = pluginCalls.filter((c) => c.method === "POST");
+    expect(installs).toHaveLength(1);
+    expect(installs[0].body).toEqual({ packageName: "papercliped-paperclip-plugin", version: VERSION }); // fixed name, exact version, nothing user-supplied
+    expect(installs[0].auth).toMatch(/^Bearer board-plug-a\.example\.com-/);
+    expect(plugins.get("plug-a.example.com")).toBe(VERSION);
+    expect(await kinds(r)).toContain("plugin/installed");
+    r.close();
+  });
+
+  it("does nothing when the box is not ticked", async () => {
+    const r = await rig();
+    pluginCalls.length = 0;
+    const { tokens } = await connectWithPlugin(r, "plug-b.example.com", "plug.user2", false);
+    expect(tokens.access_token).toBeTruthy();
+    expect(pluginCalls).toHaveLength(0);
+    expect((await kinds(r)).some((k) => k.startsWith("plugin"))).toBe(false);
+    r.close();
+  });
+
+  it("leaves an existing install alone", async () => {
+    const r = await rig();
+    pluginCalls.length = 0;
+    const s = await start(r);
+    await toInstance(r, s);
+    await step(r, s, "instance", { instance: "plug-c.example.com", install_plugin: "on" });
+    approve("plug-c.example.com");
+    plugins.set("plug-c.example.com", "9.9.9");
+    await step(r, s, "approved");
+    await r.provider.drainBackground();
+    expect(pluginCalls.filter((c) => c.method === "POST")).toHaveLength(0);
+    expect(plugins.get("plug-c.example.com")).toBe("9.9.9");
+    expect(await kinds(r)).toContain("plugin/already");
+    r.close();
+  });
+
+  it.each([
+    ["notadmin.example.com", "denied"],
+    ["noplugins.example.com", "unsupported"],
+    ["installfail.example.com", "failed"],
+  ])("never blocks the connection when the install can't happen (%s)", async (host, outcome) => {
+    const r = await rig();
+    const { tokens } = await connectWithPlugin(r, host, "plug.user3", true);
+    expect(tokens.access_token).toBeTruthy();
+    expect(await kinds(r)).toContain(`plugin/${outcome}`);
+    r.close();
+  });
+});
+
 describe("instance step: SSRF and abuse", () => {
   const rejected = [
     "localhost", "http://tenant-a.example.com", "127.0.0.1", "https://127.1", "https://2130706433", "10.0.0.5", "169.254.169.254", "https://[::1]",
@@ -843,6 +973,170 @@ describe("instance step: SSRF and abuse", () => {
     expect(un(html)).toContain("couldn't reach your Paperclip");
     unreachable.delete("tenant-a.example.com");
     expect((await loginFlow(r, "og.kpnwrld", secret!)).res.status).toBe(200);
+    r.close();
+  });
+});
+
+// ───────────── Paperclip key rotation ─────────────
+describe("Paperclip key rotation", () => {
+  /** Move the bridge's clock and the fake Paperclip's together. */
+  const advance = (r: Rig, ms: number) => {
+    r.clock.t += ms;
+    mockClock.offset += ms;
+  };
+  const creates = (host: string) => keyCalls.filter((c) => c.host === host && c.method === "POST");
+  const lastAuth = (host: string) => seen.filter((x) => x.host === host).at(-1)?.auth;
+  const firstKey = (host: string) => [...challenges.values()].find((c) => c.host === host && c.status === "approved")!.token;
+  const call = (r: Rig, token: string) => act(r, token, "paperclip_list_companies");
+  const LONG = { accessTtlSec: 90 * 86400 }; // the bridge's own token outlives the jumps in time
+  beforeEach(() => {
+    mockClock.offset = 0; // each rig's clock starts at the real time
+  });
+
+  it("leaves a key alone until a week before it expires", async () => {
+    const r = await rig(LONG);
+    const host = "rot-early.example.com";
+    const u = await newUser(r, host, "rot.early1");
+    advance(r, 22 * DAY);
+    expect((await call(r, u.tokens.access_token)).status).toBe(200);
+    expect(keyCalls.filter((c) => c.host === host)).toHaveLength(0);
+    expect(lastAuth(host)).toBe(`Bearer ${firstKey(host)}`);
+    r.close();
+  });
+
+  it("renews it in the last week: the new key is stored and used, the old one revoked, and it renews only once", async () => {
+    const r = await rig(LONG);
+    const host = "rot-due.example.com";
+    const u = await newUser(r, host, "rot.due1");
+    const old = firstKey(host);
+    advance(r, 24 * DAY);
+    expect((await call(r, u.tokens.access_token)).status).toBe(200);
+    await r.provider.drainBackground();
+    expect(creates(host)).toHaveLength(1);
+    expect(creates(host)[0]).toMatchObject({ auth: `Bearer ${old}`, body: { name: "Papercliped (rot.due1)" } });
+    expect(lastAuth(host)).toMatch(/^Bearer pcp_board_rot-due\.example\.com_/);
+    expect(revokedBy).toContain(`${host}|Bearer ${old}`);
+    expect(boardKeys.get(old)?.revoked).toBe(true);
+    const link = (await r.store.getLink((await r.provider.listGrants())[0].accountId!))!;
+    expect(link.credentialExpiresAt).toBe(boardKeys.get(lastAuth(host)!.slice(7))!.expiresAt);
+    expect(JSON.stringify(link)).not.toContain("pcp_board_"); // stored sealed
+    // still working days later, with no second renewal
+    advance(r, 3 * DAY);
+    expect((await call(r, u.tokens.access_token)).status).toBe(200);
+    expect(creates(host)).toHaveLength(1);
+    expect(await kinds(r)).toContain("key:rot.due1/rotated");
+    expect(JSON.stringify(await r.store.userEventsRecent(0, 100))).not.toContain("pcp_board_");
+    r.close();
+  });
+
+  it("a failed renewal keeps the working key, and is retried later", async () => {
+    const r = await rig(LONG);
+    const host = "rot-fail.example.com";
+    const u = await newUser(r, host, "rot.fail1");
+    const old = firstKey(host);
+    failCreate.add(host);
+    advance(r, 24 * DAY);
+    expect((await call(r, u.tokens.access_token)).status).toBe(200);
+    expect(creates(host)).toHaveLength(1);
+    expect(lastAuth(host)).toBe(`Bearer ${old}`);
+    expect(revokedBy).not.toContain(`${host}|Bearer ${old}`);
+    expect(await kinds(r)).toContain("key:rot.fail1/failed");
+    expect((await call(r, u.tokens.access_token)).status).toBe(200); // no retry storm
+    expect(creates(host)).toHaveLength(1);
+    failCreate.delete(host);
+    advance(r, 11 * 60_000);
+    expect((await call(r, u.tokens.access_token)).status).toBe(200);
+    expect(creates(host)).toHaveLength(2);
+    expect(lastAuth(host)).toMatch(/^Bearer pcp_board_/);
+    r.close();
+  });
+
+  it("concurrent calls renew once, and every call uses a working key", async () => {
+    const r = await rig(LONG);
+    const host = "rot-race.example.com";
+    const u = await newUser(r, host, "rot.race1");
+    advance(r, 24 * DAY);
+    const before = seen.length;
+    const res = await Promise.all(Array.from({ length: 6 }, () => call(r, u.tokens.access_token)));
+    expect(res.map((x) => x.status)).toEqual([200, 200, 200, 200, 200, 200]);
+    expect(creates(host)).toHaveLength(1);
+    const used = new Set(seen.slice(before).filter((x) => x.host === host).map((x) => x.auth));
+    expect([...used]).toEqual([expect.stringMatching(/^Bearer pcp_board_/)]);
+    r.close();
+  });
+
+  it("a renewal racing a reconnect keeps the reconnected key and drops the one it made", async () => {
+    const r = await rig(LONG);
+    const host = "rot-swap.example.com";
+    const u = await newUser(r, host, "rot.swap1");
+    const accountId = (await r.provider.listGrants())[0].accountId!;
+    const stored = (await r.store.getLink(accountId))!.sealedCredential!;
+    // The user reconnects in another tab while the renewal is between "create" and "swap".
+    const swap = r.store.swapCredential.bind(r.store);
+    r.store.swapCredential = async (h, expect, next, exp) => {
+      if (next !== expect) await swap(h, expect, "reconnected.sealed", null);
+      return swap(h, expect, next, exp);
+    };
+    advance(r, 24 * DAY);
+    await call(r, u.tokens.access_token);
+    await r.provider.drainBackground();
+    expect(creates(host)).toHaveLength(1);
+    const made = [...boardKeys.values()].find((k) => k.host === host && k.token.startsWith("pcp_board_"))!;
+    expect(made.revoked).toBe(true); // the key it made is dropped
+    expect(boardKeys.get(firstKey(host))?.revoked).toBe(false); // the old one is not touched by the rotation
+    expect((await r.store.getLink(accountId))!.sealedCredential).toBe("reconnected.sealed");
+    expect(stored).not.toBe("reconnected.sealed");
+    expect((await kinds(r)).filter((k) => k.startsWith("key"))).toEqual([]);
+    r.close();
+  });
+
+  it("an older Paperclip whose keys never expire keeps working unchanged", async () => {
+    const r = await rig(LONG);
+    const host = "oldpaperclip-rot.example.com";
+    const u = await newUser(r, host, "rot.old1");
+    advance(r, 24 * DAY); // the stored estimate says due; Paperclip has no key API
+    expect((await call(r, u.tokens.access_token)).status).toBe(200);
+    expect(creates(host)).toHaveLength(0);
+    const accountId = (await r.provider.listGrants())[0].accountId!;
+    expect((await r.store.getLink(accountId))!.credentialExpiresAt).toBeNull();
+    advance(r, 20 * DAY);
+    const asked = keyCalls.length;
+    expect((await call(r, u.tokens.access_token)).status).toBe(200);
+    expect(keyCalls.length).toBe(asked); // never asks again
+    expect(lastAuth(host)).toBe(`Bearer ${firstKey(host)}`);
+    expect((await kinds(r)).filter((k) => k.startsWith("key"))).toEqual([]);
+    r.close();
+  });
+
+  it("the periodic sweep renews keys of people who are not calling", async () => {
+    const r = await rig(LONG);
+    const host = "rot-sweep.example.com";
+    const u = await newUser(r, host, "rot.sweep1");
+    advance(r, 24 * DAY);
+    await r.provider.sweep();
+    await r.provider.drainBackground();
+    expect(creates(host)).toHaveLength(1);
+    expect((await call(r, u.tokens.access_token)).status).toBe(200);
+    expect(creates(host)).toHaveLength(1);
+    expect(lastAuth(host)).toMatch(/^Bearer pcp_board_/);
+    r.close();
+  });
+
+  it("a key Paperclip already expired still gets the reconnect hint", async () => {
+    const r = await rig(LONG);
+    const host = "rot-late.example.com";
+    const u = await newUser(r, host, "rot.late1");
+    advance(r, 31 * DAY);
+    const res = await call(r, u.tokens.access_token);
+    expect(await res.text()).toContain("disconnect and reconnect the connector");
+    expect(creates(host)).toHaveLength(0);
+    expect(await kinds(r)).toContain("key:rot.late1/failed");
+    advance(r, 11 * 60_000); // a dead key is not retried
+    const asked = keyCalls.length;
+    expect(await (await call(r, u.tokens.access_token)).text()).toContain("disconnect and reconnect the connector");
+    await r.provider.sweep();
+    expect(keyCalls.length).toBe(asked);
+    expect((await kinds(r)).filter((k) => k.startsWith("key"))).toEqual(["key:rot.late1/failed"]);
     r.close();
   });
 });

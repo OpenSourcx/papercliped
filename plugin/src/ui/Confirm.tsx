@@ -16,17 +16,17 @@ export function Confirm({ label, detail, needName, destructive, onRun }: { label
     setMsg(null);
   };
   return (
-    <div style={{ ...panel, margin: "8px 0" }}>
-      <div style={{ ...row, justifyContent: "space-between" }}>
-        <div style={{ flex: "1 1 260px" }}>
+    <div className={`${panel} my-2`}>
+      <div className={`${row} justify-between`}>
+        <div className="min-w-0 flex-1 basis-64">
           <strong>{label}</strong>
-          <p style={muted}>{detail}</p>
+          <p className={muted}>{detail}</p>
         </div>
-        {!open && <button type="button" style={destructive ? danger : button} onClick={() => setOpen(true)}>{label}</button>}
+        {!open && <button type="button" className={destructive ? danger : button} onClick={() => setOpen(true)}>{label}</button>}
       </div>
       {open && (
         <form
-          style={{ ...row, marginTop: 10 }}
+          className={`${row} mt-2.5`}
           onSubmit={(e) => {
             e.preventDefault();
             setBusy(true);
@@ -34,11 +34,11 @@ export function Confirm({ label, detail, needName, destructive, onRun }: { label
             onRun(secret.trim(), name.trim()).then(close).catch((err) => setMsg(errText(err))).finally(() => setBusy(false));
           }}
         >
-          <input aria-label={`Secret key to confirm: ${label}`} type="password" autoFocus style={{ ...field, flex: "2 1 220px" }} value={secret} onChange={(e) => setSecret(e.target.value)} placeholder="Your secret key" autoComplete="current-password" />
-          {needName && <input aria-label="Type your username to confirm" style={{ ...field, flex: "1 1 160px" }} value={name} onChange={(e) => setName(e.target.value)} placeholder="Type your username" autoComplete="off" />}
-          <button type="submit" style={destructive ? danger : button} disabled={busy || !secret.trim() || (!!needName && !name.trim())}>{busy ? "Working…" : "Confirm"}</button>
-          <button type="button" style={button} onClick={close}>Cancel</button>
-          {msg && <p role="alert" style={{ width: "100%", margin: "6px 0 0" }}>{msg}</p>}
+          <input aria-label={`Secret key to confirm: ${label}`} name="papercliped-confirm-secret-key" type="password" autoComplete="new-password" autoFocus className={`${field} min-w-0 flex-1 basis-64`} value={secret} onChange={(e) => setSecret(e.target.value)} placeholder="Your secret key" />
+          {needName && <input aria-label="Type your username to confirm" name="papercliped-confirm-username" autoComplete="off" className={`${field} w-40 min-w-0`} value={name} onChange={(e) => setName(e.target.value)} placeholder="Type your username" />}
+          <button type="submit" className={destructive ? danger : button} disabled={busy || !secret.trim() || (!!needName && !name.trim())}>{busy ? "Working…" : "Confirm"}</button>
+          <button type="button" className={button} onClick={close}>Cancel</button>
+          {msg && <p role="alert" className="w-full mt-1.5 text-sm text-destructive">{msg}</p>}
         </form>
       )}
     </div>

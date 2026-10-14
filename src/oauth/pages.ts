@@ -100,7 +100,7 @@ export function choosePage(v: Ctx & { username?: string }): string {
   );
 }
 
-export function instancePage(v: Ctx & { value?: string; notice?: string }): string {
+export function instancePage(v: Ctx & { value?: string; notice?: string; installPlugin?: boolean }): string {
   return shell(
     "Connect your Paperclip",
     `<h1>Connect your Paperclip</h1>
@@ -110,6 +110,10 @@ export function instancePage(v: Ctx & { value?: string; notice?: string }): stri
        <label class="f" for="inst">Paperclip address</label>
        <input id="inst" name="instance" type="text" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://paperclip.example.com" value="${esc(v.value ?? "")}" required>
        <small class="hint">The bridge contacts this address to sign you in and to run what you allow. Only enter an address you own.</small>
+       <label class="f" style="display:flex;gap:10px;align-items:flex-start;margin-top:16px;font-weight:400">
+         <input id="plug" name="install_plugin" type="checkbox" value="on" style="width:auto;margin-top:3px"${v.installPlugin === false ? "" : " checked"}>
+         <span>Also install the Papercliped plugin in my Paperclip<br><small class="hint">Adds a Papercliped page to Paperclip for managing connected apps. It is installed through Paperclip's own installer, only if you are its instance admin, and you can remove it any time from Settings &rarr; Plugins.</small></span>
+       </label>
        <div class="row"><button class="btn" name="action" value="continue">Continue</button>${cancel}</div>
      </form>
      <p class="fine">You'll return to <code>${esc(v.redirectHost)}</code> afterwards.</p>`,

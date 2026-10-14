@@ -43,7 +43,7 @@ const FAQ = [
   { q: "Is Papercliped free?", a: "Yes. It's free and open source (MIT). The hosted bridge at papercliped.co runs the same code you can run yourself." },
   { q: "What is Paperclip?", a: "Paperclip is an open-source orchestrator for companies of AI agents. Papercliped is an independent project that connects AI apps to your Paperclip; it isn't made by the Paperclip team." },
   { q: "What can the AI do with my Paperclip?", a: <>Only what the level you pick allows: Read only by default, Full control if you choose it. Try the playground above, and see <TextLink to="/docs/permissions">Permissions</TextLink>.</> },
-  { q: "Does my Paperclip need to be public?", a: <>For the hosted bridge, yes: a public https address. No domain? See <TextLink to="/docs/connect-your-paperclip">Set up your Paperclip</TextLink>. Or run Papercliped locally with <code className="font-mono">npx papercliped@latest</code>.</> },
+  { q: "Does my Paperclip need to be public?", a: <>For the hosted bridge, yes: a public https address. Step-by-step guides for running it at home, on a VPS, Railway, Render, Fly.io or Coolify: <TextLink to="/docs/hosting">Host your Paperclip</TextLink>. Or run Papercliped locally with <code className="font-mono">npx papercliped@latest</code>.</> },
   { q: "Can I stop it any time?", a: <>Yes. Disconnect an app or change its level in the <TextLink to="/docs/paperclip-plugin">Paperclip plugin</TextLink>, remove the connector in your AI app, or revoke the key in Paperclip.</> },
   { q: "Which AI apps work?", a: <>Claude (web, desktop, mobile, Claude Code), ChatGPT, and any app that supports MCP. See <TextLink to="/docs/other-ai-apps">Any AI app</TextLink>.</> },
 ];

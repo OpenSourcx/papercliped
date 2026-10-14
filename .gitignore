@@ -2,3 +2,11 @@ node_modules
 dist
 .env
 *.log
+
+# generated or local-only
+openapi.json
+.wrangler/
+coverage/
+*.tsbuildinfo
+.DS_Store
+Thumbs.db

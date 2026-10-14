@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { PolicyInputError } from "../access/policy.js";
 import { displayName } from "../accounts/alias.js";
 import type { Account } from "../accounts/types.js";
 import type { OAuthProvider } from "../oauth/provider.js";
@@ -94,7 +95,43 @@ export class ManageRoutes {
       return this.json(res, 200, { name: displayName(a), anonymous: !!a.anonymous, alias: a.alias ?? null, paperclip: link.label, connected: link.connected, createdAt: a.createdAt });
     }
 
-    if (m === "GET" && route === "/connections") return this.json(res, 200, { connections: await this.p.manageConnections(a.id) });
+    if (m === "GET" && (route === "/connections" || route === "/sessions")) {
+      const list = await this.p.manageConnections(a.id);
+      return this.json(res, 200, route === "/sessions" ? { sessions: list } : { connections: list });
+    }
+
+    // The control room: the access switch, per-session limits, the tool list and recent calls.
+    if (route === "/policy" && (m === "GET" || m === "POST" || m === "PUT")) {
+      if (m === "GET") return this.json(res, 200, await this.p.manageGetPolicy(a));
+      const b = await this.body(req);
+      if (!b) return this.json(res, 400, { error: "Send JSON" });
+      try {
+        return this.json(res, 200, await this.p.manageSetPolicy(a, b));
+      } catch (e) {
+        return e instanceof PolicyInputError ? this.json(res, 400, { error: e.message }) : this.json(res, 500, { error: "Could not save the access settings" });
+      }
+    }
+    if (m === "GET" && route === "/tools") return this.json(res, 200, { tools: this.p.manageTools() });
+    if (m === "GET" && route === "/activity") {
+      const session = url.searchParams.get("session") ?? undefined;
+      if (session !== undefined && !/^[A-Za-z0-9_-]{1,80}$/.test(session)) return this.json(res, 400, { error: "Invalid session" });
+      const limit = Number.parseInt(url.searchParams.get("limit") ?? "50", 10);
+      return this.json(res, 200, { calls: await this.p.manageActivity(a, { session, limit: Number.isFinite(limit) ? limit : 50 }) });
+    }
+    const sess = /^\/sessions\/([A-Za-z0-9_-]{1,80})$/.exec(route);
+    if (sess && m === "POST") {
+      const b = await this.body(req);
+      if (!b) return this.json(res, 400, { error: "Send JSON" });
+      const level: Scope | null | undefined = b.level === undefined ? undefined : b.level === "read" ? "paperclip:read" : b.level === "control" ? "paperclip:control" : null;
+      if (level === null) return this.json(res, 400, { error: "level must be read or control" });
+      try {
+        const next = await this.p.manageSetSession(a, sess[1], { label: b.label, tools: b.tools, agents: b.agents, level });
+        return next ? this.json(res, 200, next) : this.json(res, 404, { error: "No such session" });
+      } catch (e) {
+        return e instanceof PolicyInputError ? this.json(res, 400, { error: e.message }) : this.json(res, 500, { error: "Could not save the session" });
+      }
+    }
+    if (sess && m === "DELETE") return (await this.p.manageRevoke(a, sess[1])) ? this.json(res, 200, { ok: true }) : this.json(res, 404, { error: "No such session" });
     const c = /^\/connections\/([A-Za-z0-9_-]{1,80})$/.exec(route);
     if (c && m === "POST") {
       const b = await this.body(req);

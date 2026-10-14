@@ -1,8 +1,13 @@
 {
   "name": "papercliped",
-  "version": "2.1.0",
+  "version": "2.5.3",
   "description": "Run your Paperclip from Codex: control agents, sync with them and get reports, at the access level you choose.",
-  "keywords": ["paperclip", "agents", "orchestration", "mcp"],
+  "keywords": [
+    "paperclip",
+    "agents",
+    "orchestration",
+    "mcp"
+  ],
   "skills": "./skills",
   "mcpServers": "./.mcp.json",
   "interface": {

@@ -14,6 +14,7 @@ What Papercliped does to protect you, and what it cannot.
 - **OAuth 2.1 with PKCE**, short-lived access tokens, rotating refresh tokens with reuse detection.
 - **Rate limits** on sign-in, secret-key attempts and tool calls.
 - **A separate operator dashboard** (an access-controlled service, not part of the open-source bridge) reads the database through a read-only role that can see only safe views: never your key, secret hash or an anonymous account's real name.
+- **Keys are renewed, not made permanent.** Paperclip expires the keys it issues (30 days on newer versions). About a week before that, Papercliped asks Paperclip for a fresh key with the same expiry, stores it encrypted, and revokes the old one. It never asks for a key that doesn't expire. In Paperclip the key is named "Papercliped (your username)". If renewal fails, the current key keeps working and Papercliped tries again later.
 - Revocation is immediate on disconnect, and idle keys are removed after 30 days.
 
 ## What it cannot do

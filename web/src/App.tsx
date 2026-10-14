@@ -12,9 +12,10 @@ import { RenderFrame } from "./pages/Render";
 import { Status } from "./pages/Status";
 import { Kit } from "./pages/Kit";
 import { NotFound } from "./pages/Placeholder";
+import { Prompts } from "./pages/Prompts";
 
 /** Every route the site serves. scripts/check-routes.mjs loads each of these in a real browser. */
-export const ROUTES = ["/", "/kit", "/docs", "/changelog", "/community", "/brand", "/privacy", "/terms", "/status"] as const;
+export const ROUTES = ["/", "/kit", "/docs", "/changelog", "/prompts", "/community", "/brand", "/privacy", "/terms", "/status"] as const;
 
 export function App() {
   // docs.papercliped.co: the docs landing at / and each page at /<page> (the bridge maps hosts; see web/src/lib/hosts.ts).
@@ -39,6 +40,7 @@ export function App() {
           <Route path="/docs" element={<DocsIndex />} />
           <Route path="/docs/:slug" element={<DocPage />} />
           <Route path="/changelog" element={<Changelog />} />
+          <Route path="/prompts" element={<Prompts />} />
           <Route path="/community" element={<Community />} />
           <Route path="/brand" element={<Brand />} />
           <Route path="/privacy" element={<Legal page="privacy" />} />

@@ -20,6 +20,45 @@ export interface Connection {
   createdAt: number;
   lastUsedAt: number | null;
 }
+/** One connected AI app, with the limits set on it. */
+export interface Session extends Connection {
+  /** A name the person gave it (null = show the app's name). */
+  label: string | null;
+  /** The tools it may use (null = every tool its level allows). */
+  tools: string[] | null;
+  /** The agents it applies to (null = everyone). */
+  agents: string[] | null;
+}
+export type Mode = "api" | "full" | "agent";
+/** The access switch (the default for every agent) and per-agent overrides ("off" = Papercliped may not touch it). */
+export interface Policy {
+  mode: Mode;
+  agents: Record<string, Mode | "off">;
+}
+export interface SessionChange {
+  label?: string | null;
+  tools?: string[] | null;
+  agents?: string[] | null;
+  level?: "read" | "control";
+}
+export interface ToolInfo {
+  name: string;
+  title: string;
+  description: string;
+  access: "read" | "write" | "destructive";
+  surface: "read" | "agent" | "api";
+}
+export interface CallRow {
+  at: number;
+  tool: string;
+  ok: boolean;
+  blocked: boolean;
+  status: number | null;
+  error: string | null;
+  ms: number;
+  session: string | null;
+  app: string | null;
+}
 export interface PluginLink {
   id: string;
   host: string | null;
@@ -102,6 +141,28 @@ export class BridgeClient {
   }
   async connections(token: string): Promise<Connection[]> {
     return (await this.req<{ connections: Connection[] }>("GET", "/connections", { token })).connections ?? [];
+  }
+  async sessions(token: string): Promise<Session[]> {
+    return (await this.req<{ sessions: Session[] }>("GET", "/sessions", { token })).sessions ?? [];
+  }
+  /** Change one session: name, tools, agents, level. Anything left out stays as it is. */
+  setSession(token: string, id: string, change: SessionChange) {
+    return this.req<{ label: string | null; tools: string[] | null; agents: string[] | null }>("POST", `/sessions/${encodeURIComponent(id)}`, { token, body: change });
+  }
+  policy(token: string) {
+    return this.req<Policy>("GET", "/policy", { token });
+  }
+  setPolicy(token: string, policy: Policy) {
+    return this.req<Policy>("POST", "/policy", { token, body: policy });
+  }
+  async tools(token: string): Promise<ToolInfo[]> {
+    return (await this.req<{ tools: ToolInfo[] }>("GET", "/tools", { token })).tools ?? [];
+  }
+  async activity(token: string, opts: { session?: string; limit?: number } = {}): Promise<CallRow[]> {
+    const q = new URLSearchParams();
+    if (opts.session) q.set("session", opts.session);
+    if (opts.limit) q.set("limit", String(opts.limit));
+    return (await this.req<{ calls: CallRow[] }>("GET", `/activity${q.size ? `?${q}` : ""}`, { token })).calls ?? [];
   }
   async setLevel(token: string, id: string, level: "read" | "control"): Promise<void> {
     await this.req("POST", `/connections/${encodeURIComponent(id)}`, { token, body: { level } });

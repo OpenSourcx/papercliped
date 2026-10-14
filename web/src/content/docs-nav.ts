@@ -1,15 +1,16 @@
 /** The docs table of contents. Every page in site/docs/*.md must be listed exactly once (test/docs.test.ts checks). */
 export const DOCS_NAV: { title: string; slugs: string[] }[] = [
-  { title: "Get started", slugs: ["what-is-papercliped", "getting-started", "signup", "connect-your-paperclip"] },
+  { title: "Get started", slugs: ["what-is-papercliped", "getting-started", "signup"] },
+  { title: "Host your Paperclip", slugs: ["hosting", "connect-your-paperclip", "host-vps", "host-railway", "host-render", "host-fly", "host-coolify"] },
   { title: "Connect your AI app", slugs: ["other-ai-apps", "chatgpt"] },
-  { title: "Guides", slugs: ["permissions", "manage", "paperclip-plugin", "anonymous-mode", "self-hosting"] },
+  { title: "Guides", slugs: ["prompts", "permissions", "control-room", "access-modes", "manage", "paperclip-plugin", "anonymous-mode", "self-hosting"] },
   { title: "Reference", slugs: ["tools", "manage-api", "public-api", "environment", "cli", "limits-and-errors", "security"] },
   { title: "Help", slugs: ["faq", "troubleshooting"] },
 ];
 
 /** How the sidebar groups the sections, with an icon for each (names from components/Icons). */
-export const DOCS_GROUPS: { label: string; sections: { title: string; icon: "rocket" | "plug" | "book" | "code" | "help" }[] }[] = [
-  { label: "Learn", sections: [{ title: "Get started", icon: "rocket" }, { title: "Connect your AI app", icon: "plug" }, { title: "Guides", icon: "book" }] },
+export const DOCS_GROUPS: { label: string; sections: { title: string; icon: "rocket" | "plug" | "book" | "code" | "help" | "link" }[] }[] = [
+  { label: "Learn", sections: [{ title: "Get started", icon: "rocket" }, { title: "Host your Paperclip", icon: "link" }, { title: "Connect your AI app", icon: "plug" }, { title: "Guides", icon: "book" }] },
   { label: "Reference", sections: [{ title: "Reference", icon: "code" }, { title: "Help", icon: "help" }] },
 ];
 

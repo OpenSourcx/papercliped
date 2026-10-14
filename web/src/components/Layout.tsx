@@ -34,8 +34,9 @@ export const MENUS: { label: string; items: MenuItem[] }[] = [
   {
     label: "Resources",
     items: [
+      { to: "/prompts", title: "Prompt gallery", desc: "Things to ask your AI app, ready to copy.", badge: "New" },
       { to: "/changelog", title: "Changelog", desc: "Everything that shipped, newest first." },
-      { to: "/docs/connect-your-paperclip", title: "Set up your Paperclip", desc: "Get a public address, with or without a domain." },
+      { to: "/docs/hosting", title: "Host your Paperclip", desc: "Step-by-step: at home, a VPS, Railway, Render, Fly.io or Coolify." },
       { to: "/brand", title: "Brand assets", desc: "The wordmark, the mascot and how to use them." },
       { to: REPO_URL, title: "Source code", desc: "MIT licensed, on GitHub." },
     ],
@@ -189,8 +190,8 @@ export function Header() {
 }
 
 const FOOTER: { title: string; links: { to: string; label: string }[] }[] = [
-  { title: "Product", links: [{ to: "/", label: "Overview" }, { to: "/docs/getting-started", label: "Get started" }, { to: "/docs/paperclip-plugin", label: "Paperclip plugin" }, { to: "/changelog", label: "Changelog" }] },
-  { title: "Docs", links: [{ to: "/docs", label: "All topics" }, { to: "/docs/connect-your-paperclip", label: "Set up your Paperclip" }, { to: "/docs/other-ai-apps", label: "Any AI app (MCP)" }, { to: "/docs/troubleshooting", label: "Troubleshooting" }] },
+  { title: "Product", links: [{ to: "/", label: "Overview" }, { to: "/docs/getting-started", label: "Get started" }, { to: "/docs/paperclip-plugin", label: "Paperclip plugin" }, { to: "/prompts", label: "Prompt gallery" }, { to: "/changelog", label: "Changelog" }] },
+  { title: "Docs", links: [{ to: "/docs", label: "All topics" }, { to: "/docs/hosting", label: "Host your Paperclip" }, { to: "/docs/other-ai-apps", label: "Any AI app (MCP)" }, { to: "/docs/troubleshooting", label: "Troubleshooting" }] },
   { title: "Community", links: [{ to: "/community", label: "Join the community" }, { to: community.newIssue, label: "Report a bug" }, { to: "/community#suggest", label: "Suggest a feature" }, { to: "/brand", label: "Brand assets" }] },
   { title: "Company", links: [{ to: REPO_URL, label: "Open source (MIT)" }, { to: `mailto:${community.email}`, label: "Contact" }, { to: "/status", label: "Status" }] },
   { title: "Legal", links: [{ to: "/privacy", label: "Privacy" }, { to: "/terms", label: "Terms" }, { to: "/docs/security", label: "Security" }] },
@@ -207,7 +208,7 @@ function SocialIcons() {
   const items = [
     { key: "x" as const, label: "Papercliped on X", href: community.x },
     { key: "github" as const, label: "Papercliped on GitHub", href: community.github },
-    { key: "discord" as const, label: "Papercliped on Discord", href: community.discord },
+    { key: "discord" as const, label: "OpenSourcedd on Discord", href: community.discord },
   ];
   return (
     <ul aria-label="Social" className="mt-5 flex gap-2">

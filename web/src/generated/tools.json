@@ -4,209 +4,239 @@
     "title": "List companies",
     "description": "List the companies the credential can access. Use this first to find a companyId.",
     "access": "read",
-    "scope": "paperclip:read"
+    "scope": "paperclip:read",
+    "surface": "read"
   },
   {
     "name": "paperclip_org_chart",
     "title": "Org chart",
     "description": "Return the company's full agent org tree (who reports to whom).",
     "access": "read",
-    "scope": "paperclip:read"
+    "scope": "paperclip:read",
+    "surface": "read"
   },
   {
     "name": "paperclip_list_agents",
     "title": "List agents",
     "description": "List all agents in a company with status, role and budget/spend.",
     "access": "read",
-    "scope": "paperclip:read"
+    "scope": "paperclip:read",
+    "surface": "read"
   },
   {
     "name": "paperclip_get_agent",
     "title": "Get agent",
     "description": "Get one agent including its chain of command and current status.",
     "access": "read",
-    "scope": "paperclip:read"
+    "scope": "paperclip:read",
+    "surface": "read"
   },
   {
     "name": "paperclip_pause_agent",
     "title": "Pause agent",
     "description": "Pause an agent: stops its heartbeats and cancels its active run. Reversible with resume.",
     "access": "write",
-    "scope": "paperclip:control"
+    "scope": "paperclip:control",
+    "surface": "api"
   },
   {
     "name": "paperclip_resume_agent",
     "title": "Resume agent",
     "description": "Resume a paused agent so heartbeats start again.",
     "access": "write",
-    "scope": "paperclip:control"
+    "scope": "paperclip:control",
+    "surface": "api"
   },
   {
     "name": "paperclip_clear_agent_error",
     "title": "Clear agent error",
     "description": "Move an agent from `error` back to `idle`. Keeps run history. Only valid for agents in error.",
     "access": "write",
-    "scope": "paperclip:control"
+    "scope": "paperclip:control",
+    "surface": "api"
   },
   {
     "name": "paperclip_wake_agent",
     "title": "Wake agent now",
     "description": "Manually trigger a heartbeat so the agent starts working immediately.",
     "access": "write",
-    "scope": "paperclip:control"
+    "scope": "paperclip:control",
+    "surface": "agent"
   },
   {
     "name": "paperclip_set_agent_budget",
     "title": "Set agent budget",
     "description": "Set an agent's monthly budget in US cents (e.g. 5000 = $50). Agents auto-pause at 100%.",
     "access": "write",
-    "scope": "paperclip:control"
+    "scope": "paperclip:control",
+    "surface": "api"
   },
   {
     "name": "paperclip_terminate_agent",
     "title": "Terminate agent",
     "description": "PERMANENTLY deactivate an agent. Irreversible. Requires confirm=true; ask the human first and prefer pause.",
     "access": "destructive",
-    "scope": "paperclip:control"
+    "scope": "paperclip:control",
+    "surface": "api"
   },
   {
     "name": "paperclip_list_goals",
     "title": "List goals",
     "description": "List the goal hierarchy for a company.",
     "access": "read",
-    "scope": "paperclip:read"
+    "scope": "paperclip:read",
+    "surface": "read"
   },
   {
     "name": "paperclip_create_goal",
     "title": "Create goal",
     "description": "Create a goal. level is one of company/team/agent/task (default task).",
     "access": "write",
-    "scope": "paperclip:control"
+    "scope": "paperclip:control",
+    "surface": "api"
   },
   {
     "name": "paperclip_update_goal",
     "title": "Update goal",
     "description": "Update a goal's title, description or status (planned/active/achieved/cancelled).",
     "access": "write",
-    "scope": "paperclip:control"
+    "scope": "paperclip:control",
+    "surface": "api"
   },
   {
     "name": "paperclip_list_projects",
     "title": "List projects",
     "description": "List projects in a company.",
     "access": "read",
-    "scope": "paperclip:read"
+    "scope": "paperclip:read",
+    "surface": "read"
   },
   {
     "name": "paperclip_list_issues",
     "title": "List issues",
     "description": "List issues/tasks. status may be comma-separated, e.g. 'todo,in_progress'.",
     "access": "read",
-    "scope": "paperclip:read"
+    "scope": "paperclip:read",
+    "surface": "read"
   },
   {
     "name": "paperclip_get_issue",
     "title": "Get issue",
     "description": "Get an issue with project, goal, ancestors and plan document.",
     "access": "read",
-    "scope": "paperclip:read"
+    "scope": "paperclip:read",
+    "surface": "read"
   },
   {
     "name": "paperclip_create_issue",
     "title": "Create issue",
     "description": "Create a task. Assigning it to an agent (assigneeAgentId) with status 'todo' is how you hand work to that agent.",
     "access": "write",
-    "scope": "paperclip:control"
+    "scope": "paperclip:control",
+    "surface": "agent"
   },
   {
     "name": "paperclip_update_issue",
     "title": "Update issue",
     "description": "Change an issue's status, priority, assignee, title etc. Optional `comment` is added in the same call.",
     "access": "write",
-    "scope": "paperclip:control"
+    "scope": "paperclip:control",
+    "surface": "agent"
   },
   {
     "name": "paperclip_comment_issue",
     "title": "Comment on issue",
     "description": "Add a markdown comment to an issue. Can wake the current assignee.",
     "access": "write",
-    "scope": "paperclip:control"
+    "scope": "paperclip:control",
+    "surface": "agent"
   },
   {
     "name": "paperclip_list_approvals",
     "title": "List approvals",
     "description": "List approval requests (hires, plans, budget overrides). Filter client-side by status if needed.",
     "access": "read",
-    "scope": "paperclip:read"
+    "scope": "paperclip:read",
+    "surface": "read"
   },
   {
     "name": "paperclip_decide_approval",
     "title": "Decide approval",
     "description": "Approve, reject, or request revision on an approval. Decisions bind agents, so confirm with the human.",
     "access": "write",
-    "scope": "paperclip:control"
+    "scope": "paperclip:control",
+    "surface": "api"
   },
   {
     "name": "paperclip_sync_snapshot",
     "title": "Sync snapshot",
     "description": "One-call picture of the company right now: dashboard counters, every agent's status, and live runs. Call at the start of a session to sync with the agents.",
     "access": "read",
-    "scope": "paperclip:read"
+    "scope": "paperclip:read",
+    "surface": "read"
   },
   {
     "name": "paperclip_sync_changes",
     "title": "Changes since cursor",
     "description": "Poll for what changed. Pass the `cursor` returned by the previous call (omit the first time to get recent history). Returns new activity entries and the next cursor.",
     "access": "read",
-    "scope": "paperclip:read"
+    "scope": "paperclip:read",
+    "surface": "read"
   },
   {
     "name": "paperclip_wait_for_agent",
     "title": "Wait for agent",
     "description": "Block (polling) until an agent reaches one of the target statuses (default: idle or error) or the timeout passes. Use after waking an agent to follow it to completion.",
     "access": "read",
-    "scope": "paperclip:read"
+    "scope": "paperclip:read",
+    "surface": "read"
   },
   {
     "name": "paperclip_report_status",
     "title": "Status report",
     "description": "Executive status report: agents, tasks, spend, pending approvals, agents needing attention.",
     "access": "read",
-    "scope": "paperclip:read"
+    "scope": "paperclip:read",
+    "surface": "read"
   },
   {
     "name": "paperclip_report_costs",
     "title": "Cost report",
     "description": "Spend vs budget with per-agent and per-project breakdown. Defaults to the current month.",
     "access": "read",
-    "scope": "paperclip:read"
+    "scope": "paperclip:read",
+    "surface": "read"
   },
   {
     "name": "paperclip_report_agent_performance",
     "title": "Agent performance report",
     "description": "Per-agent throughput (done / in progress / blocked), spend and cost per completed task.",
     "access": "read",
-    "scope": "paperclip:read"
+    "scope": "paperclip:read",
+    "surface": "read"
   },
   {
     "name": "paperclip_report_activity",
     "title": "Activity digest",
     "description": "Digest of audit-log activity, optionally since an ISO timestamp (e.g. start of day).",
     "access": "read",
-    "scope": "paperclip:read"
+    "scope": "paperclip:read",
+    "surface": "read"
   },
   {
     "name": "papercliped_service_status",
     "title": "Papercliped service status",
     "description": "Is the hosted Papercliped service working? Returns its status (ok, degraded, down), version and aggregate 24-hour numbers (requests, success rate, latency, sign-ins). Public data only; does not touch Paperclip.",
     "access": "read",
-    "scope": "paperclip:read"
+    "scope": "paperclip:read",
+    "surface": "read"
   },
   {
     "name": "paperclip_api_request",
     "title": "Raw API request",
     "description": "Call any Paperclip REST endpoint under /api (path like '/companies/{id}/routines'). For endpoints without a dedicated tool. DELETE and any non-GET require confirm=true.",
     "access": "write",
-    "scope": "paperclip:control"
+    "scope": "paperclip:control",
+    "surface": "api"
   }
 ]

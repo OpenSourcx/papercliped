@@ -1,6 +1,6 @@
 # Community: Discord, Discussions and socials
 
-A ready-to-follow setup for the Papercliped Discord, plus where everything else lives. Links show up on the website only once they're set (`web/src/config/community.ts`, or `VITE_DISCORD_URL`, `VITE_X_URL`, `VITE_DISCUSSIONS_URL`, `VITE_FORUM_URL` at build time). Nothing here needs a bot.
+A ready-to-follow setup for the Discord, plus where everything else lives. Papercliped's community is **OpenSourcedd**: the Discord server (https://discord.gg/cAECU68jSA) and r/OpenSourcedd on Reddit, both set in `web/src/config/community.ts`. Other links show up on the website only once they're set (`VITE_X_URL`, `VITE_DISCUSSIONS_URL`, `VITE_FORUM_URL` at build time; `VITE_DISCORD_URL` / `VITE_REDDIT_URL` override the defaults). Nothing here needs a bot.
 
 ## 1. Create the server (about 20 minutes)
 

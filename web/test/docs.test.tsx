@@ -26,12 +26,12 @@ describe("docs content", () => {
   it("every page has a title, headings with unique ids, and no unfilled placeholders", () => {
     for (const d of docs) {
       expect(d.title.length, d.slug).toBeGreaterThan(2);
-      expect(d.html, d.slug).not.toContain("{{");
+      expect(d.html, d.slug).not.toMatch(/\{\{[A-Z]+\}\}/); // our placeholders; Railway's ${{Service.VAR}} syntax is real content
       expect(new Set(d.headings.map((h) => h.id)).size, d.slug).toBe(d.headings.length);
     }
   });
   it("every internal link points at a docs page or a page the site or bridge serves", () => {
-    const ok = new Set([...DOC_ORDER.map((s) => `/docs/${s}`), "/docs", "/", "/changelog", "/community", "/brand", "/status", "/privacy", "/terms", "/manage"]);
+    const ok = new Set([...DOC_ORDER.map((s) => `/docs/${s}`), "/docs", "/", "/changelog", "/prompts", "/community", "/brand", "/status", "/privacy", "/terms", "/manage"]);
     for (const d of docs) for (const m of d.html.matchAll(/href="(\/[^"#]*)(#[^"]*)?"/g)) expect(ok.has(m[1]), `${d.slug} → ${m[1]}`).toBe(true);
   });
   it("search finds pages by title, heading and text", () => {
@@ -60,8 +60,8 @@ describe("docs pages", () => {
     expect(screen.getAllByRole("navigation", { name: "On this page" }).length).toBeGreaterThan(0);
     expect(screen.getByRole("link", { name: "Edit this page on GitHub" })).toHaveAttribute("href", "https://github.com/OpenSourcx/papercliped/edit/main/site/docs/permissions.md");
     const pn = screen.getByRole("navigation", { name: "Previous and next" });
-    expect(within(pn).getByText("ChatGPT setup")).toBeInTheDocument(); // previous in the nav order
-    expect(within(pn).getByText("Manage connections")).toBeInTheDocument(); // next
+    expect(within(pn).getByText("Prompt gallery")).toBeInTheDocument(); // previous in the nav order
+    expect(within(pn).getByText("The control room")).toBeInTheDocument(); // next
     expect(screen.getByRole("button", { name: "Copy link" })).toBeInTheDocument();
   });
   it("the tool reference lists every tool", () => {

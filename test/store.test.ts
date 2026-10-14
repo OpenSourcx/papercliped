@@ -1,4 +1,6 @@
-import { readFileSync } from "node:fs";
+import { copyFileSync, mkdtempSync, readFileSync, readdirSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { consolidatedSql, migrate } from "../src/migrate.js";
@@ -283,6 +285,39 @@ function accountContract(name: string, make: () => Promise<Store>) {
       expect(await s.getAccount("nope")).toBeUndefined();
     });
 
+    it("an account's access policy and a session's limits round-trip, replace, and clear", async () => {
+      await s.createAccount(acct("pol1", "policy.user1"));
+      expect((await s.getAccount("pol1"))?.policy ?? null).toBeNull(); // untouched = Full for every agent
+      expect(await s.setAccountPolicy("pol1", { mode: "agent", agents: { a1: "off", a2: "api" } })).toBe(true);
+      expect((await s.getAccount("pol1"))?.policy).toEqual({ mode: "agent", agents: { a1: "off", a2: "api" } });
+      expect(await s.setAccountPolicy("pol1", { mode: "full", agents: {} })).toBe(true);
+      expect((await s.getAccount("pol1"))?.policy).toEqual({ mode: "full", agents: {} });
+      expect(await s.setAccountPolicy("nobody", { mode: "api", agents: {} })).toBe(false);
+
+      await s.putGrant(grant("gp1", { accountId: "pol1", scopes: ["paperclip:control"] }));
+      expect((await s.getGrant("gp1"))?.policy ?? null).toBeNull();
+      expect(await s.setGrantPolicy("gp1", { label: "Phone", tools: ["paperclip_list_agents"], agents: ["a1"] })).toBe(true);
+      expect((await s.getGrant("gp1"))?.policy).toEqual({ label: "Phone", tools: ["paperclip_list_agents"], agents: ["a1"] });
+      expect((await s.listAccountGrants("pol1")).find((g) => g.id === "gp1")?.policy).toEqual({ label: "Phone", tools: ["paperclip_list_agents"], agents: ["a1"] });
+      expect(await s.setGrantPolicy("gp1", null)).toBe(true);
+      expect((await s.getGrant("gp1"))?.policy ?? null).toBeNull();
+      expect(await s.setGrantPolicy("missing", { label: null, tools: null, agents: null })).toBe(false);
+      await s.revokeGrant("gp1");
+      expect(await s.setGrantPolicy("gp1", { label: "x", tools: null, agents: null })).toBe(false); // a revoked session can't be edited
+    });
+
+    it("recent calls are found by session, newest first, and only for the sessions asked about", async () => {
+      const row = (at: number, grantId: string | null, name: string, over: Partial<AuditRow> = {}): AuditRow => ({ at, node: "n", kind: "tool", name, mutation: false, ok: true, status: null, errorClass: null, totalMs: 5, upstreamMs: null, upstreamCalls: null, scope: null, grantId, client: "Claude", instance: null, userId: null, username: null, ...over });
+      await s.insertAudit([row(T0 + 1, "rc_a", "first"), row(T0 + 2, "rc_b", "other"), row(T0 + 3, "rc_a", "second", { ok: false, status: 403, errorClass: "policy_blocked" }), row(T0 + 4, null, "nobody"), row(T0 + 5, "rc_a", "http", { kind: "http" })]);
+      const calls = await s.recentCallsForGrants(["rc_a"], 10);
+      expect(calls.map((r) => r.name)).toEqual(["second", "first"]); // newest first; other sessions, no-session rows and http rows excluded
+      expect(calls[0]).toMatchObject({ ok: false, errorClass: "policy_blocked", status: 403 });
+      expect((await s.recentCallsForGrants(["rc_a"], 1)).map((r) => r.name)).toEqual(["second"]);
+      expect((await s.recentCallsForGrants(["rc_a", "rc_b"], 10)).map((r) => r.name)).toEqual(["second", "other", "first"]);
+      expect(await s.recentCallsForGrants([], 10)).toEqual([]);
+      expect(await s.recentCallsForGrants(["unknown"], 10)).toEqual([]);
+    });
+
     it("one link per account; a Paperclip identity can belong to only one account", async () => {
       await s.createAccount(acct("a2", "second.user2"));
       expect(await s.putLink(link("a1", { paperclipUserId: "pu-shared" }))).toBe(true);
@@ -448,6 +483,39 @@ function accountContract(name: string, make: () => Promise<Store>) {
       expect(await s.liveGrantCount()).toBeGreaterThanOrEqual(0);
     });
 
+    it("a stored Paperclip key is swapped only while it is still the one stored, and expiring keys are listed", async () => {
+      const DAY = 86_400_000;
+      await s.createAccount(acct("rot1", "rotate.user1"));
+      await s.createAccount(acct("rot2", "rotate.user2"));
+      expect(await s.putLink(link("rot1", { sealedCredential: "k1.sealed", credentialExpiresAt: T0 + 3 * DAY }))).toBe(true);
+      expect(await s.putLink(link("rot2", { sealedCredential: "k2.sealed", credentialExpiresAt: null }))).toBe(true); // never expires
+      const soon = (await s.listExpiringLinks(T0 + 7 * DAY)).map((l) => l.accountId);
+      expect(soon).toContain("rot1");
+      expect(soon).not.toContain("rot2");
+      expect((await s.getLink("rot2"))?.credentialExpiresAt).toBeNull();
+
+      const h = { kind: "link" as const, id: "rot1" };
+      expect(await s.swapCredential(h, "k1.sealed", "k1b.sealed", T0 + 30 * DAY)).toBe(true);
+      expect(await s.getLink("rot1")).toMatchObject({ sealedCredential: "k1b.sealed", credentialExpiresAt: T0 + 30 * DAY });
+      expect(await s.swapCredential(h, "k1.sealed", "late.sealed", T0)).toBe(false); // already replaced
+      expect((await s.listExpiringLinks(T0 + 7 * DAY)).map((l) => l.accountId)).not.toContain("rot1");
+      await s.dropLinkCredential("rot1");
+      expect(await s.swapCredential(h, "k1b.sealed", "x.sealed", T0)).toBe(false); // dropped
+      expect(await s.swapCredential({ kind: "link", id: "nobody" }, "a", "b", null)).toBe(false);
+
+      await s.putGrant(grant("grot1", { sealedCredential: "g.sealed", credentialExpiresAt: T0 + DAY }));
+      await s.putGrant(grant("grot2", { sealedCredential: "g2.sealed", credentialExpiresAt: null }));
+      const due = (await s.listExpiringGrants(T0 + 7 * DAY)).map((g) => g.id);
+      expect(due).toContain("grot1");
+      expect(due).not.toContain("grot2");
+      const g = { kind: "grant" as const, id: "grot1" };
+      expect(await s.swapCredential(g, "g.sealed", "g.sealed", null)).toBe(true); // expiry only
+      expect(await s.getGrant("grot1")).toMatchObject({ sealedCredential: "g.sealed", credentialExpiresAt: null });
+      await s.revokeGrant("grot1");
+      expect(await s.swapCredential(g, "g.sealed", "g3.sealed", T0)).toBe(false);
+      expect((await s.listExpiringGrants(T0 + 7 * DAY)).map((x) => x.id)).not.toContain("grot1");
+    });
+
     it("prune removes old events along with old audit rows", async () => {
       await s.insertUserEvent(ev({ at: T0 - 90 * 86_400_000, kind: "joined", username: "ancient.1" }));
       await s.pruneAudit(T0 - 30 * 86_400_000);
@@ -493,8 +561,34 @@ describe.skipIf(!DB)("Postgres", () => {
 
   it("migrates once, idempotently", async () => {
     await reset();
-    expect(await migrate(opts)).toEqual(["001_init.sql", "002_audit.sql", "003_accounts.sql", "004_privacy_panel.sql", "005_beta.sql", "006_two_levels.sql"]);
+    expect(await migrate(opts)).toEqual(["001_init.sql", "002_audit.sql", "003_accounts.sql", "004_privacy_panel.sql", "005_beta.sql", "006_two_levels.sql", "007_control_room.sql", "008_key_rotation.sql"]);
     expect(await migrate(opts)).toEqual([]);
+  });
+
+  it("gives keys stored before rotation existed Paperclip's default 30 days from when they were connected", async () => {
+    await reset();
+    const all = new URL("../migrations/", import.meta.url);
+    const before = mkdtempSync(join(tmpdir(), "mig-"));
+    for (const f of readdirSync(all)) if (f < "008") copyFileSync(new URL(f, all), join(before, f));
+    await migrate(opts, before);
+    const c = new pg.Client({ connectionString: DB });
+    await c.connect();
+    try {
+      await c.query("insert into bridge.accounts (id, username, username_key, secret_hash, created_at) values ('old1', 'old.user1', 'old.user1', 'h', $1)", [T0]);
+      await c.query("insert into bridge.account_links (account_id, instance_url, sealed_credential, created_at, connected_at, last_used_at) values ('old1', 'https://p.example.com', 'k.sealed', $1, $2, $2)", [T0, T0 + 5]);
+      await c.query("insert into bridge.grants (id, client_id, client_name, scopes, resource, sealed_credential, created_at, last_used_at) values ('og1', 'c', 'C', '{}', 'r', 'g.sealed', $1, $1), ('og2', 'c', 'C', '{}', 'r', null, $1, $1)", [T0]);
+      expect(await migrate(opts)).toEqual(["008_key_rotation.sql"]);
+      const pgs = new PgStore(opts, () => T0);
+      try {
+        expect((await pgs.getLink("old1"))?.credentialExpiresAt).toBe(T0 + 5 + 30 * 86_400_000);
+        expect((await pgs.getGrant("og1"))?.credentialExpiresAt).toBe(T0 + 30 * 86_400_000);
+        expect((await pgs.getGrant("og2"))?.credentialExpiresAt).toBeNull(); // no key, nothing to renew
+      } finally {
+        await pgs.close();
+      }
+    } finally {
+      await c.end();
+    }
   });
 
   it("locks the schema against Supabase's anon/authenticated roles (RLS + revoked grants)", async () => {
@@ -584,7 +678,7 @@ describe.skipIf(!DB)("Postgres", () => {
     const sql = readFileSync(new URL("../docs/supabase-schema.sql", import.meta.url), "utf8");
     await c.query(sql);
     await c.query(sql); // re-run
-    expect((await c.query("select version from bridge.schema_migrations order by 1")).rows.map((r) => r.version)).toEqual(["001_init.sql", "002_audit.sql", "003_accounts.sql", "004_privacy_panel.sql", "005_beta.sql", "006_two_levels.sql"]);
+    expect((await c.query("select version from bridge.schema_migrations order by 1")).rows.map((r) => r.version)).toEqual(["001_init.sql", "002_audit.sql", "003_accounts.sql", "004_privacy_panel.sql", "005_beta.sql", "006_two_levels.sql", "007_control_room.sql", "008_key_rotation.sql"]);
     for (const role of ["anon", "authenticated"]) {
       await c.query(`set role ${role}`);
       for (const t of ["grants", "tokens", "codes", "pending", "clients", "rate_limits", "audit_events", "schema_migrations", "accounts", "account_links", "user_events", "heartbeat", "node_samples", "panel_accounts", "panel_grants", "panel_links"])
@@ -604,7 +698,7 @@ describe.skipIf(!DB)("Postgres", () => {
 
   it("the audit table is locked against anon/authenticated and idempotently migrated", async () => {
     await reset();
-    expect(await migrate(opts)).toEqual(["001_init.sql", "002_audit.sql", "003_accounts.sql", "004_privacy_panel.sql", "005_beta.sql", "006_two_levels.sql"]);
+    expect(await migrate(opts)).toEqual(["001_init.sql", "002_audit.sql", "003_accounts.sql", "004_privacy_panel.sql", "005_beta.sql", "006_two_levels.sql", "007_control_room.sql", "008_key_rotation.sql"]);
     const c = new pg.Client({ connectionString: DB });
     await c.connect();
     for (const role of ["anon", "authenticated"]) {

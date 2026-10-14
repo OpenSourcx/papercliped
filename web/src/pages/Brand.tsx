@@ -5,10 +5,29 @@ import { PALETTES } from "../theme/palettes";
 import { usePageTitle } from "./usePageTitle";
 
 const ASSETS = [
+  { file: "/brand/icons/avatar-light-1024.png", label: "Profile picture (PNG)" },
+  { file: "/brand/icons/x-header-light-1500x500.png", label: "X header (PNG)" },
+  { file: "/brand/icons/banner-light-960x540.png", label: "Banner 16:9 (PNG)" },
   { file: "/brand/mascot-light.svg", label: "Mascot, light (SVG)" },
   { file: "/brand/mascot-dark.svg", label: "Mascot, dark (SVG)" },
   { file: "/brand/wordmark-light.png", label: "Wordmark, light (PNG)" },
   { file: "/brand/wordmark-dark.png", label: "Wordmark, dark (PNG)" },
+];
+
+/** Ready-to-post cards for announcements and the community (built by scripts/community-cards.mjs). */
+const CARDS = [
+  { name: "papercliped-launch", label: "Launch announcement" },
+  { name: "opensourcedd-welcome", label: "r/OpenSourcedd welcome" },
+];
+
+/** The OpenSourcedd community kit (also built by scripts/community-cards.mjs). Light and dark of each. */
+const OPENSOURCEDD = [
+  { file: "opensourcedd/opensourcedd-avatar", size: "-1024", label: "Profile picture (Reddit, Discord, X, GitHub)" },
+  { file: "opensourcedd/opensourcedd-icon", size: "-1024", label: "Rounded icon" },
+  { file: "opensourcedd/opensourcedd-discord-banner", size: "", label: "Discord banner" },
+  { file: "opensourcedd/opensourcedd-x-header", size: "", label: "X header" },
+  { file: "community/opensourcedd-reddit-banner", size: "", label: "Reddit banner (desktop)" },
+  { file: "community/opensourcedd-reddit-banner-mobile", size: "", label: "Reddit banner (app)" },
 ];
 
 export function Brand() {
@@ -33,8 +52,45 @@ export function Brand() {
             <span className="font-display text-5xl font-bold lowercase">papercliped</span>
           </Card>
         </div>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <a href="/brand/papercliped-icons.zip" download className="inline-flex h-11 items-center rounded-full bg-accent px-6 font-semibold text-accent-ink shadow-sm transition-transform duration-150 hover:-translate-y-0.5">Download the icon pack (ZIP)</a>
+          <span className="text-sm text-muted">App icons from 16 to 1024 px, favicon, profile pictures, X header, banners and link previews, in light and dark.</span>
+        </div>
         <ul className="mt-4 flex flex-wrap gap-3">
           {ASSETS.map((a) => <li key={a.file}><a href={a.file} download className="inline-flex h-10 items-center rounded-lg border border-field px-4 text-sm font-semibold transition-transform duration-150 hover:-translate-y-0.5">{a.label}</a></li>)}
+        </ul>
+      </section>
+
+      <section aria-labelledby="cards-h" className="mt-12">
+        <h2 id="cards-h" className="text-2xl font-bold">Community cards</h2>
+        <p className="mt-2 max-w-2xl text-muted">Ready-to-post images for Reddit, X and Discord, 1600×900. Use the dark one on dark feeds.</p>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          {CARDS.map((c) => (
+            <Card key={c.name}>
+              <img src={`/brand/community/${c.name}-dark.png`} alt={`${c.label} card`} width={1600} height={900} loading="lazy" className="h-auto w-full rounded-lg border border-line" />
+              <h3 className="mt-3 font-sans text-lg font-bold">{c.label}</h3>
+              <div className="mt-2 flex flex-wrap gap-3">
+                {(["dark", "light"] as const).map((m) => <a key={m} href={`/brand/community/${c.name}-${m}.png`} download className="inline-flex h-10 items-center rounded-lg border border-field px-4 text-sm font-semibold transition-transform duration-150 hover:-translate-y-0.5">{m === "dark" ? "Dark (PNG)" : "Light (PNG)"}</a>)}
+              </div>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      <section aria-labelledby="os-h" className="mt-12">
+        <h2 id="os-h" className="text-2xl font-bold">OpenSourcedd</h2>
+        <p className="mt-2 max-w-2xl text-muted">The community around Papercliped has its own mark: an open ring with the same face. Use these for OpenSourcedd on Reddit, Discord, X and GitHub.</p>
+        <div className="mt-4 flex items-center gap-4">
+          <img src="/brand/opensourcedd/opensourcedd-icon-light.svg" alt="OpenSourcedd mark" width={88} height={88} className="rounded-2xl border border-line" />
+          <img src="/brand/opensourcedd/opensourcedd-icon-dark.svg" alt="" width={88} height={88} className="rounded-2xl border border-line" />
+        </div>
+        <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+          {OPENSOURCEDD.map((a) => (
+            <li key={a.file} className="flex flex-wrap items-center gap-3">
+              <span className="min-w-48 text-sm font-semibold">{a.label}</span>
+              {(["light", "dark"] as const).map((m) => <a key={m} href={`/brand/${a.file}-${m}${a.size}.png`} download className="inline-flex h-9 items-center rounded-lg border border-field px-3 text-sm font-semibold transition-transform duration-150 hover:-translate-y-0.5">{m === "light" ? "Light" : "Dark"}</a>)}
+            </li>
+          ))}
         </ul>
       </section>
 

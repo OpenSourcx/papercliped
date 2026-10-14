@@ -4,10 +4,11 @@ import { Button, ButtonLink, Card, Field, TextLink } from "../components/ui";
 import { community, REPO_URL } from "../config/community";
 import { usePageTitle } from "./usePageTitle";
 
-const CHANNELS: { key: "github" | "discussions" | "discord" | "x" | "forum"; title: string; desc: string }[] = [
+const CHANNELS: { key: "github" | "discussions" | "discord" | "reddit" | "x" | "forum"; title: string; desc: string }[] = [
   { key: "github", title: "GitHub", desc: "The code, issues and pull requests. Star it to follow along." },
   { key: "discussions", title: "GitHub Discussions", desc: "Questions, ideas and show-and-tell." },
-  { key: "discord", title: "Discord", desc: "Chat with other Paperclip operators and the people building Papercliped." },
+  { key: "discord", title: "Discord", desc: "The OpenSourcedd server: chat with other Paperclip operators and the people building Papercliped." },
+  { key: "reddit", title: "Reddit", desc: "r/OpenSourcedd: share what you're building, suggest ideas and review each other's work." },
   { key: "x", title: "X", desc: "Release news and tips." },
   { key: "forum", title: "Forum", desc: "Long-form discussion and guides." },
 ];

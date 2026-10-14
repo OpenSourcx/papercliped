@@ -1,3 +1,5 @@
+import { guardClient } from "./access/guard.js";
+import { evaluate, hiddenAgents, narrowAgentList, needsIssueAgent, type ExecPolicy } from "./access/policy.js";
 import { PaperclipApiError, PaperclipClient } from "./client.js";
 import { ToolInputError } from "./errors.js";
 import { requiredScope, scopeAllows, type Scope } from "./oauth/scopes.js";
@@ -16,6 +18,8 @@ export function isMutation(tool: ToolDef, input: Record<string, unknown>): boole
 export interface ExecOptions {
   /** When set, the caller is limited to these scopes. Omitted = unrestricted (stdio / static token). */
   scopes?: readonly string[];
+  /** The account switch and this session's limits. Omitted = no limits (stdio / static token). */
+  policy?: ExecPolicy;
   actor?: { id: string; client?: string; userId?: string | null; instance?: string; username?: string };
   audit?: (e: AuditEvent) => void;
 }
@@ -74,8 +78,27 @@ export async function executeTool(
   if (client.config.readOnly && mutation) {
     return done({ ok: false, status: 403, error: "Bridge is in read-only mode (PAPERCLIP_READ_ONLY); this action was not sent to Paperclip." }, "read_only");
   }
+  let runWith = client;
+  const policy = opts.policy;
+  if (policy) {
+    // An issue's agent is whoever it is assigned to; look it up once, only when the answer can change the decision.
+    let issueAgent: string | null | undefined;
+    if (needsIssueAgent(policy, tool) && typeof parsed.data.issueId === "string") {
+      try {
+        const issue = await client.get<{ assigneeAgentId?: unknown }>(`/issues/${encodeURIComponent(parsed.data.issueId)}`);
+        issueAgent = typeof issue?.assigneeAgentId === "string" ? issue.assigneeAgentId : null;
+      } catch {
+        issueAgent = undefined; // can't tell: a session limited to selected agents is refused below, anything else lets the tool report the real error
+      }
+    }
+    const denial = evaluate(policy, tool, parsed.data, issueAgent);
+    if (denial) return done({ ok: false, status: 403, error: { message: denial.message, policy: denial.code } }, "policy_blocked");
+    runWith = guardClient(client, new Set(hiddenAgents(policy.account)));
+  }
   try {
-    return done({ ok: true, result: await runTimed(timer, () => tool.run(client, parsed.data)) });
+    let result = await runTimed(timer, () => tool.run(runWith, parsed.data));
+    if (policy?.session.agents && tool.name === "paperclip_list_agents") result = narrowAgentList(result, policy.session.agents);
+    return done({ ok: true, result });
   } catch (err) {
     if (err instanceof ToolInputError) return done({ ok: false, status: 400, error: err.message }, "invalid_input");
     if (err instanceof PaperclipApiError) {

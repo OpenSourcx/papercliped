@@ -3,6 +3,12 @@ contact_links:
   - name: Security problem
     url: mailto:support@papercliped.co
     about: Please report vulnerabilities privately, not in a public issue.
+  - name: Questions and chat (Discord)
+    url: https://discord.gg/cAECU68jSA
+    about: The OpenSourcedd community server. Ask for help, share setups, meet other Paperclip operators.
+  - name: Ideas and project shares (Reddit)
+    url: https://www.reddit.com/r/OpenSourcedd
+    about: Suggest ideas, share what you're building and review each other's work.
   - name: Docs
-    url: https://papercliped.co/docs
+    url: https://docs.papercliped.co
     about: Setup guides, permissions and troubleshooting.
