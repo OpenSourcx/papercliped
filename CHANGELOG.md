@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v2.5.4 — fix the website build after dependency updates
+
+- **Fixed:** the website build failed after the latest dependency updates (React and its type definitions were left on different major versions). They now match, so the site builds and deploys again. Nothing to do.
+
 ## v2.5.3 — the OpenSourcedd brand kit
 
 - **OpenSourcedd brand kit.** OpenSourcedd, the community around Papercliped, has its own mark: an open ring with the Papercliped face. papercliped.co/brand now carries its icons (rounded and circle-safe, SVG and PNG up to 1024 px), the Discord server banner, the X header and the r/OpenSourcedd banners for desktop and the Reddit app, all in light and dark, in `web/public/brand/opensourcedd/` and `web/public/brand/community/`. Everything is rebuilt by `web/scripts/community-cards.mjs`.

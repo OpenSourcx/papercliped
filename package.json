@@ -1,6 +1,6 @@
 {
   "name": "papercliped",
-  "version": "2.5.3",
+  "version": "2.5.4",
   "description": "Papercliped — connect Claude, ChatGPT and any MCP app to your Paperclip: control agents, sync, report. MCP server + hosted multi-tenant OAuth bridge + public stats API.",
   "license": "MIT",
   "type": "module",
