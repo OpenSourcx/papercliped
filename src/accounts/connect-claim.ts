@@ -11,15 +11,13 @@ const ASSERTION_ISSUER = "https://papercliped.co";
 const CLAIM_AUDIENCE = "papercliped-connect";
 const ACCOUNT_ID = /^[A-Za-z0-9_-]{3,128}$/;
 
+/** Only the trusted Supabase Auth project may be used for Connect account claims.
+ * The OIDC issuer includes /auth/v1 (it is not an origin-only URL).
+ */
+export const CONNECT_LOGIN_ISSUER = "https://ixwbkbkdxvfmfyiyturx.supabase.co/auth/v1";
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export function validClaimIdentity(issuer: unknown, subject: unknown): issuer is string {
-  if (typeof issuer !== "string" || issuer.length < 9 || issuer.length > 512) return false;
-  if (typeof subject !== "string" || subject.length < 1 || subject.length > 512 || /[\u0000-\u001f\u007f]/.test(subject)) return false;
-  try {
-    const u = new URL(issuer);
-    return u.protocol === "https:" && u.username === "" && u.password === "" &&
-      u.search === "" && u.hash === "" && (u.pathname === "/" || u.pathname === "") &&
-      u.origin === issuer;
-  } catch { return false; }
+  return issuer === CONNECT_LOGIN_ISSUER && typeof subject === "string" && UUID.test(subject);
 }
 /** Bind an assertion to an exact trusted issuer + subject without including PII. */
 export function claimIdentityBinding(issuer: string, subject: string): string {

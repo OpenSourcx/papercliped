@@ -11,3 +11,10 @@ The route verifies the owner's existing username + secret key via the current th
 This route does not modify stored accounts or grants. It never stores or returns the user's secret key. Existing plugin sign-in and MCP OAuth behavior are unchanged.
 
 The bridge and Connect service must share the dedicated secret over their trusted server environments only. The client browser must never receive it.
+
+
+## Central Auth decision (November 5, 2026)
+
+The sole trusted login identity issuer is Supabase Auth in the **existing shared Paperclipped project**: `https://ixwbkbkdxvfmfyiyturx.supabase.co/auth/v1`. The subject is its verified `auth.users.id` UUID. Email OTP and passkeys authenticate to the *same Supabase identity*, which is mapped only after an explicit one-time claim to the existing `bridge.accounts.id`.
+
+The bridge claim contract rejects arbitrary third-party issuers and non-UUID subjects. Note that `issuer` is the entire OIDC issuer URL, including `/auth/v1`. Central `auth.papercliped.co` is the proposed sign-in UI, not the JWT issuer. The current flag stays OFF; no hosted configuration has been changed.

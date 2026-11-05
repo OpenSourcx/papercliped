@@ -13,8 +13,8 @@ import type { OAuthConfig } from "../src/config.js";
 
 const key = "TEST-ONLY-papercliped-connect-claim-signing-key-long-enough";
 const accountName = "claim.owner";
-const issuer = "https://accounts.google.com";
-const subject = "google-subject-123";
+const issuer = "https://ixwbkbkdxvfmfyiyturx.supabase.co/auth/v1";
+const subject = "6d7beb74-570b-4180-a51b-42e7b1df9342";
 const nowMs = 1793851200000;
 const oauth: OAuthConfig = {
   issuer: "http://localhost:1", secret: "a".repeat(40), previousSecrets: [],
@@ -66,6 +66,7 @@ describe("Papercliped Connect account-claim issuer", () => {
     expect((await post({username:accountName,secret,issuer:"http://evil.invalid",subject})).status).toBe(400);
     expect((await post({username:accountName,secret,issuer,subject:""})).status).toBe(400);
     expect(() => signConnectClaim({accountId:"acct_one",issuer,subject,signingKey:"short"})).toThrow();
-    expect(() => claimIdentityBinding("https://accounts.google.com/path",subject)).toThrow();
+    expect(() => claimIdentityBinding("https://accounts.google.com",subject)).toThrow();
+    expect(() => claimIdentityBinding(issuer,"not-a-user-uuid")).toThrow();
   });
 });
