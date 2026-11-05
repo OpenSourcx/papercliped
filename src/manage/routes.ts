@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { PolicyInputError } from "../access/policy.js";
+import { signConnectClaim, validClaimIdentity } from "../accounts/connect-claim.js";
 import { displayName } from "../accounts/alias.js";
 import type { Account } from "../accounts/types.js";
 import type { OAuthProvider } from "../oauth/provider.js";
@@ -23,6 +24,8 @@ const cleanUid = (v: unknown): string | null | undefined => (v == null ? null : 
 
 export interface ManageOptions {
   now?: () => number;
+  /** Dedicated key, different from BRIDGE_SECRET. Disabled unless configured. */
+  connectClaimSigningKey?: string | null;
 }
 
 /**
@@ -35,7 +38,7 @@ export interface ManageOptions {
  * so there is no cookie and no CSRF surface.
  */
 export class ManageRoutes {
-  constructor(private p: OAuthProvider, _o: ManageOptions = {}) {}
+  constructor(private p: OAuthProvider, private readonly options: ManageOptions = {}) {}
 
   private json(res: ServerResponse, status: number, body: unknown, extra: Record<string, string> = {}): true {
     res.writeHead(status, { "Content-Type": "application/json", ...HEADERS, ...extra });
@@ -69,6 +72,34 @@ export class ManageRoutes {
     }
     if (!path.startsWith("/api/manage")) return false;
     const route = path.slice("/api/manage".length) || "/";
+
+    // Opt-in service claim issuance for Connect. No cookies, CORS, or general
+    // login session. Existing secret-key verification supplies normal rate limits.
+    // The returned 60-second token is bound to the browser identity separately
+    // verified by Connect, and can be consumed only once there.
+    if (route === "/connect-claim") {
+      const key = this.options.connectClaimSigningKey;
+      if (!key || key.length < 32) return this.json(res, 404, { error: "Not found" });
+      if (m !== "POST") return this.json(res, 405, { error: "Method not allowed" }, { Allow: "POST" });
+      const b = await this.body(req);
+      if (!b || typeof b.subject !== "string" || !validClaimIdentity(b.issuer, b.subject) ||
+          typeof b.username !== "string" || b.username.length > 64 ||
+          typeof b.secret !== "string" || b.secret.length > 100) {
+        return this.json(res, 400, { error: "Invalid account claim request" });
+      }
+      const login = await this.p.manageLogin(req, b.username, b.secret);
+      if (!login.ok) {
+        return login.reason === "throttled"
+          ? this.json(res, 429, { error: "Too many attempts" })
+          : this.json(res, 401, { error: "Invalid credentials" });
+      }
+      const claim = signConnectClaim({
+        accountId: login.account.id, issuer: b.issuer, subject: b.subject,
+        signingKey: key, nowMs: this.options.now?.() ?? Date.now(),
+      });
+      return this.json(res, 200, claim);
+    }
+
 
     // The plugin proves the secret key once and gets its token. Throttled exactly like the sign-in page.
     if (m === "POST" && route === "/plugin-link/sign-in") {
