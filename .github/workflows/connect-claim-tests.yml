@@ -1,0 +1,25 @@
+name: Connect claim contract tests
+on:
+  push:
+    branches: [feat/connect-account-claim-issuer]
+  pull_request:
+    paths:
+      - "src/accounts/connect-claim.ts"
+      - "src/manage/routes.ts"
+      - "src/http.ts"
+      - "test/connect-claim.test.ts"
+      - ".github/workflows/connect-claim-tests.yml"
+jobs:
+  claim-contract:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npx vitest run test/connect-claim.test.ts test/manage.test.ts
