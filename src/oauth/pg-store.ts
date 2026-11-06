@@ -219,6 +219,17 @@ export class PgStore implements Store {
     return { accountId: x.account_id, instanceUrl: x.instance_url, paperclipUserId: x.paperclip_user_id, sealedCredential: x.sealed_credential, credentialExpiresAt: x.credential_expires_at == null ? null : num(x.credential_expires_at), createdAt: num(x.created_at), connectedAt: num(x.connected_at), lastUsedAt: num(x.last_used_at), instanceLabel: x.instance_label ?? null };
   }
 
+  async linkIdentity(accountId: string, issuer: string, subject: string, at: number) {
+    try {
+      const r = await this.q("insert into bridge.account_identities (account_id, issuer, subject, linked_at) values ($1,$2,$3,$4) on conflict do nothing returning account_id", [accountId, issuer, subject, at]);
+      if (r.rowCount === 1) return "linked" as const;
+    } catch (e) {
+      if ((e as { code?: string }).code !== "23505") throw e;
+    }
+    const x = await this.q("select 1 from bridge.account_identities where account_id = $1 and issuer = $2 and subject = $3", [accountId, issuer, subject]);
+    return x.rowCount === 1 ? ("exists" as const) : ("conflict" as const);
+  }
+
   async createAccount(a: Account) {
     try {
       const r = await this.q(

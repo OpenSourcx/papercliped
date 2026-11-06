@@ -127,6 +127,8 @@ export interface AccountStore {
   recentCallsForGrants(grantIds: readonly string[], limit: number): Promise<AuditRow[]>;
   /** Turn anonymity on/off: updates the account and rewrites what logs, grants and audit rows show. */
   setAccountPrivacy(id: string, change: PrivacyChange): Promise<"ok" | "alias_taken" | "missing">;
+  /** Bind a verified central-login identity to an account. 'conflict' if either side is already bound to something else. */
+  linkIdentity(accountId: string, issuer: string, subject: string, at: number): Promise<"linked" | "exists" | "conflict">;
   getAccountByKey(usernameKey: string): Promise<Account | undefined>;
   getAccount(id: string): Promise<Account | undefined>;
   setAccountSecret(id: string, secretHash: string): Promise<void>;
@@ -222,6 +224,7 @@ interface Persisted {
   refresh: Record<string, TokenRecord>;
   accounts?: Record<string, Account>;
   links?: Record<string, AccountLink>;
+  identities?: Record<string, string>;
 }
 
 const MAX_USER_EVENTS = 20_000;
@@ -443,6 +446,15 @@ export class MemoryStore implements Store {
     this.accts[a.id] = { anonymous: false, alias: null, ...a };
     this.save();
     return true;
+  }
+  async linkIdentity(accountId: string, issuer: string, subject: string, _at: number) {
+    const ids = (this.d.identities ??= {});
+    const key = `${issuer}|${subject}`;
+    if (ids[key] === accountId) return "exists" as const;
+    if (ids[key] || Object.values(ids).includes(accountId)) return "conflict" as const;
+    ids[key] = accountId;
+    this.save();
+    return "linked" as const;
   }
   async setAccountBeta(id: string, beta: boolean) {
     const a = this.accts[id];
