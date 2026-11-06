@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { supabaseIdentityVerifier } from "./accounts/supabase-session.js";
+import { claimEdKeyFromEnv } from "./accounts/connect-claim.js";
 import { readConfig, readHttpConfig } from "./config.js";
 import { migrate } from "./migrate.js";
 import { OAuthProvider } from "./oauth/provider.js";
@@ -77,7 +78,7 @@ async function main() {
   const webDir = WebAppRoutes.locate(process.env, fileURLToPath(new URL("../web/dist", import.meta.url)));
   const web = webDir ? new WebAppRoutes({ dir: webDir, hosts, forumUrl: process.env.FORUM_URL?.trim() || null }) : undefined;
   if (web) console.error(`website: ${webDir}${process.env.PUBLIC_HOSTS ? ` (hosts: ${process.env.PUBLIC_HOSTS})` : ""}`);
-  const manage = provider && http.oauth?.mode === "multi" ? new ManageRoutes(provider, { connectClaimSigningKey: process.env.CONNECT_CLAIM_SIGNING_KEY?.trim() || null, verifyIdentity: process.env.CONNECT_SUPABASE_PUBLISHABLE_KEY?.trim() ? supabaseIdentityVerifier(process.env.CONNECT_SUPABASE_PUBLISHABLE_KEY.trim()) : null }) : undefined;
+  const manage = provider && http.oauth?.mode === "multi" ? new ManageRoutes(provider, { connectClaimSigningKey: process.env.CONNECT_CLAIM_SIGNING_KEY?.trim() || null, connectClaimEdKey: claimEdKeyFromEnv(), verifyIdentity: process.env.CONNECT_SUPABASE_PUBLISHABLE_KEY?.trim() ? supabaseIdentityVerifier(process.env.CONNECT_SUPABASE_PUBLISHABLE_KEY.trim()) : null }) : undefined;
   const server = createHttpServer(config, http, { oauth: provider, recorder, site, manage, publicApi, web });
   server.listen(http.port, http.host, () => {
     const o = http.oauth;

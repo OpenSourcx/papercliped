@@ -1,14 +1,14 @@
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { beforeAll, afterAll, describe, expect, it } from "vitest";
-import { createHmac } from "node:crypto";
+import { createHmac, generateKeyPairSync, verify as edVerify } from "node:crypto";
 import { hashSecretKey, generateSecretKey, normalizeSecretKey } from "../src/accounts/secret.js";
 import { usernameKey } from "../src/accounts/username.js";
 import { ManageRoutes } from "../src/manage/routes.js";
 import { MemoryStore } from "../src/oauth/store.js";
 import { OAuthProvider } from "../src/oauth/provider.js";
 import { createHttpServer } from "../src/server.js";
-import { claimIdentityBinding, signConnectClaim } from "../src/accounts/connect-claim.js";
+import { claimEdKeyFromEnv, claimIdentityBinding, parseClaimEdKey, signConnectClaim } from "../src/accounts/connect-claim.js";
 import { supabaseIdentityVerifier } from "../src/accounts/supabase-session.js";
 import type { OAuthConfig } from "../src/config.js";
 
@@ -88,6 +88,50 @@ describe("Papercliped Connect account-claim issuer", () => {
     expect((await post({ username: accountName, secret, accessToken: otherToken })).status).toBe(409); // other identity, same account
     expect((await post({ username: "second.owner", secret: secret2, accessToken: goodToken })).status).toBe(409); // same identity, other account
     expect((await post({ username: accountName, secret, accessToken: goodToken })).status).toBe(200); // idempotent
+  });
+});
+
+describe("Ed25519 claim signing (asymmetric)", () => {
+  const pair = generateKeyPairSync("ed25519");
+  const pem = pair.privateKey.export({ type: "pkcs8", format: "pem" }) as string;
+  const edKey = parseClaimEdKey(pem, "k-test");
+  it("signs EdDSA with a kid header that the public key verifies; the shared secret is not involved", () => {
+    const { assertion } = signConnectClaim({ accountId: "acct_one", issuer, subject, edKey, nowMs });
+    const [h, p, sig] = assertion.split(".");
+    expect(JSON.parse(Buffer.from(h, "base64url").toString())).toEqual({ alg: "EdDSA", typ: "PCD-ACCOUNT-ASSERTION", v: 2, kid: "k-test" });
+    expect(edVerify(null, Buffer.from(h + "." + p), pair.publicKey, Buffer.from(sig, "base64url"))).toBe(true);
+    expect(edVerify(null, Buffer.from(h + "." + p + "x"), pair.publicKey, Buffer.from(sig, "base64url"))).toBe(false);
+    expect(JSON.parse(Buffer.from(p, "base64url").toString()).binding).toBe(claimIdentityBinding(issuer, subject));
+  });
+  it("prefers EdDSA when both keys are configured and still signs HS256 when only the secret is", () => {
+    expect(signConnectClaim({ accountId: "acct_one", issuer, subject, signingKey: key, edKey, nowMs }).assertion.split(".")[0]).toBe(
+      Buffer.from(JSON.stringify({ alg: "EdDSA", typ: "PCD-ACCOUNT-ASSERTION", v: 2, kid: "k-test" })).toString("base64url"));
+    expect(JSON.parse(Buffer.from(signConnectClaim({ accountId: "acct_one", issuer, subject, signingKey: key, nowMs }).assertion.split(".")[0], "base64url").toString()).alg).toBe("HS256");
+    expect(() => signConnectClaim({ accountId: "acct_one", issuer, subject, nowMs })).toThrow();
+  });
+  it("rejects non-Ed25519 keys and bad key ids; env parsing accepts single-line PEM and fails loudly when invalid", () => {
+    const rsa = generateKeyPairSync("rsa", { modulusLength: 2048 }).privateKey.export({ type: "pkcs8", format: "pem" }) as string;
+    expect(() => parseClaimEdKey(rsa, "k")).toThrow();
+    expect(() => parseClaimEdKey(pem, "bad kid!")).toThrow();
+    expect(claimEdKeyFromEnv({})).toBeNull();
+    expect(claimEdKeyFromEnv({ CONNECT_CLAIM_ED25519_PRIVATE_KEY: pem.trim().replace(/\n/g, "\\n"), CONNECT_CLAIM_KEY_ID: "env-kid" } as NodeJS.ProcessEnv)?.kid).toBe("env-kid");
+    expect(() => claimEdKeyFromEnv({ CONNECT_CLAIM_ED25519_PRIVATE_KEY: "not a key" } as NodeJS.ProcessEnv)).toThrow();
+  });
+  it("the route works with ONLY an Ed25519 key (no shared secret) and signs EdDSA", async () => {
+    const store = new MemoryStore();
+    const s = generateSecretKey();
+    await store.createAccount({ id: "acct_ed", username: "ed.owner", usernameKey: "ed.owner", secretHash: await hashSecretKey(normalizeSecretKey(s)!), createdAt: Date.now(), lastLoginAt: null, disabled: false });
+    const provider = new OAuthProvider({ config, oauth, bridgeToken: null, store });
+    const srv = createHttpServer(config, { host: "127.0.0.1", port: 0, bridgeToken: null, publicUrl: oauth.issuer, oauth } as any,
+      { oauth: provider, manage: new ManageRoutes(provider, { connectClaimEdKey: edKey, now: () => nowMs, verifyIdentity }) });
+    await new Promise<void>((r) => srv.listen(0, "127.0.0.1", r));
+    try {
+      const r = await fetch("http://127.0.0.1:" + (srv.address() as AddressInfo).port + "/api/manage/connect-claim", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: "ed.owner", secret: s, accessToken: goodToken }) });
+      expect(r.status).toBe(200);
+      const [h, p, sig] = ((await r.json()) as { assertion: string }).assertion.split(".");
+      expect(JSON.parse(Buffer.from(h, "base64url").toString()).alg).toBe("EdDSA");
+      expect(edVerify(null, Buffer.from(h + "." + p), pair.publicKey, Buffer.from(sig, "base64url"))).toBe(true);
+    } finally { srv.close(); }
   });
 });
 

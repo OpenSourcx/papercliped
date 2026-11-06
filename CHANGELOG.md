@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v2.7.0 — Ed25519-signed Connect account claims
+
+- **Connect claims can be signed with an Ed25519 key.** Set `CONNECT_CLAIM_ED25519_PRIVATE_KEY` (PKCS#8 PEM; `node scripts/gen-claim-key.mjs <file>` makes a pair) and optionally `CONNECT_CLAIM_KEY_ID`; Connect then verifies with the public key only and can no longer forge claims. The shared `CONNECT_CLAIM_SIGNING_KEY` still works for one more release. Nothing to do unless you run Connect claims; they stay off by default.
+
 ## v2.6.0 — verified Connect account claims and identity linking
 
 - **Account claims for Connect are verified.** The (still opt-in, off by default) Connect claim route now checks the caller's Supabase sign-in itself instead of trusting a submitted identity, and links each Papercliped account to at most one sign-in identity. Self-hosters using Connect claims: set `CONNECT_SUPABASE_PUBLISHABLE_KEY` and run the database migration. Everyone else: nothing to do.
