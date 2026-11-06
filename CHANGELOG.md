@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v2.5.5 — security: update vulnerable dependencies
+
+- **Security:** updated dependencies with known vulnerabilities (the request-body parser, URI handling, IP parsing and query-string libraries). No action needed.
+
 ## v2.5.4 — fix the website build after dependency updates
 
 - **Fixed:** the website build failed after the latest dependency updates (React and its type definitions were left on different major versions). They now match, so the site builds and deploys again. Nothing to do.
