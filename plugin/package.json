@@ -1,6 +1,6 @@
 {
   "name": "papercliped-paperclip-plugin",
-  "version": "2.7.0",
+  "version": "2.7.1",
   "description": "Papercliped inside Paperclip: link your account and manage connected AI apps from a Paperclip page.",
   "license": "MIT",
   "type": "module",
@@ -15,7 +15,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@paperclipai/plugin-sdk": "2026.1001.0"
+    "@paperclipai/plugin-sdk": "2026.1023.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
