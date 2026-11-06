@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## v2.7.1 — works with Paperclip 2026.1023.0
+
+- **Works with Paperclip 2026.1023.0.** Checked against a real instance: sign-in, key renewal, every tool and the plugin install. "Wake agent now" now uses Paperclip's current wake route (the old one still works there, but is a legacy alias), and the Papercliped plugin is built against the 2026.1023.0 plugin SDK. A new test pins the list of Paperclip routes the tools call, so a Paperclip release that removes one fails CI instead of failing for you.
+- **Docs:** which Paperclip versions are supported, and which Paperclip role you need (Viewer for Read only, Operator for Full control), in `docs/PAPERCLIP-COMPATIBILITY.md` and the permissions page.
+
 ## v2.7.0 — Ed25519-signed Connect account claims
 
 - **Connect claims can be signed with an Ed25519 key.** Set `CONNECT_CLAIM_ED25519_PRIVATE_KEY` (PKCS#8 PEM; `node scripts/gen-claim-key.mjs <file>` makes a pair) and optionally `CONNECT_CLAIM_KEY_ID`; Connect then verifies with the public key only and can no longer forge claims. The shared `CONNECT_CLAIM_SIGNING_KEY` still works for one more release. Nothing to do unless you run Connect claims; they stay off by default.

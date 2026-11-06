@@ -22,6 +22,9 @@ These only ever narrow what a level allows; they never grant more than the level
 - Apps that still ask for the old "admin" level get Full control.
 - To change a level, use the [Paperclip plugin](/docs/paperclip-plugin), or disconnect the app and connect it again.
 
+## Which Paperclip role you need
+Papercliped uses your own Paperclip account, so what it can do also depends on your role in the company. **Viewer** is enough for Read only. **Operator** is enough for Full control (create and update issues, pause, resume, wake and terminate agents, set budgets). Owner and Admin add nothing Papercliped uses. Installing the plugin with one click needs an instance admin; anyone else can install it from Paperclip's plugin page. Papercliped works with Paperclip 2026.1023.0, the latest stable release, and with the releases from 2026.1005.0 on that it has been checked against.
+
 ## Disconnecting
 - Remove the connector in Claude or ChatGPT.
 - To cut access immediately, revoke the key in your Paperclip (it is named like "… (via bridge) (board)").

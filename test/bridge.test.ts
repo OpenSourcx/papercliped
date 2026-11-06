@@ -52,7 +52,7 @@ function mockPaperclip(): Server {
       ]);
     if (p === "/api/agents/a2/pause") return send(200, { id: "a2", status: "paused" });
     if (p === "/api/agents/a1") return send(200, { id: "a1", status: agentStatus });
-    if (p === "/api/agents/a1/heartbeat/invoke") return (agentStatus = "idle", send(202, { queued: true }));
+    if (p === "/api/agents/a1/wakeup") return (agentStatus = "idle", send(202, { queued: true }));
     if (p === "/api/agents/nope/pause") return send(404, { error: "Agent not found" });
     send(404, { error: "no route" });
   });

@@ -94,7 +94,8 @@ export const tools: ToolDef[] = [
     description: "Manually trigger a heartbeat so the agent starts working immediately.",
     access: "write",
     schema: z.object({ agentId: id("Agent") }),
-    run: (c, i) => c.post(`/agents/${i.agentId}/heartbeat/invoke`),
+    // /wakeup is Paperclip's current route (in every release since 2026.318); /heartbeat/invoke is its legacy alias. /wakeup needs a JSON body.
+    run: (c, i) => c.post(`/agents/${i.agentId}/wakeup`, { source: "on_demand", triggerDetail: "manual" }),
   }),
   tool({
     name: "paperclip_set_agent_budget",
