@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v2.7.0 — Ed25519-signed Connect account claims
+
+- **Connect claims can be signed with an Ed25519 key.** Set `CONNECT_CLAIM_ED25519_PRIVATE_KEY` (PKCS#8 PEM; `node scripts/gen-claim-key.mjs <file>` makes a pair) and optionally `CONNECT_CLAIM_KEY_ID`; Connect then verifies with the public key only and can no longer forge claims. The shared `CONNECT_CLAIM_SIGNING_KEY` still works for one more release. Nothing to do unless you run Connect claims; they stay off by default.
+
 ## v2.6.1 — docs: mention the upcoming managed address
 
 - **Docs:** the "At home, with a tunnel" guide now mentions that a managed address from Papercliped Connect (for ePaperclip on Proxmox) is being built and is not available yet. Nothing to do.
