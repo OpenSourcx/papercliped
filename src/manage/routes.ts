@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { PolicyInputError } from "../access/policy.js";
-import { signConnectClaim, validClaimIdentity } from "../accounts/connect-claim.js";
+import { signConnectClaim, validClaimIdentity, type ClaimEdKey } from "../accounts/connect-claim.js";
 import { displayName } from "../accounts/alias.js";
 import type { Account } from "../accounts/types.js";
 import type { OAuthProvider } from "../oauth/provider.js";
@@ -26,6 +26,8 @@ export interface ManageOptions {
   now?: () => number;
   /** Dedicated key, different from BRIDGE_SECRET. Disabled unless configured. */
   connectClaimSigningKey?: string | null;
+  /** Ed25519 private key (preferred): claims are signed with it and verified by Connect with the public key only. */
+  connectClaimEdKey?: ClaimEdKey | null;
   /** Verifies a central-login (Supabase) access token and returns the identity it belongs to. Claims are disabled without it. */
   verifyIdentity?: ((accessToken: string) => Promise<{ issuer: string; subject: string } | null>) | null;
 }
@@ -80,9 +82,10 @@ export class ManageRoutes {
     // The returned 60-second token is bound to the browser identity separately
     // verified by Connect, and can be consumed only once there.
     if (route === "/connect-claim") {
-      const key = this.options.connectClaimSigningKey;
+      const hmacKey = this.options.connectClaimSigningKey;
+      const edKey = this.options.connectClaimEdKey ?? null;
       const verify = this.options.verifyIdentity;
-      if (!key || key.length < 32 || !verify) return this.json(res, 404, { error: "Not found" });
+      if ((!edKey && (!hmacKey || hmacKey.length < 32)) || !verify) return this.json(res, 404, { error: "Not found" });
       if (m !== "POST") return this.json(res, 405, { error: "Method not allowed" }, { Allow: "POST" });
       const b = await this.body(req);
       if (!b || typeof b.accessToken !== "string" || typeof b.username !== "string" || b.username.length > 64 ||
@@ -104,7 +107,7 @@ export class ManageRoutes {
       if (linked === "conflict") return this.json(res, 409, { error: "This account or sign-in is already linked to another" });
       const claim = signConnectClaim({
         accountId: login.account.id, issuer: who.issuer, subject: who.subject,
-        signingKey: key, nowMs: now,
+        signingKey: hmacKey, edKey, nowMs: now,
       });
       return this.json(res, 200, claim);
     }
