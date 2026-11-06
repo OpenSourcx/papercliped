@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## v2.6.0 — verified Connect account claims and identity linking
+
+- **Account claims for Connect are verified.** The (still opt-in, off by default) Connect claim route now checks the caller's Supabase sign-in itself instead of trusting a submitted identity, and links each Papercliped account to at most one sign-in identity. Self-hosters using Connect claims: set `CONNECT_SUPABASE_PUBLISHABLE_KEY` and run the database migration. Everyone else: nothing to do.
+- **Security:** a database helper (`rls_auto_enable`) can no longer be called through the public API.
+
 ## v2.5.5 — security: update vulnerable dependencies
 
 - **Security:** updated dependencies with known vulnerabilities (the request-body parser, URI handling, IP parsing and query-string libraries). No action needed.

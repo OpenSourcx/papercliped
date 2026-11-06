@@ -274,6 +274,16 @@ function accountContract(name: string, make: () => Promise<Store>) {
       expect(await s.getAccountByKey("nobody.1")).toBeUndefined();
     });
 
+    it("binds one central identity to one account, even under a race", async () => {
+      const iss = "https://x.supabase.co/auth/v1";
+      await s.createAccount(acct("idA", "ident.a")); await s.createAccount(acct("idB", "ident.b"));
+      const r = await Promise.all(["s1", "s2", "s3", "s4"].map((sub) => s.linkIdentity("idA", iss, sub, T0)));
+      expect(r.filter((x) => x === "linked")).toHaveLength(1); // exactly one subject wins the account
+      const winner = ["s1", "s2", "s3", "s4"][r.indexOf("linked")];
+      expect(await s.linkIdentity("idA", iss, winner, T0)).toBe("exists");
+      expect(await s.linkIdentity("idB", iss, winner, T0)).toBe("conflict");
+    });
+
     it("accounts round-trip and update", async () => {
       expect(await s.createAccount(acct("a1", "og.kpnwrld"))).toBe(true);
       expect(await s.getAccount("a1")).toMatchObject({ username: "og.kpnwrld", usernameKey: "og.kpnwrld", lastLoginAt: null, disabled: false });
@@ -561,7 +571,7 @@ describe.skipIf(!DB)("Postgres", () => {
 
   it("migrates once, idempotently", async () => {
     await reset();
-    expect(await migrate(opts)).toEqual(["001_init.sql", "002_audit.sql", "003_accounts.sql", "004_privacy_panel.sql", "005_beta.sql", "006_two_levels.sql", "007_control_room.sql", "008_key_rotation.sql"]);
+    expect(await migrate(opts)).toEqual(["001_init.sql", "002_audit.sql", "003_accounts.sql", "004_privacy_panel.sql", "005_beta.sql", "006_two_levels.sql", "007_control_room.sql", "008_key_rotation.sql", "009_account_identities.sql"]);
     expect(await migrate(opts)).toEqual([]);
   });
 
@@ -577,7 +587,7 @@ describe.skipIf(!DB)("Postgres", () => {
       await c.query("insert into bridge.accounts (id, username, username_key, secret_hash, created_at) values ('old1', 'old.user1', 'old.user1', 'h', $1)", [T0]);
       await c.query("insert into bridge.account_links (account_id, instance_url, sealed_credential, created_at, connected_at, last_used_at) values ('old1', 'https://p.example.com', 'k.sealed', $1, $2, $2)", [T0, T0 + 5]);
       await c.query("insert into bridge.grants (id, client_id, client_name, scopes, resource, sealed_credential, created_at, last_used_at) values ('og1', 'c', 'C', '{}', 'r', 'g.sealed', $1, $1), ('og2', 'c', 'C', '{}', 'r', null, $1, $1)", [T0]);
-      expect(await migrate(opts)).toEqual(["008_key_rotation.sql"]);
+      expect(await migrate(opts)).toEqual(["008_key_rotation.sql", "009_account_identities.sql"]);
       const pgs = new PgStore(opts, () => T0);
       try {
         expect((await pgs.getLink("old1"))?.credentialExpiresAt).toBe(T0 + 5 + 30 * 86_400_000);
@@ -678,7 +688,7 @@ describe.skipIf(!DB)("Postgres", () => {
     const sql = readFileSync(new URL("../docs/supabase-schema.sql", import.meta.url), "utf8");
     await c.query(sql);
     await c.query(sql); // re-run
-    expect((await c.query("select version from bridge.schema_migrations order by 1")).rows.map((r) => r.version)).toEqual(["001_init.sql", "002_audit.sql", "003_accounts.sql", "004_privacy_panel.sql", "005_beta.sql", "006_two_levels.sql", "007_control_room.sql", "008_key_rotation.sql"]);
+    expect((await c.query("select version from bridge.schema_migrations order by 1")).rows.map((r) => r.version)).toEqual(["001_init.sql", "002_audit.sql", "003_accounts.sql", "004_privacy_panel.sql", "005_beta.sql", "006_two_levels.sql", "007_control_room.sql", "008_key_rotation.sql", "009_account_identities.sql"]);
     for (const role of ["anon", "authenticated"]) {
       await c.query(`set role ${role}`);
       for (const t of ["grants", "tokens", "codes", "pending", "clients", "rate_limits", "audit_events", "schema_migrations", "accounts", "account_links", "user_events", "heartbeat", "node_samples", "panel_accounts", "panel_grants", "panel_links"])
@@ -686,7 +696,7 @@ describe.skipIf(!DB)("Postgres", () => {
       await c.query("reset role");
     }
     const rls = await c.query("select relname, relrowsecurity from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'bridge' and relkind = 'r'");
-    expect(rls.rows.map((r) => r.relname).sort()).toEqual(["account_links", "accounts", "audit_events", "clients", "codes", "grants", "heartbeat", "node_samples", "pending", "rate_limits", "schema_migrations", "tokens", "user_events"]);
+    expect(rls.rows.map((r) => r.relname).sort()).toEqual(["account_identities", "account_links", "accounts", "audit_events", "clients", "codes", "grants", "heartbeat", "node_samples", "pending", "rate_limits", "schema_migrations", "tokens", "user_events"]);
     expect(rls.rows.every((r) => r.relrowsecurity)).toBe(true);
     await c.end();
     expect(await migrate(opts)).toEqual([]); // nothing left to apply
@@ -698,7 +708,7 @@ describe.skipIf(!DB)("Postgres", () => {
 
   it("the audit table is locked against anon/authenticated and idempotently migrated", async () => {
     await reset();
-    expect(await migrate(opts)).toEqual(["001_init.sql", "002_audit.sql", "003_accounts.sql", "004_privacy_panel.sql", "005_beta.sql", "006_two_levels.sql", "007_control_room.sql", "008_key_rotation.sql"]);
+    expect(await migrate(opts)).toEqual(["001_init.sql", "002_audit.sql", "003_accounts.sql", "004_privacy_panel.sql", "005_beta.sql", "006_two_levels.sql", "007_control_room.sql", "008_key_rotation.sql", "009_account_identities.sql"]);
     const c = new pg.Client({ connectionString: DB });
     await c.connect();
     for (const role of ["anon", "authenticated"]) {

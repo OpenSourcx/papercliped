@@ -26,6 +26,8 @@ export interface ManageOptions {
   now?: () => number;
   /** Dedicated key, different from BRIDGE_SECRET. Disabled unless configured. */
   connectClaimSigningKey?: string | null;
+  /** Verifies a central-login (Supabase) access token and returns the identity it belongs to. Claims are disabled without it. */
+  verifyIdentity?: ((accessToken: string) => Promise<{ issuer: string; subject: string } | null>) | null;
 }
 
 /**
@@ -79,23 +81,30 @@ export class ManageRoutes {
     // verified by Connect, and can be consumed only once there.
     if (route === "/connect-claim") {
       const key = this.options.connectClaimSigningKey;
-      if (!key || key.length < 32) return this.json(res, 404, { error: "Not found" });
+      const verify = this.options.verifyIdentity;
+      if (!key || key.length < 32 || !verify) return this.json(res, 404, { error: "Not found" });
       if (m !== "POST") return this.json(res, 405, { error: "Method not allowed" }, { Allow: "POST" });
       const b = await this.body(req);
-      if (!b || typeof b.subject !== "string" || !validClaimIdentity(b.issuer, b.subject) ||
-          typeof b.username !== "string" || b.username.length > 64 ||
+      if (!b || typeof b.accessToken !== "string" || typeof b.username !== "string" || b.username.length > 64 ||
           typeof b.secret !== "string" || b.secret.length > 100) {
         return this.json(res, 400, { error: "Invalid account claim request" });
       }
+      // Who is signing in comes from Supabase (checked here), never from the request body.
+      const who = await verify(b.accessToken);
+      if (!who || !validClaimIdentity(who.issuer, who.subject)) return this.json(res, 401, { error: "Sign in again" });
       const login = await this.p.manageLogin(req, b.username, b.secret);
       if (!login.ok) {
         return login.reason === "throttled"
           ? this.json(res, 429, { error: "Too many attempts" })
           : this.json(res, 401, { error: "Invalid credentials" });
       }
+      const now = this.options.now?.() ?? Date.now();
+      // One account <-> one central identity: a second sign-in cannot take over an already-linked account.
+      const linked = await this.p.store.linkIdentity(login.account.id, who.issuer, who.subject, now);
+      if (linked === "conflict") return this.json(res, 409, { error: "This account or sign-in is already linked to another" });
       const claim = signConnectClaim({
-        accountId: login.account.id, issuer: b.issuer, subject: b.subject,
-        signingKey: key, nowMs: this.options.now?.() ?? Date.now(),
+        accountId: login.account.id, issuer: who.issuer, subject: who.subject,
+        signingKey: key, nowMs: now,
       });
       return this.json(res, 200, claim);
     }
