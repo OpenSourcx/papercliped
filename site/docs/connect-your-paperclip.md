@@ -15,6 +15,8 @@ Run Paperclip on your own computer and give it a public `https://` address with 
 | **ngrok** | one free `*.ngrok-free.app` address | Yes | A free ngrok account | Daily use without a domain |
 | **Cloudflare quick tunnel** | random `*.trycloudflare.com` | **No, changes every restart** | Nothing | Trying it for an afternoon |
 
+**Running ePaperclip on Proxmox?** A managed address from Papercliped Connect (a per-device tunnel and a `*.connect.papercliped.co` address, no domain or Cloudflare account needed) is being built as a paid option. It is **not available yet**: billing is not enabled and nothing here depends on it. The tunnels above remain the way to get a public address today.
+
 Pick one and **work out your address first**: Paperclip needs to know it during setup (step 2). The tunnel sections below show how to get it.
 
 ## 2. Install Paperclip in public mode

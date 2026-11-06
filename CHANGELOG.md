@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v2.6.1 — docs: mention the upcoming managed address
+
+- **Docs:** the "At home, with a tunnel" guide now mentions that a managed address from Papercliped Connect (for ePaperclip on Proxmox) is being built and is not available yet. Nothing to do.
+
 ## v2.6.0 — verified Connect account claims and identity linking
 
 - **Account claims for Connect are verified.** The (still opt-in, off by default) Connect claim route now checks the caller's Supabase sign-in itself instead of trusting a submitted identity, and links each Papercliped account to at most one sign-in identity. Self-hosters using Connect claims: set `CONNECT_SUPABASE_PUBLISHABLE_KEY` and run the database migration. Everyone else: nothing to do.
