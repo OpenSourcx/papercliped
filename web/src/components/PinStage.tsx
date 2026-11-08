@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { ButtonLink } from "./ui";
 
 /**
  * A guided, local-only product demonstration. Never call host APIs or present sample
