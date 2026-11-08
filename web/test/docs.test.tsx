@@ -102,6 +102,6 @@ describe("docs layout", () => {
   it("the site header has no light/dark switch", () => {
     render(<MemoryRouter initialEntries={["/"]}><App /></MemoryRouter>);
     expect(screen.queryByRole("radio", { name: /dark|light|system/i })).toBeNull();
-    expect(screen.getAllByRole("link", { name: "Get started" }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("link", { name: "Use ePaperclip" }).length).toBeGreaterThan(0);
   });
 });

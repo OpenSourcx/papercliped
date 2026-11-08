@@ -115,7 +115,7 @@ describe("community links", () => {
 describe("app", () => {
   it("renders the home page and the kit", () => {
     inRouter(<App />);
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Your Paperclip, in every AI app.");
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("The power");
   });
   it("renders the design kit with every theme listed", () => {
     inRouter(<App />, "/kit");

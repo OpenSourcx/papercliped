@@ -12,27 +12,67 @@ import { levelOf, type Prompt } from "../src/pages/Prompts";
 const at = (path: string) => render(<MemoryRouter initialEntries={[path]}><App /></MemoryRouter>);
 afterEach(() => vi.unstubAllGlobals());
 
-describe("landing", () => {
-  it("shows live counts from the public stats API", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => ({ users: 42, connections: 7 }) }));
+describe("V2 landing", () => {
+  it("keeps the product-focused headline and a working ePaperclip CTA", () => {
     at("/");
-    expect(await screen.findByText("42", {}, { timeout: 3000 })).toBeInTheDocument();
+    const main = screen.getByRole("main");
+    expect(within(main).getByRole("heading", { level: 1 }).textContent).toMatch(/The power.*of the Pin\./);
+    expect(main.textContent).toContain("Use your homelab to the fullest.");
+    expect(within(main).getAllByRole("link", { name: /Use ePaperclip/ })[0]).toHaveAttribute("href", "/epaperclip");
   });
-  it("keeps a placeholder when the API is missing, without throwing", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
+  it("explains the whole product family instead of just the MCP bridge", () => {
     at("/");
-    expect(screen.getAllByText("—").length).toBeGreaterThan(0);
+    const main = screen.getByRole("main");
+    for (const name of ["ePaperclip", "Pin", "Papercliped", "Connect"]) {
+      expect(within(main).getByRole("heading", { level: 3, name })).toBeInTheDocument();
+    }
+    expect(main.textContent).toContain("release-candidate software");
   });
-  it("the permission playground has two levels, and Full control is every tool", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
+  it("Pin's demo offers real interactions without passing them off as live host changes", async () => {
     at("/");
+    const main = screen.getByRole("main");
+    const tabs = within(main).getAllByRole("tab");
+    expect(tabs).toHaveLength(3);
+    expect(main.textContent).toContain("Interactive demo");
+    await userEvent.click(tabs[1]);
+    expect(tabs[1]).toHaveAttribute("aria-selected", "true");
+    expect(main.textContent).toContain("coding workspace");
+    await userEvent.click(within(main).getByRole("button", { name: /agent mode/i }));
+    expect(main.textContent).toContain("does not execute anything");
+    await userEvent.click(within(main).getByRole("button", { name: "Ask Pin another example" }));
+    expect(tabs[2]).toHaveAttribute("aria-selected", "true");
+  });
+});
+
+describe("V2 product routes", () => {
+  for (const [path, heading] of [
+    ["/epaperclip", "Use your homelab to the fullest."],
+    ["/pin", "The power of the Pin."],
+    ["/papercliped", "The AI app you love. The agents you run."],
+    ["/connect", "Your homelab. Wherever life takes you."],
+  ]) {
+    it(`renders ${path}`, () => {
+      at(path);
+      expect(screen.getByRole("heading", { level: 1, name: heading })).toBeInTheDocument();
+    });
+  }
+  it("keeps the MCP permission playground available on the Papercliped page", async () => {
+    at("/papercliped");
+    const main = screen.getByRole("main");
     const read = tools.filter((t) => t.scope === "paperclip:read").length;
-    const status = () => screen.getByText(/tools available at this level/).textContent!;
-    expect(screen.getAllByRole("radio", { name: /Read only|Full control/ })).toHaveLength(2);
-    expect(screen.queryByRole("radio", { name: /Admin/ })).toBeNull();
-    expect(status()).toContain(`${read} of ${tools.length}`);
-    await userEvent.click(screen.getByRole("radio", { name: /Full control/ }));
-    expect(status()).toContain(`${tools.length} of ${tools.length}`);
+    expect(main.textContent).toContain("tools available at this level");
+    expect(main.textContent).toContain(`${read} of ${tools.length}`);
+    await userEvent.click(within(main).getByRole("radio", { name: /Full control/ }));
+    expect(main.textContent).toContain(`${tools.length} of ${tools.length}`);
+  });
+  it("links to the real release-candidate installation guide", () => {
+    at("/epaperclip");
+    expect(screen.getByRole("link", { name: /Try ePaperclip/ })).toHaveAttribute("href", "https://github.com/OpenSourcx/papercliped-engine/blob/main/docs/USER-GUIDE.md");
+  });
+  it("describes dual-approval sign-in without claiming a live login", () => {
+    at("/connect");
+    expect(screen.getByRole("heading", { name: /One account. Two approvals./ })).toBeInTheDocument();
+    expect(screen.getByRole("main").textContent).toContain("not yet offered as a finished public service");
   });
 });
 
@@ -129,15 +169,3 @@ describe("brand and legal", () => {
   });
 });
 
-describe("hero demo", () => {
-  it("shows an AI app steering a Paperclip, with tabs for each example", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
-    at("/");
-    const tabs = screen.getAllByRole("tab");
-    expect(tabs.map((t) => t.textContent)).toEqual(["Pause an agent", "Weekly report", "Approve a request"]);
-    await userEvent.click(tabs[2]);
-    expect(tabs[2]).toHaveAttribute("aria-selected", "true");
-    expect(await screen.findByText("Approved. The CEO can now hire a Support Agent.", {}, { timeout: 5000 })).toBeInTheDocument();
-    expect(screen.getAllByText("paperclip_decide_approval").length).toBeGreaterThan(1); // the demo chip and the playground
-  });
-});
