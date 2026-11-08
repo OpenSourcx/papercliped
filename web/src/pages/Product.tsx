@@ -1,5 +1,7 @@
 import { AppLink } from "../components/AppLink";
 import { PinStage } from "../components/PinStage";
+import { Playground } from "../components/Playground";
+import { HeroDemo } from "../components/HeroDemo";
 import { ButtonLink, TextLink } from "../components/ui";
 import { usePageTitle } from "./usePageTitle";
 
@@ -151,6 +153,19 @@ export function Product({ product }: { product: ProductName }) {
         </div>
       </section>
 
+      {product === "papercliped" && (
+        <section className="border-y border-line bg-surface">
+          <div className="mx-auto max-w-7xl px-4 py-20 sm:py-28">
+            <p className="text-xs font-bold uppercase tracking-[.2em] text-muted">It works with the tools you know</p>
+            <h2 className="mt-3 text-4xl font-bold tracking-tighter sm:text-5xl">See the connection in action.</h2>
+            <p className="mt-4 max-w-2xl text-muted">A guided example of the Papercliped MCP bridge. Sample conversations are illustrative; permissions always apply to actual tool calls.</p>
+            <div className="mt-10"><HeroDemo /></div>
+            <h3 className="mt-16 text-3xl font-bold tracking-tight">Explore every permission.</h3>
+            <p className="mt-3 max-w-2xl text-muted">Switch between Read only and Full control to see which tools your AI app can use.</p>
+            <div className="mt-8"><Playground /></div>
+          </div>
+        </section>
+      )}
       {product === "connect" && (
         <section id="connect-flow" className="scroll-mt-20 border-y border-line bg-surface">
           <div className="mx-auto max-w-7xl px-4 py-20 sm:py-28">
