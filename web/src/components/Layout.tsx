@@ -25,10 +25,12 @@ export const MENUS: { label: string; items: MenuItem[] }[] = [
   {
     label: "Product",
     items: [
-      { to: "/", title: "Overview", desc: "What Papercliped does, in a minute." },
-      { to: "/docs/getting-started", title: "Get started", desc: "Connect Claude or ChatGPT to your Paperclip." },
-      { to: "/docs/paperclip-plugin", title: "Paperclip plugin", desc: "Manage connections from inside Paperclip.", badge: "New" },
-      { to: "/status", title: "Status", desc: "Live, public numbers for the hosted service.", badge: "New" },
+      { to: "/", title: "Overview", desc: "The full Papercliped family and the power of Pin." },
+      { to: "/epaperclip", title: "ePaperclip", desc: "The Proxmox-native home for your homelab.", badge: "RC" },
+      { to: "/pin", title: "Pin", desc: "Meet your playful system companion." },
+      { to: "/papercliped", title: "Papercliped MCP", desc: "Connect Claude, ChatGPT and other AI apps." },
+      { to: "/connect", title: "Connect", desc: "Managed access and the shared sign-in vision.", badge: "Preview" },
+      { to: "/status", title: "Status", desc: "Public status of the hosted MCP gateway." },
     ],
   },
   {
@@ -122,7 +124,7 @@ function SiteHeader() {
         <div className="flex items-center justify-self-end gap-2">
           <SearchIconButton />
           <GitHubButton className="hidden lg:inline-flex" />
-          <AppLink to="/docs/getting-started" className={cx(PILL_CTA, "hidden sm:inline-flex")}>Get started</AppLink>
+          <AppLink to="/epaperclip" className={cx(PILL_CTA, "hidden sm:inline-flex")}>Use ePaperclip</AppLink>
           <button type="button" aria-label={mobile ? "Close menu" : "Open menu"} aria-expanded={mobile} aria-controls="mobile-nav" onClick={() => setMobile((m) => !m)}
             className="grid h-9 w-9 place-items-center rounded-full border border-line md:hidden">
             <Icon name={mobile ? "close" : "menu"} size={17} />
@@ -142,7 +144,7 @@ function SiteHeader() {
             </div>
           ))}
           <div className="mt-4 flex flex-wrap gap-2 px-3">
-            <AppLink to="/docs/getting-started" className={PILL_CTA}>Get started</AppLink>
+            <AppLink to="/epaperclip" className={PILL_CTA}>Use ePaperclip</AppLink>
             <GitHubButton />
           </div>
         </nav>
@@ -190,7 +192,7 @@ export function Header() {
 }
 
 const FOOTER: { title: string; links: { to: string; label: string }[] }[] = [
-  { title: "Product", links: [{ to: "/", label: "Overview" }, { to: "/docs/getting-started", label: "Get started" }, { to: "/docs/paperclip-plugin", label: "Paperclip plugin" }, { to: "/prompts", label: "Prompt gallery" }, { to: "/changelog", label: "Changelog" }] },
+  { title: "Product", links: [{ to: "/", label: "Overview" }, { to: "/epaperclip", label: "ePaperclip" }, { to: "/pin", label: "Pin" }, { to: "/papercliped", label: "Papercliped MCP" }, { to: "/connect", label: "Connect" }, { to: "/changelog", label: "Changelog" }] },
   { title: "Docs", links: [{ to: "/docs", label: "All topics" }, { to: "/docs/hosting", label: "Host your Paperclip" }, { to: "/docs/other-ai-apps", label: "Any AI app (MCP)" }, { to: "/docs/troubleshooting", label: "Troubleshooting" }] },
   { title: "Community", links: [{ to: "/community", label: "Join the community" }, { to: community.newIssue, label: "Report a bug" }, { to: "/community#suggest", label: "Suggest a feature" }, { to: "/brand", label: "Brand assets" }] },
   { title: "Company", links: [{ to: REPO_URL, label: "Open source (MIT)" }, { to: `mailto:${community.email}`, label: "Contact" }, { to: "/status", label: "Status" }] },
@@ -230,7 +232,7 @@ export function Footer() {
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-6">
         <div className="lg:col-span-1">
           <Wordmark />
-          <p className="mt-3 text-sm text-muted">Papercliped, not Paperclipped. Free and open source.</p>
+          <p className="mt-3 text-sm text-muted">The system, the companion and the connection. Built for your homelab.</p>
           <SocialIcons />
         </div>
         {FOOTER.map((col) => (
@@ -248,7 +250,7 @@ export function Footer() {
       </div>
       <div className="border-t border-line">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-4 text-xs text-muted">
-          <span>© {new Date().getUTCFullYear()} Papercliped contributors · MIT licence · Not affiliated with Paperclip</span>
+          <span>© {new Date().getUTCFullYear()} Papercliped contributors · MCP and ePaperclip MIT · Connect separately licensed · Independent of Paperclip AI</span>
           <span>No trackers. No third-party scripts.</span>
         </div>
       </div>
