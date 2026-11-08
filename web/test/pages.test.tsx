@@ -56,6 +56,15 @@ describe("V2 product routes", () => {
       expect(screen.getByRole("heading", { level: 1, name: heading })).toBeInTheDocument();
     });
   }
+  it("keeps the MCP permission playground available on the Papercliped page", async () => {
+    at("/papercliped");
+    const main = screen.getByRole("main");
+    const read = tools.filter((t) => t.scope === "paperclip:read").length;
+    expect(main.textContent).toContain("tools available at this level");
+    expect(main.textContent).toContain(`${read} of ${tools.length}`);
+    await userEvent.click(within(main).getByRole("radio", { name: "Full control" }));
+    expect(main.textContent).toContain(`${tools.length} of ${tools.length}`);
+  });
   it("links to the real release-candidate installation guide", () => {
     at("/epaperclip");
     expect(screen.getByRole("link", { name: /Try ePaperclip/ })).toHaveAttribute("href", "https://github.com/OpenSourcx/papercliped-engine/blob/main/docs/USER-GUIDE.md");
