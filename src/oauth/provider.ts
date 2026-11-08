@@ -1074,7 +1074,7 @@ export class OAuthProvider {
         const link = p.accountId ? await this.store.getLink(p.accountId) : undefined;
         const u = new URL(p.redirectUri);
         const acct = p.accountId ? await this.store.getAccount(p.accountId) : undefined;
-        return this.page(res, status, scopePage({ ...c, requestedMax: normalizeScope(p.requestedMax) as Scope, loopbackOnly: u.protocol === "http:" && LOOPBACK.has(u.hostname), instanceHost: link ? new URL(link.instanceUrl).host : "your Paperclip", username: p.username ?? "", anonymous: !!acct?.anonymous, alias: acct?.alias ?? null}), p);
+        return this.page(res, status, scopePage({ ...c, requestedMax: normalizeScope(p.requestedMax) as Scope, loopbackOnly: u.protocol === "http:" && LOOPBACK.has(u.hostname), instanceHost: link ? new URL(link.instanceUrl).host : "your Paperclip", username: p.username ?? "", anonymous: !!acct?.anonymous, alias: acct?.alias ?? null, maxOnly: !!this.centralPublicKey }), p);
       }
       default:
         if (this.centralPublicKey) return this.html(res, 400, errorPage("Invalid stage", "Restart the MCP connection from your app."));
@@ -1399,7 +1399,7 @@ export class OAuthProvider {
     const { f, p, rid } = s;
     const allowed = grantableScopes();
     const level = (f.get("level") ?? "") as Scope;
-    if (!allowed.includes(level)) return this.renderStage(res, rid, p, "Choose an access level.");
+    if (!allowed.includes(level) || (this.centralPublicKey && maxRank([level]) > maxRank([p.requestedMax]))) return this.renderStage(res, rid, p, "Choose an access level no higher than requested.");
     const link = p.accountId ? await this.store.getLink(p.accountId) : undefined;
     if (!p.accountId || !link?.sealedCredential) {
       p.stage = "instance";

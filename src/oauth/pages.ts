@@ -1,6 +1,6 @@
 import { USERNAME_MAX, USERNAME_MIN } from "../accounts/username.js";
 import { FAVICON_LINK } from "../site/favicon.js";
-import { grantableScopes, type Scope } from "./scopes.js";
+import { grantableScopes, maxRank, type Scope } from "./scopes.js";
 
 export const esc = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
@@ -195,8 +195,8 @@ const LEVELS: { scope: Scope; label: string; blurb: string }[] = [
 ];
 
 /** Final step of the account flow: pick how much the app may do. */
-export function scopePage(v: Ctx & { requestedMax: Scope; loopbackOnly: boolean; instanceHost: string; username: string; anonymous?: boolean; alias?: string | null }): string {
-  const allowed = new Set(grantableScopes(v.requestedMax));
+export function scopePage(v: Ctx & { requestedMax: Scope; loopbackOnly: boolean; instanceHost: string; username: string; anonymous?: boolean; alias?: string | null; maxOnly?: boolean }): string {
+  const allowed = new Set(grantableScopes(v.requestedMax).filter((level)=>!v.maxOnly || maxRank([level])<=maxRank([v.requestedMax])));
   const def: Scope = v.requestedMax;
   const opts = LEVELS.filter((l) => allowed.has(l.scope))
     .map((l) => `<label class="opt"><input type="radio" name="level" value="${l.scope}"${l.scope === def ? " checked" : ""}> <strong>${l.label}</strong><small>${esc(l.blurb)}</small></label>`)
