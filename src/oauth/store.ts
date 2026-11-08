@@ -78,7 +78,7 @@ export interface PendingRecord {
   /** The Paperclip user id learned from the approved challenge. */
   paperclipUserId?: string;
   /** login = signed in with the secret key; connect = via Paperclip approval. */
-  path?: "login" | "connect" | "new";
+  path?: "login" | "connect" | "new" | "central";
   expiresAt: number;
 }
 
