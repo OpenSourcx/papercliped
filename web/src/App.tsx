@@ -7,6 +7,7 @@ import { Changelog } from "./pages/Changelog";
 import { Community } from "./pages/Community";
 import { DocPage, DocsIndex } from "./pages/Docs";
 import { Home } from "./pages/Home";
+import { Product } from "./pages/Product";
 import { Legal } from "./pages/Legal";
 import { RenderFrame } from "./pages/Render";
 import { Status } from "./pages/Status";
@@ -15,7 +16,7 @@ import { NotFound } from "./pages/Placeholder";
 import { Prompts } from "./pages/Prompts";
 
 /** Every route the site serves. scripts/check-routes.mjs loads each of these in a real browser. */
-export const ROUTES = ["/", "/kit", "/docs", "/changelog", "/prompts", "/community", "/brand", "/privacy", "/terms", "/status"] as const;
+export const ROUTES = ["/", "/epaperclip", "/pin", "/papercliped", "/connect", "/kit", "/docs", "/changelog", "/prompts", "/community", "/brand", "/privacy", "/terms", "/status"] as const;
 
 export function App() {
   // docs.papercliped.co: the docs landing at / and each page at /<page> (the bridge maps hosts; see web/src/lib/hosts.ts).
@@ -36,6 +37,10 @@ export function App() {
       <Layout>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/epaperclip" element={<Product product="epaperclip" />} />
+          <Route path="/pin" element={<Product product="pin" />} />
+          <Route path="/papercliped" element={<Product product="papercliped" />} />
+          <Route path="/connect" element={<Product product="connect" />} />
           <Route path="/kit" element={<Kit />} />
           <Route path="/docs" element={<DocsIndex />} />
           <Route path="/docs/:slug" element={<DocPage />} />
