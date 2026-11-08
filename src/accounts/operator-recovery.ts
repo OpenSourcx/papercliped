@@ -1,5 +1,5 @@
 import { createPrivateKey, randomBytes, sign, type KeyObject } from "node:crypto";
-import type { OAuthStore } from "../oauth/store.js";
+import type { Store } from "../oauth/store.js";
 
 export const OPERATOR_RECOVERY_AUDIENCE = "papercliped-operator-recovery-review";
 export const OPERATOR_RECOVERY_ISSUER = "https://mcp.papercliped.co";
@@ -30,7 +30,7 @@ export function recoverySignerFromEnv(env: NodeJS.ProcessEnv = process.env): Rec
  * possession even when a user deleted their former Paperclip deployment.
  */
 export async function issueOperatorRecoveryEvidence(
-  store: Pick<OAuthStore, "getGrant" | "getAccount" | "hit">,
+  store: Pick<Store, "getGrant" | "getAccount" | "hit">,
   grantId: string,
   signer: RecoverySigner,
   nowMs = Date.now(),
