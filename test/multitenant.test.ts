@@ -1269,8 +1269,11 @@ describe("hosted MCP: central Papercliped account required before client consent
      const html=await ok.text();
      expect(html).toContain("Allow Claude Central?");
      expect(html).toContain("central.user1");
+     expect(html).not.toContain('value="paperclip:control"');
      expect((await post(assertion)).status).toBe(400);
      const csrf=grab(html).csrf;
+     const escalated=await step(central,{rid,csrf},"decision",{level:"paperclip:control"});
+     expect(escalated.status).toBe(400);
      const approved=await step(central,{rid,csrf},"decision",{level:"paperclip:read"});
      expect(approved.status).toBe(302);
      const tokens=await exchange(central,{rid,csrf,cid,verifier,html:"",status:303},approved);
