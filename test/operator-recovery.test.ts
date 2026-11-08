@@ -42,7 +42,7 @@ describe("opt-in operator recovery evidence",()=>{
 
 describe("MCP recovery-only fallback when the old Paperclip is gone", () => {
  it("allows only one evidence tool, with no normal MCP or HTTP action access", async () => {
-   const g = existing();
+   const g = {...existing(),createdAt:Date.now()-3*86_400_000};
    const storeFake = {getGrant:async()=>g,getAccount:async()=>({id:aid,disabled:false}),hit:async()=>true};
    const oauthFake = {
      authenticate:async (token:string)=>token==="pcb_at_oldauthorized" ? g : null,
