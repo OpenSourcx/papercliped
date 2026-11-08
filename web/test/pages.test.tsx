@@ -5,6 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { App } from "../src/App";
+import tools from "../src/generated/tools.json";
 import gallery from "../src/content/prompts.json";
 import { levelOf, type Prompt } from "../src/pages/Prompts";
 
