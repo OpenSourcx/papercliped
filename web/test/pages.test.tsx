@@ -123,9 +123,14 @@ describe("brand and legal", () => {
     expect(main.textContent).toContain("support@papercliped.co");
     expect(main.textContent).toContain("https://papercliped.co");
     expect(main.textContent).not.toContain("{{");
+    expect(main.textContent).toContain("Google Sign-In information");
+    expect(main.textContent).toContain("Stripe");
+    expect(main.textContent).toContain("2026-11-07");
     unmount();
     at("/terms");
     expect(screen.getByRole("main").textContent).not.toContain("{{");
+    expect(screen.getByRole("main").textContent).toContain("Paid plans and billing");
+    expect(screen.getByRole("main").textContent).toContain("Papercliped Connect");
   });
 });
 

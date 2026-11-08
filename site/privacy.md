@@ -1,51 +1,67 @@
 # Privacy Policy
 
-**Operator:** KpnWorld ("we") · **Contact:** {{CONTACT}} · **Effective:** {{DATE}}
+**Service:** Papercliped and the related Papercliped Account, Connect and hosted Console services at {{URL}} and their Papercliped subdomains  
+**Operator:** KpnWorld ("Papercliped", "we" or "us")  
+**Contact:** {{CONTACT}}  
+**Effective date:** {{DATE}}
 
-*This policy describes how the hosted Papercliped service at {{URL}} handles data. It is a good-faith summary of what the software does; the operator should have it reviewed before relying on it as a legal document.*
+This policy explains what information is handled when you visit the Papercliped website, sign in to a Papercliped account, connect an AI client to the hosted MCP gateway, or use Papercliped Connect with an ePaperclip device. Some features are still being developed; information is processed for a feature only if you actually use it.
 
-## What the service does
-Papercliped lets an AI assistant (such as Claude or ChatGPT) that **you** connect act on **your** Paperclip: read status and reports and, only at the access level you choose, control agents and tasks.
+Software installed and operated locally on your own machine may retain separate operational data under your control. The hosted services do not thereby become the administrator of your Proxmox system.
 
-## What we publish
-The service publishes **aggregate numbers only** at `/api/public/v1/*` and on the status page: totals and rates (users, live connections, sign-in success, request success rate, latency, error types, load). Nothing in them identifies you: no usernames or aliases, no Paperclip addresses, no app names, no IP addresses, and no per-person breakdown.
+## Information we receive
 
-## Data we handle
-| Data | Why | How it is kept |
-| --- | --- | --- |
-| Your **username** | to identify your account and to run the service | stored with your account; shown only in the operator's logs and private dashboard (see Anonymous mode below) |
-| Your **secret key** | to let you sign in again | only a salted one-way hash is stored; we cannot read or recover it |
-| The address of your Paperclip | to connect to it | stored until you disconnect or delete your account |
-| A Paperclip access key, issued when **you** approve in your own Paperclip | to make the requests you authorised | stored **encrypted**; deleted when you disconnect, or after 30 days without use |
-| Your Paperclip user id and the AI app's name | to recognise you when you reconnect, and to show the connection | with your account and connection records |
-| OAuth tokens | to authenticate the AI app to the service | only irreversible hashes are stored; access tokens last 1 hour |
-| Activity log: time, tool name, whether it changed anything, success or failure, timing, app name, your Paperclip's host | security, abuse prevention and measuring reliability | kept 30 days |
-| Community log: when an account joins, signs in, updates or leaves, and whether sign-in flows succeed | to measure how the service is doing | kept with the activity log |
-| Service health samples | to detect outages | kept short-term, contain no personal data |
+- **Account and login information.** Account ID, chosen username, and, if you enroll in central sign-in, your email address, authentication-provider identity identifier, email verification status and linked sign-in method. We retain hashes or other protected representations of account secrets and session tokens rather than storing those tokens as readable credentials.
+- **Google Sign-In information.** If you choose Google, Google and our identity provider may provide your Google account identifier, email address and email-verification status, and, depending on the permissions you approve, your name and profile photo. We use this information to verify your sign-in, establish or link your Papercliped account with your confirmation, protect your session and help you manage sign-in methods. We do not use Google Sign-In to read your Gmail, Google Drive, contacts or calendar. We request only the identity scopes needed for sign-in (normally openid, email and profile); any future Google API permissions would require updated disclosures and applicable consent.
+- **Paperclip and MCP connections.** Addresses of Paperclip installations that you connect, linked Paperclip user IDs, your chosen AI application, grant scopes, and connection credentials or references needed to act on your instructions. Sensitive connection credentials are protected in storage. The underlying Paperclip token can carry broad authority; see [Security](/docs/security) and choose access levels carefully.
+- **Devices and managed connectivity.** If you use Connect, we process registered device identifiers, ownership and authorized-user relationships, device public keys, pairing events, assigned hostnames, tunnel/provisioning identifiers and connection status. Your device's private signing key stays on the device. The hosted account alone does not grant Proxmox administrator permissions.
+- **Billing.** If you purchase Connect, our payment provider processes payment details. We may retain the billing customer identifier, subscription/plan, device quantity, payment and entitlement status, invoice references, and related billing and audit events. We do not need your full card number to manage a subscription.
+- **Operational and security information.** We may record IP address, browser or user-agent information, timestamps, login attempts, session and authorization events, request outcomes, tool names, connection hostnames, errors, performance metrics and rate-limit information for security, support, abuse prevention and reliability.
+- **Information you send to support.** The contents of your requests, email address and any diagnostics you choose to provide.
 
-**Pass-through:** content from your Paperclip (tasks, agent names, reports) is relayed to the AI app you connected so it can answer you. The service **does not store** that content and does not log request arguments or responses.
+## How we use information
 
-We do **not** sell data, use it for advertising, or use it to train models.
+We use the information described above to provide sign-in and account recovery; enforce permissions; operate the MCP gateway and optional device connections; complete transactions and apply subscription entitlements; detect abuse; investigate failures; respond to support requests; and comply with applicable legal obligations.
 
-## Anonymous mode
-You can choose to appear anonymously. Your username is then replaced in the logs and the operator's dashboard by a generated alias (for example `Ann02`), and your Paperclip's address by a masked label. Turning it on also replaces your name in earlier log entries. This is **pseudonymity, not secrecy from the operator**: a person with administrator access to the database can still link an alias to an account. It does protect you from anyone who only sees the panel or the logs.
+When you authorize an AI client, the gateway transmits relevant requests to your connected Paperclip and returns the results to that client. Responses may contain sensitive task, agent or business information from your installation. The gateway is designed to avoid persistently storing request arguments or full tool responses, but the AI application and your own Paperclip installation may independently keep their own records. Review their privacy notices before connecting.
 
-## Your AI provider
-What the AI app does with the content it receives is governed by that provider's terms and privacy policy (for example Anthropic or OpenAI), not this one.
+We do not sell personal data or use Google Sign-In information to target advertisements or train AI models. If we materially change the permitted uses of Google data, we will update this policy and obtain any consent required before using that data differently.
 
-## Sharing
-Infrastructure providers process data on our behalf: Render (hosting), Supabase (database) and Cloudflare (DNS and keep-alive). No other sharing, except where required by law.
+## Who processes or receives information
 
-## Your choices
-- Disconnect in your AI app, and ask us to delete your account at {{CONTACT}} to remove it immediately.
-- Revoke the access key in your own Paperclip (named like "… (via bridge) (board)"). That cuts access instantly.
-- Switch anonymous mode on or off whenever you sign in.
+Depending on which feature you use, information can be processed by:
+
+- **Supabase:** authentication, identity records and PostgreSQL storage.
+- **Google:** authentication when you choose Google Sign-In; Google handles your Google account and authentication ceremony.
+- **Render:** hosting the Papercliped MCP gateway.
+- **Cloudflare:** website delivery, security, DNS and, if you subscribe to Connect, managed tunnels and routing.
+- **Stripe:** checkout, billing, payment processing and subscription administration.
+- **Resend or another configured email-delivery provider:** sending verification messages and service emails.
+- **Your chosen AI application provider:** data you specifically authorize the MCP gateway to deliver to that application.
+- **Your own device, hosting or Paperclip provider:** data processed by software you install or independently operate.
+
+We may also disclose limited information when reasonably necessary to investigate fraud, protect users and services, comply with law, or respond to a valid legal request. Providers may process data in different countries under their own applicable safeguards and terms.
+
+## Sessions, cookies and analytics
+
+Hosted account access uses security-related session cookies, including a Secure, HttpOnly browser session used by the Connect API. Cookies and similar browser storage may also remember preferences such as the site's appearance. We use service logs and aggregated metrics to understand reliability and abuse. The marketing site does not intentionally install third-party behavioral-advertising trackers. An IP address or other personal information can nonetheless appear in infrastructure and security logs.
+
+## Retention and deletion
+
+Different records have different lifetimes. For example, short-lived authentication codes expire quickly, while account records remain while you maintain an account. The MCP gateway's operational activity log has historically been configured for about 30 days; additional security, device-provisioning, billing and service-provider logs may have different retention periods. Financial records and some audit records may need to be kept to satisfy legal or security obligations. Disconnecting a tool or tunnel does not necessarily erase past billing or audit records.
+
+To request account access, correction, export or deletion, contact {{CONTACT}}. We will verify the request, explain what can be removed, and handle it under applicable law and technical constraints. You can also revoke AI application grants, remove supported device connections, and manage sessions from the available account interfaces. Revoking Google access in your Google Account can stop future Google authorization, but it does not by itself remove your Papercliped account or records already lawfully retained.
 
 ## Security
-See [Security](/docs/security). No system is perfectly secure; if we learn of a breach affecting you we will tell you promptly and help you revoke keys.
 
-## Children
-Not intended for anyone under 18.
+We use measures such as TLS, access controls, hashed tokens, encryption for certain stored connection credentials, and device-bound signing for supported pairing flows. No internet-connected system is completely secure. Keep your credentials private and use only trusted AI clients, device administrators and connected services.
 
-## Changes
-We will post changes here and update the date above.
+## Age and location
+
+The hosted service is not intended for children under 18. Privacy rights and protections may vary by location. Contact {{CONTACT}} if you have a privacy question or wish to exercise a right available to you under applicable law.
+
+## Changes and contact
+
+We may revise this policy when services, providers, legal requirements or our handling of information change. Material changes will be communicated where required. The effective date above indicates the version displayed on this page.
+
+**Questions or privacy requests:** {{CONTACT}}.
