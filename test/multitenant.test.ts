@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, randomBytes, sign, generateKeyPairSync } from "node:crypto";
 import { createServer, type IncomingMessage, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import pg from "pg";
@@ -1223,4 +1223,62 @@ describe("multi-tenant configuration", () => {
     expect(c.proxyHops).toBe(1);
     expect(c.database?.ssl).toBe("require");
   });
+});
+
+
+describe("hosted MCP: central Papercliped account required before client consent", () => {
+ it("blocks legacy login, requires signed session handoff, then mints ordinary scoped OAuth tokens", async () => {
+   const original=await rig();
+   let central: Rig | undefined;
+   try {
+     await newUser(original,"tenant-central.example.com","central.user1",{level:"paperclip:read"});
+     const account=(await original.store.getAccountByKey("central.user1"))!;
+     const pair=generateKeyPairSync("ed25519");
+     const pem=pair.publicKey.export({type:"spki",format:"pem"}).toString();
+     central=await rig({ centralAuth:{ publicKey:pem } },{store:original.store});
+     const cid=await register(central,"Claude Central");
+     const {verifier,challenge}=pkce();
+     const url=new URL(central.base+"/authorize");
+     for (const [k,v] of Object.entries({client_id:cid,redirect_uri:CB,response_type:"code",
+       code_challenge:challenge,code_challenge_method:"S256",state:"oauth-state",scope:"paperclip:read",
+       resource:central.base+"/mcp"})) url.searchParams.set(k,v);
+     const started=await fetch(url,{redirect:"manual"});
+     expect(started.status).toBe(303);
+     const where=new URL(started.headers.get("location")!);
+     expect(where.origin+where.pathname).toBe("https://auth.papercliped.co/mcp/authorize");
+     const rid=where.searchParams.get("rid")!;
+     expect(rid).toMatch(/^[A-Za-z0-9_-]{32}$/);
+     const denied=await fetch(central.base+"/authorize/login",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},
+       body:new URLSearchParams({rid,username:"central.user1",secret:"not-needed"}).toString()});
+     expect(denied.status).toBe(404);
+     const iat=Math.floor(central.clock.t/1000);
+     const enc=(o:unknown)=>Buffer.from(JSON.stringify(o)).toString("base64url");
+     const header=enc({alg:"EdDSA",typ:"PCD-MCP-HANDOFF",kid:"pcd-mcp-1",v:1});
+     const payload=enc({iss:"https://connect.papercliped.co",aud:"https://mcp.papercliped.co/mcp",
+       sub:account.id,rid,iat,exp:iat+90,jti:randomBytes(24).toString("base64url")});
+     const body=header+"."+payload;
+     const assertion=body+"."+sign(null,Buffer.from(body),pair.privateKey).toString("base64url");
+     const post=(sig:string,origin="https://auth.papercliped.co")=>fetch(central!.base+"/authorize/central",{
+       method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded",Origin:origin},
+       body:new URLSearchParams({rid,assertion:sig}).toString(),redirect:"manual"
+     });
+     expect((await post(assertion,"https://evil.example")).status).toBe(403);
+     expect((await post(assertion.slice(0,-4)+"aaaa")).status).toBe(403);
+     const ok=await post(assertion);
+     expect(ok.status).toBe(200);
+     const html=await ok.text();
+     expect(html).toContain("Allow Claude Central?");
+     expect(html).toContain("central.user1");
+     expect(html).not.toContain('value="paperclip:control"');
+     expect((await post(assertion)).status).toBe(400);
+     const csrf=grab(html).csrf;
+     const escalated=await step(central,{rid,csrf},"decision",{level:"paperclip:control"});
+     expect(escalated.status).toBe(400);
+     const approved=await step(central,{rid,csrf},"decision",{level:"paperclip:read"});
+     expect(approved.status).toBe(302);
+     const tokens=await exchange(central,{rid,csrf,cid,verifier,html:"",status:303},approved);
+     expect(tokens.scope).toBe("paperclip:read");
+     expect(tokens.access_token).toMatch(/^pcb_at_/);
+   } finally { central?.close(); original.close(); }
+ });
 });
