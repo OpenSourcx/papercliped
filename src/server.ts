@@ -74,7 +74,7 @@ async function readBody(req: IncomingMessage): Promise<unknown> {
 }
 
 /** Who is calling the protected endpoints. */
-type Principal = { kind: "static" } | { kind: "oauth"; grantId: string; client: string; userId: string | null; username?: string; instance?: string; scopes: string[]; paperclip: PaperclipClient; policy: ExecPolicy };
+type Principal = { kind: "static" } | { kind: "oauth"; grantId: string; client: string; userId: string | null; username?: string; instance?: string; scopes: string[]; paperclip: PaperclipClient; policy: ExecPolicy } | { kind: "recovery"; grantId: string; client: string; username?: string };
 
 export function createHttpServer(config: BridgeConfig, http: HttpConfig, opts: ServerOptions = {}): Server {
   const baseClient = opts.client ?? new PaperclipClient(config);
@@ -87,7 +87,7 @@ export function createHttpServer(config: BridgeConfig, http: HttpConfig, opts: S
     opts.oauth !== undefined ? opts.oauth : http.oauth ? new OAuthProvider({ config, oauth: http.oauth, bridgeToken: http.bridgeToken }) : null;
   const recoverySigner = opts.recoverySigner === undefined ? recoverySignerFromEnv() : opts.recoverySigner;
 
-  async function authenticate(req: IncomingMessage): Promise<Principal | null> {
+  async function authenticate(req: IncomingMessage, requestedPath: string): Promise<Principal | null> {
     const m = /^Bearer (.+)$/i.exec(req.headers.authorization ?? "");
     if (!m) return null;
     const token = m[1].trim();
@@ -99,12 +99,17 @@ export function createHttpServer(config: BridgeConfig, http: HttpConfig, opts: S
     try {
       ({ client: paperclip, instanceHost: instance } = await oauth.resolveClient(grant));
     } catch {
-      return null; // unreadable credential, expired connection, or instance no longer allowed: an invalid token (the user reconnects)
+      // A formerly valid OAuth grant can support evidence-only recovery after its old
+      // Paperclip disappears. It never regains ordinary MCP/action access.
+      if (requestedPath === "/mcp" && recoverySigner && grant.accountId && grant.scopes.includes("paperclip:read")) {
+        return { kind: "recovery", grantId: grant.id, client: grant.clientName, username: grant.username ?? undefined };
+      }
+      return null;
     }
     return { kind: "oauth", grantId: grant.id, client: grant.clientName, userId: grant.userId, username: grant.username ?? undefined, instance, scopes: grant.scopes, paperclip, policy: await oauth.policyFor(grant) };
   }
 
-  const execFor = (p: Principal): { client: PaperclipClient; exec: ExecOptions } =>
+  const execFor = (p: Exclude<Principal, {kind: "recovery"}>): { client: PaperclipClient; exec: ExecOptions } =>
     p.kind === "static"
       ? { client: baseClient, exec: { actor: { id: "static-token" }, audit } }
       : { client: p.paperclip, exec: { scopes: p.scopes, policy: p.policy, actor: { id: p.grantId, client: p.client, userId: p.userId, instance: p.instance, username: p.username }, audit } };
@@ -154,19 +159,23 @@ export function createHttpServer(config: BridgeConfig, http: HttpConfig, opts: S
 
       if (oauth && (await oauth.handle(req, res, url))) return;
 
-      const principal = await authenticate(req);
+      const principal = await authenticate(req, path);
       if (!principal) return unauthorized(res, !!req.headers.authorization);
       if (principal.kind === "oauth" && oauth && !(await oauth.allowCall(principal.grantId))) {
         return json(res, 429, { error: "Too many requests for this connection; slow down." }, { "Retry-After": "30" });
       }
-      const { client, exec } = execFor(principal);
+      const { client, exec } = principal.kind === "recovery"
+        ? { client: baseClient, exec: { actor: { id: principal.grantId, client: principal.client, username: principal.username }, audit } }
+        : execFor(principal);
 
       // Stateless Streamable HTTP: a fresh server+transport per request, so no session affinity is needed.
       if (path === "/mcp") {
-        const evidence = principal.kind === "oauth" && recoverySigner && oauth
+        const evidence = (principal.kind === "oauth" || principal.kind === "recovery") && recoverySigner && oauth
           ? () => issueOperatorRecoveryEvidence(oauth.store, principal.grantId, recoverySigner)
           : undefined;
-        const server = createMcpServer(config, client, exec, evidence);
+        // The fallback exposes exactly one evidence tool. It cannot forward any
+        // Paperclip command, including the generic raw API tool.
+        const server = createMcpServer(config, client, exec, evidence, principal.kind === "recovery");
         const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
         res.on("close", () => {
           void transport.close();

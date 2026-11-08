@@ -17,10 +17,10 @@ export function visibleTools(scopes?: readonly string[], policy?: ExecPolicy) {
   return policy ? byScope.filter((t) => canEverRun(policy, t)) : byScope;
 }
 
-export function createMcpServer(config: BridgeConfig = readConfig(), client = new PaperclipClient(config), exec: ExecOptions = {}, recoveryEvidence?: () => Promise<string>) {
+export function createMcpServer(config: BridgeConfig = readConfig(), client = new PaperclipClient(config), exec: ExecOptions = {}, recoveryEvidence?: () => Promise<string>, recoveryOnly = false) {
   const server = new McpServer({ name: "papercliped", version: VERSION });
 
-  for (const tool of visibleTools(exec.scopes, exec.policy)) {
+  for (const tool of recoveryOnly ? [] : visibleTools(exec.scopes, exec.policy)) {
     server.registerTool(
       tool.name,
       {
