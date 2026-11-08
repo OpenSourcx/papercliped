@@ -62,7 +62,7 @@ describe("V2 product routes", () => {
     const read = tools.filter((t) => t.scope === "paperclip:read").length;
     expect(main.textContent).toContain("tools available at this level");
     expect(main.textContent).toContain(`${read} of ${tools.length}`);
-    await userEvent.click(within(main).getByRole("radio", { name: "Full control" }));
+    await userEvent.click(within(main).getByRole("radio", { name: /Full control/ }));
     expect(main.textContent).toContain(`${tools.length} of ${tools.length}`);
   });
   it("links to the real release-candidate installation guide", () => {
