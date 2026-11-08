@@ -5,11 +5,18 @@ Current as of v2.0.0 (read from the route code). Items marked **(planned v3)** d
 ## 0. Hosts
 One service, routed by host (`PUBLIC_HOSTS`, `src/web/`): `papercliped.co` the website, `docs.papercliped.co` the docs (landing at `/`, pages at `/<page>`), `mcp.`/`api.papercliped.co` the protocol and APIs, `forum.` a redirect, `www.` a redirect to the apex. See `docs/DOMAINS.md`. Below, docs paths are shown as `/docs/<page>`; on the docs host they are `/<page>`.
 
+> Product pages (`/products`, `/console`, `/connect`, `/epaperclip`, `/pin`) are generated from `web/src/content/products.ts`, which is also the single place their status word lives. Change a status only with evidence (a deployed URL or a release tag). They link out to `auth.papercliped.co` (sign in, `/account`), `console.papercliped.co` and `connect.papercliped.co`, which are separate sites.
+
 ## 1. Public website (React, `web/`; the bridge's Markdown pages in `src/site/` are the fallback)
 | Path | Page |
 | --- | --- |
 | `/` | Landing page ("Papercliped, not Paperclipped."), live user count |
 | `/status` | Live status page (public API) |
+| `/products` | The Papercliped family: the four products, how they fit together, and what each status word means |
+| `/console` | Console: the hosted account, devices and security console (status: live) |
+| `/connect` | Connect: optional managed remote access per device (status: early access) |
+| `/epaperclip` | ePaperclip: Paperclip on your own Proxmox server (status: coming soon, nothing to download yet) |
+| `/pin` | Pin: the copilot built into ePaperclip (status: coming soon) |
 | `/changelog` | Changelog (and `/changelog.xml` feed) |
 | `/community` | Community |
 | `/brand` | Brand assets |
