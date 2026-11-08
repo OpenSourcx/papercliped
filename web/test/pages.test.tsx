@@ -37,7 +37,7 @@ describe("V2 landing", () => {
     await userEvent.click(tabs[1]);
     expect(tabs[1]).toHaveAttribute("aria-selected", "true");
     expect(main.textContent).toContain("coding workspace");
-    await userEvent.click(within(main).getByRole("button", { name: "Agent mode" }));
+    await userEvent.click(within(main).getByRole("button", { name: /agent mode/i }));
     expect(main.textContent).toContain("does not execute anything");
     await userEvent.click(within(main).getByRole("button", { name: "Ask Pin another example" }));
     expect(tabs[2]).toHaveAttribute("aria-selected", "true");
