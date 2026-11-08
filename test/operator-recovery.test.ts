@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { generateKeyPairSync, verify } from "node:crypto";
+import type { AddressInfo } from "node:net";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { createHttpServer } from "../src/server.js";
 import { issueOperatorRecoveryEvidence, parseRecoverySigner, recoverySignerFromEnv } from "../src/accounts/operator-recovery.js";
 
 const {privateKey,publicKey}=generateKeyPairSync("ed25519");
@@ -32,5 +36,43 @@ describe("opt-in operator recovery evidence",()=>{
    }
    await expect(issueOperatorRecoveryEvidence(store(existing(),true) as any,gid,signer,now)).rejects.toThrow();
    await expect(issueOperatorRecoveryEvidence({...store(),hit:async()=>false} as any,gid,signer,now)).rejects.toThrow();
+ });
+});
+
+
+describe("MCP recovery-only fallback when the old Paperclip is gone", () => {
+ it("allows only one evidence tool, with no normal MCP or HTTP action access", async () => {
+   const g = existing();
+   const storeFake = {getGrant:async()=>g,getAccount:async()=>({id:aid,disabled:false}),hit:async()=>true};
+   const oauthFake = {
+     authenticate:async (token:string)=>token==="pcb_at_oldauthorized" ? g : null,
+     resolveClient:async()=>{throw new Error("historical upstream is permanently offline");},
+     handle:async()=>false,
+     challengeHeader:()=> "Bearer",
+     store:storeFake,
+   };
+   const cfg = {apiUrl:"https://retired-paperclip.invalid/api",apiKey:null,companyId:null,readOnly:false,timeoutMs:1000};
+   const http = {host:"127.0.0.1",port:0,bridgeToken:null,publicUrl:null,oauth:null};
+   const server=createHttpServer(cfg as any,http as any,{oauth:oauthFake as any,recoverySigner:signer,audit:()=>{}});
+   let client:Client | undefined;
+   try {
+     await new Promise<void>(resolve=>server.listen(0,"127.0.0.1",resolve));
+     const origin="http://127.0.0.1:"+(server.address() as AddressInfo).port;
+     const headers={Authorization:"Bearer pcb_at_oldauthorized"};
+     client=new Client({name:"recovery-test",version:"0.0.0"});
+     await client.connect(new StreamableHTTPClientTransport(new URL(origin+"/mcp"),{requestInit:{headers}}));
+     const names=(await client.listTools()).tools.map(t=>t.name);
+     expect(names).toEqual(["paperclip_operator_recovery_evidence"]);
+     const reply:any=await client.callTool({name:"paperclip_operator_recovery_evidence",arguments:{}});
+     const token=reply.content[0]?.text?.split("\n").at(-1);
+     const signed=decode(token);
+     expect(verify(null,Buffer.from(signed.signed),publicKey,signed.sig)).toBe(true);
+     expect(signed.payload.aid).toBe(aid);
+     const forbidden=await fetch(origin+"/actions/paperclip_list_agents",{method:"POST",headers,body:"{}"});
+     expect(forbidden.status).toBe(401);
+   } finally {
+     if(client)await client.close();
+     await new Promise<void>(resolve=>server.close(()=>resolve()));
+   }
  });
 });
