@@ -139,3 +139,95 @@
 .docs-body table td:first-child code { white-space: nowrap; }
 
 .hero-glow { position: absolute; inset: -20% -10% auto; height: 70%; background: radial-gradient(40% 50% at 50% 0%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%); pointer-events: none; }
+
+
+/* Papercliped V2 platform story: theme-token based, no external font/image requests. */
+.v2-hero-light {
+  position: absolute;
+  inset: -20% -25% 0;
+  background:
+    radial-gradient(ellipse 38% 37% at 78% 38%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 80%),
+    radial-gradient(ellipse 35% 30% at 18% 14%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 80%);
+  pointer-events: none;
+}
+.v2-pin-text {
+  color: var(--accent);
+  filter: drop-shadow(0 0 32px color-mix(in srgb, var(--accent) 12%, transparent));
+}
+.v2-family-card {
+  transition: transform .28s ease, border-color .28s ease, box-shadow .28s ease;
+}
+.v2-family-card::after {
+  content: "";
+  position: absolute;
+  right: -4rem;
+  top: -4rem;
+  width: 13rem;
+  height: 13rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 50%;
+  box-shadow: 0 0 0 25px color-mix(in srgb, var(--accent) 4%, transparent), 0 0 0 50px color-mix(in srgb, var(--accent) 2%, transparent);
+  pointer-events: none;
+  opacity: .45;
+  transition: transform .28s ease, opacity .28s ease;
+}
+.v2-family-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--field);
+  box-shadow: 0 24px 54px -32px color-mix(in srgb, var(--ink) 30%, transparent);
+}
+.v2-family-card:hover::after { transform: translate(-12px, 12px); opacity: .7; }
+.v2-final-panel {
+  background:
+    radial-gradient(circle at 15% 5%, color-mix(in srgb, var(--accent) 13%, transparent), transparent 45%),
+    radial-gradient(circle at 95% 95%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 40%),
+    var(--surface);
+}
+.pin-stage-grid {
+  opacity: .45;
+  background-image: linear-gradient(to right, var(--line) 1px, transparent 1px), linear-gradient(to bottom, var(--line) 1px, transparent 1px);
+  background-size: 26px 26px;
+  mask-image: radial-gradient(ellipse at 50% 20%, black, transparent 70%);
+}
+.pin-orb-button {
+  width: clamp(125px, 15vw, 190px);
+  height: clamp(125px, 15vw, 190px);
+  isolation: isolate;
+  transition: transform .22s ease;
+  animation: pin-hover 5s ease-in-out infinite;
+}
+.pin-orb-button:hover { transform: scale(1.05) rotate(-5deg); }
+.pin-orb-face {
+  display: block;
+  position: relative;
+  width: 85%;
+  height: 85%;
+  border-radius: 50%;
+  background-image: url("/brand/pin-orb.svg");
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 17px 18px rgba(0,0,0,.20));
+  z-index: 1;
+}
+.pin-orb-halo {
+  position: absolute;
+  inset: 6%;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  filter: blur(28px);
+}
+.pin-orb-glint {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(145deg, rgba(255,255,255,.10), transparent 50%);
+  pointer-events: none;
+}
+@keyframes pin-hover { 0%,100% { translate: 0 0; } 50% { translate: 0 -7px; } }
+@keyframes pin-bop { 0% { rotate: 0deg; } 35% { rotate: -15deg; } 70% { rotate: 12deg; } 100% { rotate: 0deg; } }
+.pin-orb-bop { animation: pin-bop .42s ease-in-out; }
+@media (prefers-reduced-motion: reduce) {
+  .pin-orb-button, .pin-orb-bop { animation: none; }
+  .v2-family-card, .v2-family-card::after { transition: none; }
+}
