@@ -103,6 +103,10 @@ export function GitHubIcon({ size = 16 }: { size?: number }) {
 }
 
 const SKIP = "sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-50 focus:rounded-full focus:bg-accent focus:px-4 focus:py-2 focus:text-accent-ink";
+/** Verified live (HTTP 200, 2026-11-08): the central sign-in and the hosted Console. Plain links; nothing is sent or stored by this site. */
+export const SIGN_IN_URL = "https://auth.papercliped.co/";
+export const CONSOLE_URL = "https://console.papercliped.co/";
+const UTIL = "h-11 items-center rounded-full px-3.5 text-sm font-medium text-muted transition-colors hover:text-ink";
 const PILL_CTA = "inline-flex h-9 items-center rounded-full bg-accent px-4 text-sm font-semibold text-accent-ink transition-transform duration-150 hover:-translate-y-0.5 active:scale-[0.97]";
 
 /** The marketing header: logo left, a short centred nav, search, stars and one call to action on the right. */
@@ -113,9 +117,9 @@ function SiteHeader() {
   return (
     <header className="sticky top-0 z-30 border-b border-line/70 bg-bg/80 backdrop-blur-md">
       <a href="#main" className={SKIP}>Skip to content</a>
-      <div className="mx-auto grid h-16 max-w-7xl grid-cols-[1fr_auto] items-center gap-4 px-4 md:grid-cols-[1fr_auto_1fr]">
+      <div className="mx-auto grid h-16 max-w-7xl grid-cols-[1fr_auto] items-center gap-4 px-4 xl:grid-cols-[1fr_auto_1fr]">
         <Wordmark className="justify-self-start" />
-        <nav aria-label="Main" className="hidden items-center md:flex">
+        <nav aria-label="Main" className="hidden items-center xl:flex">
           <Menu {...MENUS[0]} />
           <AppLink to="/docs" className="rounded-full px-3.5 py-2 text-sm font-medium text-muted transition-colors hover:text-ink">Docs</AppLink>
           <Menu {...MENUS[1]} />
@@ -123,16 +127,18 @@ function SiteHeader() {
         </nav>
         <div className="flex items-center justify-self-end gap-2">
           <SearchIconButton />
-          <GitHubButton className="hidden lg:inline-flex" />
+          <GitHubButton className="hidden 2xl:inline-flex" />
+          <a href={SIGN_IN_URL} rel="noopener noreferrer" className={cx(UTIL, "hidden xl:inline-flex")}>Sign in</a>
+          <a href={CONSOLE_URL} rel="noopener noreferrer" className={cx(UTIL, "hidden xl:inline-flex")}>Console</a>
           <AppLink to="/epaperclip" className={cx(PILL_CTA, "hidden sm:inline-flex")}>Use ePaperclip</AppLink>
           <button type="button" aria-label={mobile ? "Close menu" : "Open menu"} aria-expanded={mobile} aria-controls="mobile-nav" onClick={() => setMobile((m) => !m)}
-            className="grid h-9 w-9 place-items-center rounded-full border border-line md:hidden">
+            className="grid h-11 w-11 place-items-center rounded-full border border-line xl:hidden">
             <Icon name={mobile ? "close" : "menu"} size={17} />
           </button>
         </div>
       </div>
       {mobile && (
-        <nav id="mobile-nav" aria-label="Main" className="border-t border-line px-4 pb-5 md:hidden">
+        <nav id="mobile-nav" aria-label="Main" className="border-t border-line px-4 pb-5 xl:hidden">
           <ul className="pt-3">
             <li><AppLink to="/docs" className="block rounded-xl px-3 py-2.5 font-semibold hover:bg-surface">Docs</AppLink></li>
             <li><AppLink to="/community" className="block rounded-xl px-3 py-2.5 font-semibold hover:bg-surface">Community</AppLink></li>
@@ -143,6 +149,13 @@ function SiteHeader() {
               <ul>{m.items.map((it) => <li key={it.title}><NavItem item={it} /></li>)}</ul>
             </div>
           ))}
+          <div className="pt-3">
+            <p className="px-3 text-xs font-bold uppercase tracking-widest text-muted">Account</p>
+            <ul>
+              <li><NavItem item={{ to: SIGN_IN_URL, title: "Sign in", desc: "One Papercliped account, signed in with an email code." }} /></li>
+              <li><NavItem item={{ to: CONSOLE_URL, title: "Console", desc: "Your hosted account, devices and security." }} /></li>
+            </ul>
+          </div>
           <div className="mt-4 flex flex-wrap gap-2 px-3">
             <AppLink to="/epaperclip" className={PILL_CTA}>Use ePaperclip</AppLink>
             <GitHubButton />
