@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { docsHostSlug, isExternal, resolveHref } from "../lib/hosts";
 
 /** Paths the React app renders itself; other same-site paths (like /status.json or /api) are bridge paths and need a full load. */
-const APP_PATH = /^\/(docs(\/|$)|changelog$|community$|brand$|status$|privacy$|terms$|kit$|$)/;
+const APP_PATH = /^\/(docs(\/|$)|epaperclip$|pin$|papercliped$|connect$|changelog$|community$|brand$|status$|privacy$|terms$|kit$|$)/;
 /** Whether this app renders the path on this host (on the docs host that is / and /<page>). */
 export const isAppPath = (path: string) => (docsHostSlug(path) != null ? true : APP_PATH.test(path));
 
