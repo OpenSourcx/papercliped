@@ -1,4 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
 import { PaperclipClient } from "./client.js";
 import { readConfig, type BridgeConfig } from "./config.js";
 import { executeTool, renderForModel, type ExecOptions } from "./execute.js";
@@ -16,7 +17,7 @@ export function visibleTools(scopes?: readonly string[], policy?: ExecPolicy) {
   return policy ? byScope.filter((t) => canEverRun(policy, t)) : byScope;
 }
 
-export function createMcpServer(config: BridgeConfig = readConfig(), client = new PaperclipClient(config), exec: ExecOptions = {}) {
+export function createMcpServer(config: BridgeConfig = readConfig(), client = new PaperclipClient(config), exec: ExecOptions = {}, recoveryEvidence?: () => Promise<string>) {
   const server = new McpServer({ name: "papercliped", version: VERSION });
 
   for (const tool of visibleTools(exec.scopes, exec.policy)) {
@@ -39,6 +40,24 @@ export function createMcpServer(config: BridgeConfig = readConfig(), client = ne
         return { isError: true, content: [{ type: "text" as const, text }] };
       },
     );
+  }
+  // Offered only for authenticated legacy OAuth account grants and only when the operator
+  // explicitly enables an independent Ed25519 signer. The tool is a signed observation
+  // of grant possession, not permission to recover or link an account.
+  if (recoveryEvidence) {
+    server.registerTool("paperclip_operator_recovery_evidence", {
+      title: "Operator account recovery evidence",
+      description: "Generate short-lived signed evidence that this existing OAuth connection belongs to a Papercliped account. Send it privately to an authorized recovery operator. This does not reset secrets, link accounts or authorize recovery.",
+      inputSchema: z.object({}).shape,
+      annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+    }, async () => {
+      try {
+        const proof = await recoveryEvidence();
+        return { content: [{ type: "text" as const, text: "Recovery evidence (expires after 5 minutes). Keep private. Present to a trusted Papercliped operator along with a separately verified login identity. This alone does not authorize account recovery.\n" + proof }] };
+      } catch {
+        return { isError: true, content: [{ type: "text" as const, text: "Recovery evidence is unavailable for this connection. Contact the operator for manual identity verification." }] };
+      }
+    });
   }
   return server;
 }

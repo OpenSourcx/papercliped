@@ -7,6 +7,7 @@ import { createMcpServer } from "./mcp.js";
 import type { ExecPolicy } from "./access/policy.js";
 import { safeEqual } from "./oauth/crypto.js";
 import { OAuthProvider } from "./oauth/provider.js";
+import { issueOperatorRecoveryEvidence, recoverySignerFromEnv, type RecoverySigner } from "./accounts/operator-recovery.js";
 import type { PublicApiRoutes } from "./public-api/routes.js";
 import type { WebAppRoutes } from "./web/routes.js";
 import { ManageRoutes } from "./manage/routes.js";
@@ -32,6 +33,8 @@ export interface ServerOptions {
   web?: WebAppRoutes;
   /** The beta connection manager (/manage and /api/manage). */
   manage?: ManageRoutes;
+  /** Injected solely for tests; production recovery remains opt-in via OPERATOR_RECOVERY_ED25519_PRIVATE_KEY. */
+  recoverySigner?: RecoverySigner | null;
 }
 
 /** Route groups worth measuring. Health checks, discovery documents and the dashboard itself are excluded. */
@@ -82,6 +85,7 @@ export function createHttpServer(config: BridgeConfig, http: HttpConfig, opts: S
   };
   const oauth =
     opts.oauth !== undefined ? opts.oauth : http.oauth ? new OAuthProvider({ config, oauth: http.oauth, bridgeToken: http.bridgeToken }) : null;
+  const recoverySigner = opts.recoverySigner === undefined ? recoverySignerFromEnv() : opts.recoverySigner;
 
   async function authenticate(req: IncomingMessage): Promise<Principal | null> {
     const m = /^Bearer (.+)$/i.exec(req.headers.authorization ?? "");
@@ -159,7 +163,10 @@ export function createHttpServer(config: BridgeConfig, http: HttpConfig, opts: S
 
       // Stateless Streamable HTTP: a fresh server+transport per request, so no session affinity is needed.
       if (path === "/mcp") {
-        const server = createMcpServer(config, client, exec);
+        const evidence = principal.kind === "oauth" && recoverySigner && oauth
+          ? () => issueOperatorRecoveryEvidence(oauth.store, principal.grantId, recoverySigner)
+          : undefined;
+        const server = createMcpServer(config, client, exec, evidence);
         const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
         res.on("close", () => {
           void transport.close();
