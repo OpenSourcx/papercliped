@@ -11,8 +11,8 @@ const at = (path: string) => render(<MemoryRouter initialEntries={[path]}><App /
 afterEach(() => vi.unstubAllGlobals());
 vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
 
-/** Evidence-based status per product (2026-11-07). Change this table only with new evidence. */
-const EXPECTED = { console: "live", connect: "early", epaperclip: "soon", pin: "soon" } as const;
+/** Evidence-based status per product (2026-11-08; Console moves to live only on owner confirmation of a verified sign-in). Change this table only with new evidence. */
+const EXPECTED = { console: "early", connect: "early", epaperclip: "soon", pin: "soon" } as const;
 
 describe("product pages", () => {
   it("lists every product route and keeps the old ones", () => {

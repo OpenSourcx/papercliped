@@ -27,7 +27,7 @@ export const MENUS: { label: string; items: MenuItem[] }[] = [
     label: "Product",
     items: [
       { to: "/", title: "Overview", desc: "What Papercliped does, in a minute." },
-      { to: "/console", title: "Console", desc: "Your account, devices and security, signed in once." },
+      { to: "/console", title: "Console", desc: "Your account, devices and security, signed in once.", badge: "Early access" },
       { to: "/connect", title: "Connect", desc: "Optional managed remote access, one address per device.", badge: "Early access" },
       { to: "/epaperclip", title: "ePaperclip", desc: "Companies and AI agents on your own Proxmox server.", badge: "Coming soon" },
       { to: "/pin", title: "Pin", desc: "The assistant built into ePaperclip, on your host.", badge: "Coming soon" },

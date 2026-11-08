@@ -56,8 +56,8 @@ export const PRODUCTS: Product[] = [
     name: "Console",
     tagline: "Your Papercliped account, devices and subscription in one place.",
     menu: "Your account, devices and security, signed in once.",
-    status: "live",
-    statusDetail: "The Console is deployed at console.papercliped.co. Billing is not open yet, so the subscription card has nothing to buy.",
+    status: "early",
+    statusDetail: "The Console is deployed at console.papercliped.co, but sign-in is still being verified end to end, so it may not work for you yet. Billing is not open either.",
     intro:
       "The Console is the hosted home of your Papercliped account. See your devices, approve a new one, review where you are signed in and, once Connect billing opens, manage your subscription. It is separate from the console that runs on your own server (that one is ePaperclip).",
     who: [
