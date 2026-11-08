@@ -11,6 +11,8 @@ import { ButtonLink, Card, TextLink } from "../components/ui";
 import { community } from "../config/community";
 import tools from "../generated/tools.json";
 import { useLiveStats } from "../lib/useLiveStats";
+import { PRODUCTS } from "../content/products";
+import { ProductCard } from "./Product";
 import { usePageTitle } from "./usePageTitle";
 
 const MCP_URL = "https://mcp.papercliped.co/mcp";
@@ -62,10 +64,11 @@ export function Home() {
             <Icon name="chevron" size={14} className="text-muted transition-transform group-hover:translate-x-0.5" />
           </AppLink>
           <h1 className="mx-auto mt-7 max-w-4xl text-5xl font-bold leading-[0.95] tracking-tighter sm:text-7xl lg:text-[5.5rem]">Your Paperclip, in every AI&nbsp;app.</h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-muted sm:text-xl">Connect Claude, ChatGPT or any MCP app to your Paperclip. Check on agents, steer the work and get reports, at the access level you choose.</p>
+          <p className="mx-auto mt-6 max-w-2xl text-lg text-muted sm:text-xl">Connect Claude, ChatGPT or any MCP app to your Paperclip. Check on agents, steer the work and get reports, at the access level you choose. Around it, a growing family: a hosted Console, optional Connect, and, coming soon, ePaperclip with Pin for your own Proxmox server.</p>
           <div className="mt-9 flex flex-wrap justify-center gap-3">
             <ButtonLink to="/docs/getting-started" size="lg">Get started</ButtonLink>
-            <ButtonLink to={community.github} variant="secondary" size="lg"><GitHubIcon /> Star on GitHub</ButtonLink>
+            <ButtonLink to="/products" variant="secondary" size="lg">Explore the products</ButtonLink>
+            <ButtonLink to={community.github} variant="ghost" size="lg"><GitHubIcon /> Star on GitHub</ButtonLink>
           </div>
         </div>
         <div className="mx-auto mt-12 max-w-5xl px-4 sm:mt-16"><HeroDemo /></div>
@@ -94,6 +97,11 @@ export function Home() {
 
       <Section id="playground" eyebrow="Permission playground" title="See exactly what the AI can do" lede="Every tool, and the level it needs. Switch levels to see what changes.">
         <Playground />
+      </Section>
+
+      <Section id="family" eyebrow="The Papercliped family" title="More than a connector" lede="One Papercliped account, and products for your account, your connection and your own server. Each one says plainly whether it is live.">
+        <ul className="grid gap-4 sm:grid-cols-2">{PRODUCTS.map((p) => <ProductCard key={p.id} p={p} />)}</ul>
+        <p className="mt-8 text-center"><TextLink to="/products#fit">See how they fit together</TextLink></p>
       </Section>
 
       <Section id="plugins" eyebrow="Two plugins, one service" title="From your AI app, or from inside Paperclip">

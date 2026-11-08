@@ -10,6 +10,7 @@ import { SearchButton, SearchHost, SearchIconButton } from "./Search";
 import { onDocsHost } from "../lib/hosts";
 import { compact, useRepoStars } from "../lib/useRepo";
 import { Badge } from "./ui";
+import { ACCOUNT_URL, AUTH_URL } from "../content/products";
 
 export function Wordmark({ className }: { className?: string }) {
   return (
@@ -26,6 +27,10 @@ export const MENUS: { label: string; items: MenuItem[] }[] = [
     label: "Product",
     items: [
       { to: "/", title: "Overview", desc: "What Papercliped does, in a minute." },
+      { to: "/console", title: "Console", desc: "Your account, devices and security, signed in once." },
+      { to: "/connect", title: "Connect", desc: "Optional managed remote access, one address per device.", badge: "Early access" },
+      { to: "/epaperclip", title: "ePaperclip", desc: "Companies and AI agents on your own Proxmox server.", badge: "Coming soon" },
+      { to: "/pin", title: "Pin", desc: "The assistant built into ePaperclip, on your host.", badge: "Coming soon" },
       { to: "/docs/getting-started", title: "Get started", desc: "Connect Claude or ChatGPT to your Paperclip." },
       { to: "/docs/paperclip-plugin", title: "Paperclip plugin", desc: "Manage connections from inside Paperclip.", badge: "New" },
       { to: "/status", title: "Status", desc: "Live, public numbers for the hosted service.", badge: "New" },
@@ -85,7 +90,7 @@ export function GitHubButton({ className }: { className?: string }) {
   const shown = stars != null && stars > 0;
   return (
     <a href={REPO_URL} rel="noopener noreferrer" aria-label={shown ? `Star Papercliped on GitHub, ${stars} stars` : "Star Papercliped on GitHub"}
-      className={cx("inline-flex h-9 items-center gap-2 rounded-full border border-line px-3.5 text-sm font-medium transition-[transform,border-color] duration-150 hover:-translate-y-0.5 hover:border-field", className)}>
+      className={cx("inline-flex h-11 items-center gap-2 rounded-full border border-line px-3.5 text-sm font-medium transition-[transform,border-color] duration-150 hover:-translate-y-0.5 hover:border-field", className)}>
       <GitHubIcon /><span>Star</span>
       {shown && <span className="flex items-center gap-1 border-l border-line pl-2 tabular-nums text-muted" aria-hidden="true"><Icon name="star" size={13} />{compact(stars)}</span>}
     </a>
@@ -101,7 +106,7 @@ export function GitHubIcon({ size = 16 }: { size?: number }) {
 }
 
 const SKIP = "sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-50 focus:rounded-full focus:bg-accent focus:px-4 focus:py-2 focus:text-accent-ink";
-const PILL_CTA = "inline-flex h-9 items-center rounded-full bg-accent px-4 text-sm font-semibold text-accent-ink transition-transform duration-150 hover:-translate-y-0.5 active:scale-[0.97]";
+const PILL_CTA = "inline-flex h-11 items-center rounded-full bg-accent px-4 text-sm font-semibold text-accent-ink transition-transform duration-150 hover:-translate-y-0.5 active:scale-[0.97]";
 
 /** The marketing header: logo left, a short centred nav, search, stars and one call to action on the right. */
 function SiteHeader() {
@@ -111,9 +116,9 @@ function SiteHeader() {
   return (
     <header className="sticky top-0 z-30 border-b border-line/70 bg-bg/80 backdrop-blur-md">
       <a href="#main" className={SKIP}>Skip to content</a>
-      <div className="mx-auto grid h-16 max-w-7xl grid-cols-[1fr_auto] items-center gap-4 px-4 md:grid-cols-[1fr_auto_1fr]">
+      <div className="mx-auto grid h-16 max-w-7xl grid-cols-[1fr_auto] items-center gap-4 px-4 lg:grid-cols-[1fr_auto_1fr]">
         <Wordmark className="justify-self-start" />
-        <nav aria-label="Main" className="hidden items-center md:flex">
+        <nav aria-label="Main" className="hidden items-center lg:flex">
           <Menu {...MENUS[0]} />
           <AppLink to="/docs" className="rounded-full px-3.5 py-2 text-sm font-medium text-muted transition-colors hover:text-ink">Docs</AppLink>
           <Menu {...MENUS[1]} />
@@ -122,18 +127,21 @@ function SiteHeader() {
         <div className="flex items-center justify-self-end gap-2">
           <SearchIconButton />
           <GitHubButton className="hidden lg:inline-flex" />
+          <AppLink to={AUTH_URL} className="hidden h-11 items-center rounded-full px-3.5 text-sm font-medium text-muted transition-colors hover:text-ink sm:inline-flex">Sign in</AppLink>
           <AppLink to="/docs/getting-started" className={cx(PILL_CTA, "hidden sm:inline-flex")}>Get started</AppLink>
           <button type="button" aria-label={mobile ? "Close menu" : "Open menu"} aria-expanded={mobile} aria-controls="mobile-nav" onClick={() => setMobile((m) => !m)}
-            className="grid h-9 w-9 place-items-center rounded-full border border-line md:hidden">
+            className="grid h-11 w-11 place-items-center rounded-full border border-line lg:hidden">
             <Icon name={mobile ? "close" : "menu"} size={17} />
           </button>
         </div>
       </div>
       {mobile && (
-        <nav id="mobile-nav" aria-label="Main" className="border-t border-line px-4 pb-5 md:hidden">
+        <nav id="mobile-nav" aria-label="Main" className="border-t border-line px-4 pb-5 lg:hidden">
           <ul className="pt-3">
             <li><AppLink to="/docs" className="block rounded-xl px-3 py-2.5 font-semibold hover:bg-surface">Docs</AppLink></li>
             <li><AppLink to="/community" className="block rounded-xl px-3 py-2.5 font-semibold hover:bg-surface">Community</AppLink></li>
+            <li><AppLink to={AUTH_URL} className="block rounded-xl px-3 py-2.5 font-semibold hover:bg-surface">Sign in</AppLink></li>
+            <li><AppLink to={ACCOUNT_URL} className="block rounded-xl px-3 py-2.5 font-semibold hover:bg-surface">Your account</AppLink></li>
           </ul>
           {MENUS.map((m) => (
             <div key={m.label} className="pt-3">
@@ -165,7 +173,7 @@ function DocsHeader() {
       <a href="#main" className={SKIP}>Skip to content</a>
       <div className="mx-auto grid h-14 max-w-[90rem] grid-cols-[1fr_auto] items-center gap-4 px-4 md:grid-cols-[1fr_auto_1fr]">
         <nav aria-label="Site" className="hidden items-center gap-1 text-sm md:flex">
-          {DOCS_LINKS.map((l) => <AppLink key={l.label} to={l.to} className="rounded-full px-3 py-1.5 text-muted transition-colors hover:bg-surface hover:text-ink">{l.label}</AppLink>)}
+          {DOCS_LINKS.map((l) => <AppLink key={l.label} to={l.to} className="inline-flex min-h-11 items-center rounded-full px-3 text-muted transition-colors hover:bg-surface hover:text-ink">{l.label}</AppLink>)}
         </nav>
         <AppLink to="/docs" className="flex items-center gap-2 justify-self-start rounded-lg md:justify-self-center" aria-label="papercliped docs home">
           <Mascot size={26} interactive={false} title="" />
@@ -190,10 +198,10 @@ export function Header() {
 }
 
 const FOOTER: { title: string; links: { to: string; label: string }[] }[] = [
-  { title: "Product", links: [{ to: "/", label: "Overview" }, { to: "/docs/getting-started", label: "Get started" }, { to: "/docs/paperclip-plugin", label: "Paperclip plugin" }, { to: "/prompts", label: "Prompt gallery" }, { to: "/changelog", label: "Changelog" }] },
+  { title: "Product", links: [{ to: "/", label: "Overview" }, { to: "/console", label: "Console" }, { to: "/connect", label: "Connect" }, { to: "/epaperclip", label: "ePaperclip" }, { to: "/pin", label: "Pin" }, { to: "/docs/getting-started", label: "Get started" }, { to: "/docs/paperclip-plugin", label: "Paperclip plugin" }, { to: "/prompts", label: "Prompt gallery" }, { to: "/changelog", label: "Changelog" }] },
   { title: "Docs", links: [{ to: "/docs", label: "All topics" }, { to: "/docs/hosting", label: "Host your Paperclip" }, { to: "/docs/other-ai-apps", label: "Any AI app (MCP)" }, { to: "/docs/troubleshooting", label: "Troubleshooting" }] },
   { title: "Community", links: [{ to: "/community", label: "Join the community" }, { to: community.newIssue, label: "Report a bug" }, { to: "/community#suggest", label: "Suggest a feature" }, { to: "/brand", label: "Brand assets" }] },
-  { title: "Company", links: [{ to: REPO_URL, label: "Open source (MIT)" }, { to: `mailto:${community.email}`, label: "Contact" }, { to: "/status", label: "Status" }] },
+  { title: "Company", links: [{ to: REPO_URL, label: "Open source (MIT)" }, { to: `mailto:${community.email}`, label: "Contact" }, { to: "/status", label: "Status" }, { to: AUTH_URL, label: "Sign in" }, { to: ACCOUNT_URL, label: "Your account" }] },
   { title: "Legal", links: [{ to: "/privacy", label: "Privacy" }, { to: "/terms", label: "Terms" }, { to: "/docs/security", label: "Security" }] },
 ];
 
@@ -215,7 +223,7 @@ function SocialIcons() {
       {items.map((s) => (
         <li key={s.key}>
           <AppLink to={s.href || "/community"} aria-label={s.href ? s.label : `${s.label} (coming soon)`} title={s.href ? undefined : "Coming soon"}
-            className="grid h-9 w-9 place-items-center rounded-full border border-line text-muted transition-[color,border-color,transform] duration-150 hover:-translate-y-0.5 hover:border-field hover:text-ink">
+            className="grid h-11 w-11 place-items-center rounded-full border border-line text-muted transition-[color,border-color,transform] duration-150 hover:-translate-y-0.5 hover:border-field hover:text-ink">
             <svg aria-hidden="true" viewBox="0 0 24 24" width={16} height={16} fill="currentColor"><path d={BRAND[s.key]} /></svg>
           </AppLink>
         </li>
@@ -236,10 +244,10 @@ export function Footer() {
         {FOOTER.map((col) => (
           <div key={col.title}>
             <h2 className="font-sans text-sm font-bold">{col.title}</h2>
-            <ul className="mt-3 space-y-2 text-sm">
+            <ul className="mt-1 text-sm">
               {col.links.map((l) => (
                 <li key={l.label}>
-                  <AppLink to={l.to} className="text-muted hover:text-ink">{l.label}</AppLink>
+                  <AppLink to={l.to} className="inline-flex min-h-11 items-center text-muted hover:text-ink">{l.label}</AppLink>
                 </li>
               ))}
             </ul>

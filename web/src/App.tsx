@@ -13,9 +13,10 @@ import { Status } from "./pages/Status";
 import { Kit } from "./pages/Kit";
 import { NotFound } from "./pages/Placeholder";
 import { Prompts } from "./pages/Prompts";
+import { ProductPage, Products } from "./pages/Product";
 
 /** Every route the site serves. scripts/check-routes.mjs loads each of these in a real browser. */
-export const ROUTES = ["/", "/kit", "/docs", "/changelog", "/prompts", "/community", "/brand", "/privacy", "/terms", "/status"] as const;
+export const ROUTES = ["/", "/kit", "/docs", "/changelog", "/prompts", "/community", "/brand", "/privacy", "/terms", "/status", "/products", "/console", "/connect", "/epaperclip", "/pin"] as const;
 
 export function App() {
   // docs.papercliped.co: the docs landing at / and each page at /<page> (the bridge maps hosts; see web/src/lib/hosts.ts).
@@ -46,6 +47,11 @@ export function App() {
           <Route path="/privacy" element={<Legal page="privacy" />} />
           <Route path="/terms" element={<Legal page="terms" />} />
           <Route path="/status" element={<Status />} />
+          <Route path="/products" element={<Products />} />
+          <Route path="/console" element={<ProductPage id="console" />} />
+          <Route path="/connect" element={<ProductPage id="connect" />} />
+          <Route path="/epaperclip" element={<ProductPage id="epaperclip" />} />
+          <Route path="/pin" element={<ProductPage id="pin" />} />
           <Route path="/__render" element={<RenderFrame />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
