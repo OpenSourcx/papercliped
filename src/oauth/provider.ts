@@ -8,6 +8,8 @@ import { PaperclipClient } from "../client.js";
 import { hostAllowed, type BridgeConfig, type OAuthConfig } from "../config.js";
 import { UnsafeUrlError, createSafeFetch, parseInstanceUrl } from "../net/safe-fetch.js";
 import { Keyring, isValidCodeChallenge, randomToken, safeEqual, sha256Hex, verifyPkce } from "./crypto.js";
+import { centralHandoffKey, verifyCentralHandoff, CENTRAL_AUTH_URL } from "./central-handoff.js";
+import type { KeyObject } from "node:crypto";
 import { approvePage, choosePage, consentPage, errorPage, instancePage, scopePage, secretPage, usernamePage, welcomePage } from "./pages.js";
 import { LoginError, PAPERCLIP_KEY_TTL_MS, PaperclipLogin, type Challenge } from "./paperclip-login.js";
 import { parseAccountPolicy, parseSessionPolicy, readAccountPolicy, readSessionPolicy, surfaceOfTool, type AccountPolicy, type ExecPolicy, type SessionPolicy } from "../access/policy.js";
@@ -109,6 +111,7 @@ export class OAuthProvider {
   private background = new Set<Promise<void>>();
   private multi: boolean;
   private accounts: boolean;
+  private centralPublicKey: KeyObject | null;
   /** Key rotations under way in this process, by holder: callers wait for one instead of starting another. */
   private rotations = new Map<string, Promise<string | null>>();
   /** Holder → when this process may try a failed rotation again. */
@@ -120,6 +123,7 @@ export class OAuthProvider {
     this.keyring = new Keyring([deps.oauth.secret, ...deps.oauth.previousSecrets]);
     this.multi = deps.oauth.mode === "multi";
     this.accounts = deps.oauth.accounts && this.multi;
+    this.centralPublicKey = deps.oauth.centralAuth?.publicKey ? centralHandoffKey(deps.oauth.centralAuth.publicKey) : null;
     this.safeFetch = deps.safeFetch ?? createSafeFetch({ timeoutMs: deps.config.timeoutMs, maxBytes: 2_000_000 });
     this.installFetch = deps.safeFetch ?? createSafeFetch({ timeoutMs: PLUGIN_INSTALL_MS, maxBytes: 200_000 });
     this.resource = `${deps.oauth.issuer}/mcp`;
@@ -187,6 +191,7 @@ export class OAuthProvider {
     const rec = await this.store.getAccess(sha256Hex(token));
     const grant = rec && (await this.store.getGrant(rec.grantId));
     if (!grant || grant.revoked) return null;
+    if (grant.accountId) { const a=await this.store.getAccount(grant.accountId); if (!a || a.disabled) return null; }
     await this.store.touchGrant(grant.id);
     return grant;
   }
@@ -675,6 +680,12 @@ export class OAuthProvider {
       if (m === "POST" && p.startsWith("/authorize/")) {
         const step = p.slice("/authorize/".length);
         if (this.accounts) {
+          if (step === "central" && this.centralPublicKey) return await this.stepCentral(req, res);
+          // Hosted central mode never lets a client fall back to a secret-key-only
+          // or Paperclip-approval-only login. Connecting an instance still happens
+          // AFTER a verified central account handoff.
+          if (this.centralPublicKey && ["login","connect","username","welcome","continue"].includes(step))
+            return this.html(res, 404, errorPage("Unavailable", "Sign in with your Papercliped account first."));
           if (step === "login") return await this.stepLogin(req, res);
           if (step === "connect") return await this.stepConnect(req, res);
           if (step === "instance") return await this.stepInstance(req, res);
@@ -861,6 +872,11 @@ export class OAuthProvider {
     await this.event("started", null);
 
     if (this.accounts) {
+      if (this.centralPublicKey) {
+        p.stage = "central";
+        await this.store.putPending(rid, p);
+        return this.redirectCentral(res, rid);
+      }
       p.stage = "choose";
       await this.store.putPending(rid, p);
       return this.renderStage(res, rid, p);
@@ -989,6 +1005,42 @@ export class OAuthProvider {
     return this.html(res, status, html, nonce, new URL(p.redirectUri).origin);
   }
 
+  /** Redirect to the pinned Auth host with an opaque one-time pending ID only. */
+  private redirectCentral(res: ServerResponse, rid: string): true {
+    const u = new URL(CENTRAL_AUTH_URL);
+    u.searchParams.set("rid",rid);
+    res.writeHead(303, { Location:u.href, "Cache-Control":"no-store", "Referrer-Policy":"no-referrer" });
+    res.end();
+    return true;
+  }
+
+  /** Post-login, POST-only central handoff. Never accepts username/email or a browser bearer. */
+  private async stepCentral(req: IncomingMessage, res: ServerResponse): Promise<true> {
+    if (!this.centralPublicKey) return this.html(res, 404, errorPage("Not found", "Central authorization is not enabled."));
+    if (req.headers.origin !== "https://auth.papercliped.co")
+      return this.html(res, 403, errorPage("Invalid origin", "Start again from the Papercliped sign-in page."));
+    if (!(await this.limit(`central:${this.ip(req)}`,20)))
+      return this.html(res,429,errorPage("Too many attempts", "Try again shortly."));
+    const f = await this.readForm(req);
+    const rid = f.get("rid") ?? "";
+    const p = await this.store.getPending(rid);
+    if (!p || p.stage !== "central" || p.expiresAt <= this.now())
+      return this.html(res, 400, errorPage("Request expired", "Start again from your MCP client."));
+    const att = verifyCentralHandoff(f.get("assertion") ?? "", this.centralPublicKey, rid, this.now());
+    if (!att) return this.html(res, 403, errorPage("Verification failed", "Sign in again and retry."));
+    if (!(await this.store.hit(`central-jti:${att.jti}`,1,120_000)))
+      return this.html(res, 409, errorPage("Already used", "Start again from your MCP client."));
+    const acct = await this.store.getAccount(att.accountId);
+    if (!acct || acct.disabled)
+      return this.html(res, 403, errorPage("Account unavailable", "Sign in with an active Papercliped account."));
+    const link = await this.store.getLink(acct.id);
+    p.accountId=acct.id; p.username=acct.username; p.path="central";
+    p.stage=link?.sealedCredential ? "consent" : "instance";
+    await this.store.touchAccountLogin(acct.id,this.now());
+    await this.store.putPending(rid,p);
+    return this.renderStage(res,rid,p);
+  }
+
   private ctx(rid: string, p: PendingRecord, error?: string) {
     return { rid, csrf: p.csrf, clientName: p.clientName, redirectHost: new URL(p.redirectUri).host, error };
   }
@@ -1025,6 +1077,7 @@ export class OAuthProvider {
         return this.page(res, status, scopePage({ ...c, requestedMax: normalizeScope(p.requestedMax) as Scope, loopbackOnly: u.protocol === "http:" && LOOPBACK.has(u.hostname), instanceHost: link ? new URL(link.instanceUrl).host : "your Paperclip", username: p.username ?? "", anonymous: !!acct?.anonymous, alias: acct?.alias ?? null}), p);
       }
       default:
+        if (this.centralPublicKey) return this.html(res, 400, errorPage("Invalid stage", "Restart the MCP connection from your app."));
         return this.page(res, status, choosePage(c), p);
     }
   }
@@ -1228,6 +1281,7 @@ export class OAuthProvider {
         p.username = undefined;
         p.sealedChallenge = undefined;
         await this.store.putPending(rid, p);
+        if (this.centralPublicKey) return this.html(res, 409, errorPage("Account conflict", "This Paperclip belongs to another Papercliped account. Stop and contact support."));
         return this.page(res, 400, choosePage(this.ctx(rid, p, "That Paperclip account is already linked to a different Papercliped username. Log in with that username and its secret key.")), p);
       }
       if (!(await this.replaceLink(p.accountId, p.instanceUrl, userId, ch.boardApiToken))) return this.renderStage(res, rid, p, "Could not save your connection. Please try again.");
@@ -1434,6 +1488,7 @@ export class OAuthProvider {
     const rec = await this.store.getRefresh(hash);
     const grant = rec && (await this.store.getGrant(rec.grantId));
     if (!rec || !grant || grant.revoked) throw new OAuthError("invalid_grant", "Invalid refresh token");
+    if (grant.accountId) { const account=await this.store.getAccount(grant.accountId); if (!account || account.disabled) throw new OAuthError("invalid_grant", "Account disabled"); }
     if (rec.consumed || !(await this.store.consumeRefresh(hash))) {
       await this.revokeGrant(grant.id); // reuse of a rotated token ⇒ treat the whole grant as compromised
       throw new OAuthError("invalid_grant", "Refresh token already used");

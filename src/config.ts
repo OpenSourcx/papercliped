@@ -31,6 +31,8 @@ export interface OAuthConfig {
    * multi:  public service — each user supplies their own (public, https) Paperclip URL on the consent page.
    */
   mode: "single" | "multi";
+  /** Hosted mode: route NEW MCP sign-ins through central Papercliped identity. Off until coordinated rollout. */
+  centralAuth?: { publicKey: string } | null;
   /** Papercliped accounts (username + secret key, stored Paperclip connection). On in multi-tenant mode. */
   accounts: boolean;
   /** paperclip: sign in via Paperclip's approval flow · static: operator types BRIDGE_TOKEN (single mode only). */
@@ -119,6 +121,10 @@ export function readOAuthConfig(env: NodeJS.ProcessEnv, publicUrl: string | null
   const mode = (nonEmpty(env.BRIDGE_MODE) ?? "single") as string;
   if (mode !== "single" && mode !== "multi") throw new Error("BRIDGE_MODE must be 'single' or 'multi'");
   const login = (nonEmpty(env.BRIDGE_LOGIN) ?? "paperclip") as string;
+  const centralEnabled = truthy(env.BRIDGE_CENTRAL_AUTH);
+  const centralPublicKey = nonEmpty(env.BRIDGE_CENTRAL_AUTH_PUBLIC_KEY);
+  if (centralEnabled && (mode !== "multi" || !centralPublicKey))
+    throw new Error("Hosted central auth requires BRIDGE_MODE=multi and BRIDGE_CENTRAL_AUTH_PUBLIC_KEY");
   if (login !== "paperclip" && login !== "static") throw new Error("BRIDGE_LOGIN must be 'paperclip' or 'static'");
   const database = readDatabase(env);
 
@@ -139,6 +145,7 @@ export function readOAuthConfig(env: NodeJS.ProcessEnv, publicUrl: string | null
     previousSecrets,
     mode,
     accounts: mode === "multi",
+    centralAuth: centralEnabled ? { publicKey: centralPublicKey! } : null,
     login,
     dataFile: nonEmpty(env.BRIDGE_DATA_FILE),
     database,
