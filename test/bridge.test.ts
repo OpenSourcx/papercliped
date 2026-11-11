@@ -116,6 +116,18 @@ describe("tool execution", () => {
     expect(await executeTool(client(), "paperclip_api_request", { method: "GET", path: "/../admin" })).toMatchObject({ ok: false });
   });
 
+  it("raw API path cannot escape /api or smuggle a query (ERR-MCP-002)", async () => {
+    const bad = ["/%2e%2e/auth/get-session", "/%2E%2E/x", "/a%2fb", "/a%2Fb", "/a%5cb", "/a?x=1", "/a#f", "/a\\b", "/a\u0001b", "/a\nb", "/a/%2e/b"];
+    for (const path of bad) {
+      expect(await executeTool(client(), "paperclip_api_request", { method: "GET", path }), path).toMatchObject({ ok: false, status: 400 });
+    }
+    const c = new PaperclipClient({ ...config(), apiUrl: "https://h.example/api" }, (async (u: any) => {
+      expect(new URL(String(u)).pathname.startsWith("/api/")).toBe(true);
+      return new Response("{}");
+    }) as any);
+    await c.get("/companies");
+  });
+
   it("sync_changes returns only entries after the cursor and advances it", async () => {
     const out: any = await executeTool(client(), "paperclip_sync_changes", { cursor: "2026-01-01T12:00:00Z" });
     expect(out.result.count).toBe(2);

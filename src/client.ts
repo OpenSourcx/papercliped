@@ -43,7 +43,14 @@ export class PaperclipClient {
   ): Promise<T> {
     if (!path.startsWith("/")) throw new ToolInputError(`API path must start with "/": ${path}`);
     if (path.includes("..")) throw new ToolInputError("API path must not contain '..'");
+    if (/%2e|%2f|%5c|%00/i.test(path)) throw new ToolInputError("API path must not contain encoded dots, slashes or backslashes");
+    if (/[?#\\\x00-\x1f\x7f]/.test(path)) throw new ToolInputError("API path must not contain ?, #, backslashes or control characters (use `query` for parameters)");
+    const base = new URL(this.config.apiUrl);
     const url = new URL(`${this.config.apiUrl}${path}`);
+    const root = base.pathname.replace(/\/+$/, "");
+    if (url.origin !== base.origin || (url.pathname !== root && !url.pathname.startsWith(`${root}/`))) {
+      throw new ToolInputError("API path must stay under the Paperclip API");
+    }
     for (const [k, v] of Object.entries(opts.query ?? {})) {
       if (v !== undefined && v !== null && v !== "") url.searchParams.set(k, String(v));
     }
