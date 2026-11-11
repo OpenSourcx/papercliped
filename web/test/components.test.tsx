@@ -122,6 +122,23 @@ describe("app", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Design kit" })).toBeInTheDocument();
     for (const n of ["Clip (default)", "Cherry blossom", "Baby blue", "Citrus", "Lagoon", "Maple", "Harvest", "Frost", "Pine"]) expect(screen.getAllByText(n).length).toBeGreaterThan(0);
   });
+  it("the kit labels its stat as an example and asks not to be indexed (ERR-WEB-002)", () => {
+    inRouter(<App />, "/kit");
+    expect(screen.queryByText(/Live from/)).toBeNull();
+    expect(screen.getByText("Example value, not live data")).toBeInTheDocument();
+    expect(document.head.querySelector('meta[name="robots"]')?.getAttribute("content")).toContain("noindex");
+  });
+  it("home cards mark Pin and Connect as not finished (ERR-WEB-003)", () => {
+    inRouter(<App />);
+    expect(screen.getByText("Preview")).toBeInTheDocument();
+    expect(screen.getByText("Pre-release")).toBeInTheDocument();
+    expect(screen.getByText(/no real-model Pin chat yet/)).toBeInTheDocument();
+    expect(screen.getByText(/Not generally available yet/)).toBeInTheDocument();
+  });
+  it("papercliped page says the hosted gateway needs a public https address (ERR-MCP-003)", () => {
+    inRouter(<App />, "/papercliped");
+    expect(screen.getByText(/public https address/)).toBeInTheDocument();
+  });
   it("unknown paths show a not-found page", () => {
     inRouter(<App />, "/nope");
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Page not found");

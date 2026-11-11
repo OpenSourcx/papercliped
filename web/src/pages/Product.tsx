@@ -62,7 +62,7 @@ const STORIES: Record<ProductName, Story> = {
     secondary: { text: "Explore the MCP tools", to: "/docs/tools" },
     reality: "The existing open-source Papercliped connector and control-room plugin are available today. Central-account sign-in across all products is being integrated separately.",
     ideas: [
-      { title: "Any compatible AI client", description: "Use the hosted MCP gateway or run the connector locally with your own Paperclip instance." },
+      { title: "Any compatible AI client", description: "Use the hosted MCP gateway if your Paperclip has a public https address, or run the connector locally (stdio) or use ePaperclip's own MCP for a homelab. Remote access through Connect is future." },
       { title: "Choose the scope", description: "Read only or Full control, plus agent, tool and session-level access in the Paperclip plugin." },
       { title: "From question to action", description: "Reports, agent updates, issues, approvals and budgets through a conversational interface." },
       { title: "Your connections stay visible", description: "Review active sessions, change permissions, see blocked tool calls and revoke access." },

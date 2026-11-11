@@ -75,6 +75,14 @@ describe("website routing", () => {
     expect((await get(base, "/docs", "papercliped.co")).headers.get("location")).toBe("https://docs.papercliped.co/");
     expect((await get(base, "/topics/faq", "papercliped.co")).headers.get("location")).toBe("https://docs.papercliped.co/faq");
   });
+  it("sends HSTS (one year, no subdomains or preload) and a Permissions-Policy (ERR-WEB-004)", async () => {
+    const r = await get(base, "/community", "papercliped.co");
+    expect(r.headers.get("strict-transport-security")).toBe("max-age=31536000");
+    expect(r.headers.get("permissions-policy")).toContain("camera=()");
+  });
+  it("the design kit is not served in production (ERR-WEB-002)", async () => {
+    expect((await get(base, "/kit", "papercliped.co")).status).toBe(404);
+  });
   it("www redirects to the apex, keeping the path and query", async () => {
     const r = await get(base, "/changelog?a=b", "www.papercliped.co");
     expect([r.status, r.headers.get("location")]).toEqual([301, "https://papercliped.co/changelog?a=b"]);

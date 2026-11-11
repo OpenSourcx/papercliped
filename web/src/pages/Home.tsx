@@ -1,6 +1,6 @@
 import { AppLink } from "../components/AppLink";
 import { PinStage } from "../components/PinStage";
-import { ButtonLink, TextLink } from "../components/ui";
+import { Badge, ButtonLink, TextLink } from "../components/ui";
 import { usePageTitle } from "./usePageTitle";
 
 const FAMILY = [
@@ -13,8 +13,8 @@ const FAMILY = [
   {
     number: "02", name: "Pin", eyebrow: "THE COMPANION", path: "/pin",
     title: "Ask once. Keep building.",
-    desc: "Your personal system companion for understanding what is happening, planning what comes next, and getting help without hunting through dashboards.",
-    action: "Meet Pin",
+    desc: "The companion we are building to help you understand what is happening and plan what comes next. Today the demo is scripted: there is no real-model Pin chat yet.",
+    action: "Meet Pin", status: "Preview",
   },
   {
     number: "03", name: "Papercliped", eyebrow: "THE CONNECTION", path: "/papercliped",
@@ -25,8 +25,8 @@ const FAMILY = [
   {
     number: "04", name: "Connect", eyebrow: "THE WAY HOME", path: "/connect",
     title: "Your machine. Wherever you are.",
-    desc: "The managed remote-access experience: one Papercliped account, device pairing, and a secure path back to your own hardware.",
-    action: "Discover Connect",
+    desc: "Planned managed remote access: one Papercliped account, device pairing, and a secure path back to your own hardware. Not generally available yet.",
+    action: "Discover Connect", status: "Pre-release",
   },
 ] as const;
 
@@ -86,7 +86,7 @@ export function Home() {
           {FAMILY.map((p) => (
             <article key={p.name} className="v2-family-card group relative flex min-h-[20rem] flex-col overflow-hidden rounded-[1.75rem] border border-line bg-surface p-7 sm:p-9">
               <div className="flex items-center justify-between gap-2 text-xs font-bold uppercase tracking-[.16em] text-muted">
-                <span>{p.eyebrow}</span><span>{p.number} / 04</span>
+                <span>{p.eyebrow}</span><span>{"status" in p ? <Badge tone="outline">{p.status}</Badge> : null} {p.number} / 04</span>
               </div>
               <h3 className="mt-10 text-3xl font-bold tracking-tighter sm:text-4xl">{p.name}</h3>
               <p className="mt-2 text-xl font-semibold leading-tight tracking-tight">{p.title}</p>
