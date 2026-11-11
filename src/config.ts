@@ -166,6 +166,12 @@ export function readOAuthConfig(env: NodeJS.ProcessEnv, publicUrl: string | null
   };
 }
 
+/** A startup warning when running on a PaaS (PORT set) with no trusted proxy hops: every visitor would share the proxy's rate-limit bucket. */
+export function proxyHopsWarning(env: NodeJS.ProcessEnv, proxyHops: number): string | null {
+  if (!nonEmpty(env.PORT) || proxyHops > 0) return null;
+  return "warning: PORT is set but BRIDGE_PROXY_HOPS is 0, so rate limits see the proxy's address, not the client's. Set BRIDGE_PROXY_HOPS=1 (Render) or 2 (Cloudflare + Render); see docs/LAUNCH.md.";
+}
+
 export function readHttpConfig(env: NodeJS.ProcessEnv = process.env): HttpConfig {
   const publicUrl = nonEmpty(env.BRIDGE_PUBLIC_URL)?.replace(/\/+$/, "") ?? null;
   const bridgeToken = nonEmpty(env.BRIDGE_TOKEN);
