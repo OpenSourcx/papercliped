@@ -188,7 +188,7 @@ export function Product({ product }: { product: ProductName }) {
         <h2 className="mx-auto max-w-2xl text-4xl font-bold tracking-tighter sm:text-5xl">It all starts with a place to build.</h2>
         <p className="mx-auto mt-4 max-w-xl text-muted">A home for the hardware, an interface for the work, and a companion for everything in between.</p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <ButtonLink to="/epaperclip" size="lg">Use ePaperclip</ButtonLink>
+          {product === "epaperclip" ? <ButtonLink to="https://github.com/OpenSourcx/papercliped-engine" size="lg">Read the install guide</ButtonLink> : <ButtonLink to="/epaperclip" size="lg">Use ePaperclip</ButtonLink>}
           <ButtonLink to="/#platform" size="lg" variant="secondary">Explore the family</ButtonLink>
         </div>
         {product === "papercliped" && <p className="mt-7 text-sm text-muted">Already use Paperclip? <TextLink to="/docs/getting-started">Get connected now.</TextLink></p>}

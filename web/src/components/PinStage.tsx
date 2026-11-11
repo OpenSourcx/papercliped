@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { PinField } from "./PinField";
 
 /**
  * A guided, local-only product demonstration. Never call host APIs or present sample
@@ -12,6 +13,7 @@ const EXAMPLES = [
     focus: "Overview",
     event: "Status explained",
     detail: "Your host, machines, storage, and next action",
+    agentAnswer: "In agent mode I would only act inside the limits you set, and ask before anything changes. In this example I just report what I see.",
   },
   {
     name: "Make a plan",
@@ -20,6 +22,7 @@ const EXAMPLES = [
     focus: "Workspace",
     event: "Plan drafted",
     detail: "Review before making host changes",
+    agentAnswer: "In agent mode I would carry out the approved plan step by step, within your resource limits, and stop if you cancel. This example runs nothing.",
   },
   {
     name: "Stay in control",
@@ -28,6 +31,7 @@ const EXAMPLES = [
     focus: "Access",
     event: "Permissions explained",
     detail: "Local ownership stays local",
+    agentAnswer: "In agent mode each agent only gets the resource group and limits you gave it, and every action is recorded for you to review.",
   },
 ] as const;
 
@@ -36,6 +40,15 @@ export function PinStage({ compact = false }: { compact?: boolean }) {
   const [mode, setMode] = useState<"assistant" | "agent">("assistant");
   const [wave, setWave] = useState(false);
   const item = EXAMPLES[active];
+  const tabs = useRef<(HTMLButtonElement | null)[]>([]);
+  const onKey = (e: React.KeyboardEvent) => {
+    const d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : e.key === "Home" ? -99 : e.key === "End" ? 99 : 0;
+    if (!d) return;
+    e.preventDefault();
+    const n = Math.abs(d) === 99 ? (d < 0 ? 0 : EXAMPLES.length - 1) : (active + d + EXAMPLES.length) % EXAMPLES.length;
+    setActive(n);
+    tabs.current[n]?.focus();
+  };
 
   const nudge = () => {
     setWave(true);
@@ -45,6 +58,7 @@ export function PinStage({ compact = false }: { compact?: boolean }) {
   return (
     <div className={"pin-stage relative isolate overflow-hidden rounded-[2rem] border border-line bg-surface shadow-2xl shadow-black/10 " + (compact ? "p-4 sm:p-5" : "p-4 sm:p-6")}>
       <div className="absolute inset-0 pointer-events-none pin-stage-grid" aria-hidden="true" />
+      <PinField />
       <div className="relative flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
         <div className="flex items-center gap-2">
           <span aria-hidden="true" className="h-2 w-2 rounded-full bg-accent" />
@@ -74,22 +88,22 @@ export function PinStage({ compact = false }: { compact?: boolean }) {
           </div>
         </div>
         <div className="min-w-0">
-          <div role="tablist" aria-label="Try Pin" className="flex flex-wrap gap-2">
+          <div role="tablist" aria-label="Try Pin" onKeyDown={onKey} className="flex flex-wrap gap-2">
             {EXAMPLES.map((it, i) => (
-              <button type="button" role="tab" key={it.name} aria-selected={i === active} onClick={() => setActive(i)}
+              <button type="button" role="tab" key={it.name} id={`pin-tab-${i}`} aria-controls="pin-panel" ref={(el) => { tabs.current[i] = el; }} tabIndex={i === active ? 0 : -1} aria-selected={i === active} onClick={() => setActive(i)}
                 className={"rounded-full border px-3 py-1.5 text-xs font-medium transition-colors " + (i === active ? "border-accent bg-accent text-accent-ink" : "border-line bg-bg text-muted hover:text-ink")}>
                 {it.name}
               </button>
             ))}
           </div>
-          <div className="mt-4 overflow-hidden rounded-2xl border border-line bg-bg">
+          <div role="tabpanel" id="pin-panel" aria-labelledby={`pin-tab-${active}`} className="mt-4 overflow-hidden rounded-2xl border border-line bg-bg">
             <div className="flex items-center justify-between border-b border-line px-4 py-2 text-xs">
               <span className="font-semibold">{item.focus}</span>
               <span className="font-mono text-muted">PIN / 01</span>
             </div>
             <div className="min-h-[13rem] space-y-3 p-4" aria-live="polite">
               <p className="ml-auto w-fit max-w-[94%] rounded-2xl rounded-br-sm bg-accent px-3.5 py-2.5 text-sm text-accent-ink">{item.question}</p>
-              <p className="w-fit max-w-[94%] rounded-2xl rounded-bl-sm border border-line bg-surface px-3.5 py-2.5 text-sm">{item.answer}</p>
+              <p className="w-fit max-w-[94%] rounded-2xl rounded-bl-sm border border-line bg-surface px-3.5 py-2.5 text-sm">{mode === "agent" ? item.agentAnswer : item.answer}</p>
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-4 py-3 text-xs text-muted">
               <span>{item.event}</span>
