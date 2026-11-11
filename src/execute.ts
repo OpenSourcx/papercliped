@@ -1,5 +1,5 @@
 import { guardClient } from "./access/guard.js";
-import { evaluate, hiddenAgents, narrowAgentList, needsIssueAgent, type ExecPolicy } from "./access/policy.js";
+import { evaluate, hiddenAgents, narrowAgentList, issueIdOf, needsIssueAgent, type ExecPolicy } from "./access/policy.js";
 import { PaperclipApiError, PaperclipClient } from "./client.js";
 import { ToolInputError } from "./errors.js";
 import { requiredScope, scopeAllows, type Scope } from "./oauth/scopes.js";
@@ -83,9 +83,10 @@ export async function executeTool(
   if (policy) {
     // An issue's agent is whoever it is assigned to; look it up once, only when the answer can change the decision.
     let issueAgent: string | null | undefined;
-    if (needsIssueAgent(policy, tool) && typeof parsed.data.issueId === "string") {
+    const issueId = issueIdOf(tool, parsed.data);
+    if (needsIssueAgent(policy, tool) && issueId !== null) {
       try {
-        const issue = await client.get<{ assigneeAgentId?: unknown }>(`/issues/${encodeURIComponent(parsed.data.issueId)}`);
+        const issue = await client.get<{ assigneeAgentId?: unknown }>(`/issues/${encodeURIComponent(issueId)}`);
         issueAgent = typeof issue?.assigneeAgentId === "string" ? issue.assigneeAgentId : null;
       } catch {
         issueAgent = undefined; // can't tell: a session limited to selected agents is refused below, anything else lets the tool report the real error

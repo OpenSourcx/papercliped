@@ -61,6 +61,24 @@ describe("the access switch", () => {
     }
   });
 
+  it("raw API cannot bypass a per-agent Off or mode (ERR-MCP-001)", () => {
+    const p = pol({ mode: "full", agents: { A1: "off", A2: "agent" } });
+    expect(run(p, "paperclip_terminate_agent", { agentId: "A1", confirm: true })?.code).toBe("agent_off");
+    expect(run(p, "paperclip_api_request", { method: "POST", path: "/agents/A1/terminate", confirm: true })?.code).toBe("agent_off");
+    expect(run(p, "paperclip_api_request", { method: "GET", path: "/agents/A1" })?.code).toBe("agent_off");
+    expect(run(p, "paperclip_api_request", { method: "POST", path: "/agents/A%31/terminate", confirm: true })?.code).toBe("agent_off");
+    expect(run(p, "paperclip_api_request", { method: "POST", path: "/companies/c/agents/A2/pause", confirm: true })?.code).toBe("mode_blocks");
+    expect(run(p, "paperclip_api_request", { method: "POST", path: "/agents/A3/pause", confirm: true })).toBeNull();
+    // issues: judged by the assignee; unknown assignee on a write is refused
+    expect(run(p, "paperclip_api_request", { method: "PATCH", path: "/issues/I1", confirm: true }, "A1")?.code).toBe("agent_off");
+    expect(run(p, "paperclip_api_request", { method: "PATCH", path: "/issues/I1", confirm: true }, null)).toBeNull();
+    expect(run(p, "paperclip_api_request", { method: "PATCH", path: "/issues/I1", confirm: true })?.code).toBe("mode_blocks");
+    // a write that names no agent is refused while overrides exist, but fine otherwise
+    expect(run(p, "paperclip_api_request", { method: "POST", path: "/companies/c/routines", confirm: true })?.code).toBe("mode_blocks");
+    expect(run(pol({ mode: "full" }), "paperclip_api_request", { method: "POST", path: "/companies/c/routines", confirm: true })).toBeNull();
+    expect(run(p, "paperclip_api_request", { method: "GET", path: "/companies/c/routines" })).toBeNull();
+  });
+
   it("Agent only: work through agents and reads, no direct control", () => {
     const p = pol({ mode: "agent" });
     expect(run(p, "paperclip_create_issue", { title: "t", assigneeAgentId: "a1" })).toBeNull();
