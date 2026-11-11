@@ -84,10 +84,12 @@ export function papercliped(): Plugin {
       const dates = JSON.parse(readFileSync(resolve(root, "src/content/release-dates.json"), "utf8"));
       this.emitFile({ type: "asset", fileName: "changelog.xml", source: lib.atomFeed(lib.parseChangelog(md, dates), SITE_URL) });
       const routes: string[] = JSON.parse(/ROUTES = (\[[^\]]*\])/.exec(readFileSync(resolve(root, "src/App.tsx"), "utf8"))![1]).filter((r: string) => !r.startsWith("/kit"));
-      this.emitFile({ type: "asset", fileName: "sitemap.xml", source: `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${routes.map((r) => `  <url><loc>${SITE_URL}${r}</loc></url>`).join("\n")}\n</urlset>\n` });
-      // Every path the app renders, for the bridge: anything else gets the app's not-found page with a real 404 status.
+      const docPages = readdirSync(resolve(root, "../site/docs")).filter((f) => f.endsWith(".md")).map((f) => `/docs/${f.replace(/\.md$/, "")}`);
+      const lastmod = new Date().toISOString().slice(0, 10);
+      this.emitFile({ type: "asset", fileName: "sitemap.xml", source: `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${[...new Set([...routes, ...docPages])].sort().map((r) => `  <url><loc>${SITE_URL}${r}</loc><lastmod>${lastmod}</lastmod></url>`).join("\n")}\n</urlset>\n` });
+      // Every public path the app renders (the design kit is dev-only, so a 404 in production), for the bridge: anything else gets the app's not-found page with a real 404 status.
       const docs = readdirSync(resolve(root, "../site/docs")).filter((f) => f.endsWith(".md")).map((f) => f.replace(/\.md$/, ""));
-      const all = [...JSON.parse(/ROUTES = (\[[^\]]*\])/.exec(readFileSync(resolve(root, "src/App.tsx"), "utf8"))![1]), ...docs.map((d) => `/docs/${d}`)];
+      const all = [...JSON.parse(/ROUTES = (\[[^\]]*\])/.exec(readFileSync(resolve(root, "src/App.tsx"), "utf8"))![1]).filter((r: string) => !r.startsWith("/kit")), ...docs.map((d) => `/docs/${d}`)];
       this.emitFile({ type: "asset", fileName: "routes.json", source: JSON.stringify([...new Set(all)].sort()) + "\n" });
       this.emitFile({ type: "asset", fileName: "robots.txt", source: `User-agent: *\nAllow: /\nDisallow: /kit\nDisallow: /__render\nSitemap: ${SITE_URL}/sitemap.xml\n` });
     },

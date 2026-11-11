@@ -3,7 +3,7 @@ import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { assessHealth } from "../src/public-api/health.js";
 import { PaperclipClient } from "../src/client.js";
-import { readHttpConfig, type BridgeConfig } from "../src/config.js";
+import { proxyHopsWarning, readHttpConfig, type BridgeConfig } from "../src/config.js";
 import { executeTool } from "../src/execute.js";
 import { MemoryStore } from "../src/oauth/store.js";
 import { createHttpServer, routeGroup } from "../src/server.js";
@@ -235,5 +235,13 @@ describe("bridge configuration", () => {
   it("audit settings", () => {
     expect(readHttpConfig({ BRIDGE_AUDIT_RETENTION_DAYS: "7", BRIDGE_AUDIT_STDERR: "0", BRIDGE_TOKEN: "t".repeat(32) } as any).audit).toEqual({ retentionDays: 7, stderr: false });
     expect(readHttpConfig({} as any).audit).toEqual({ retentionDays: 30, stderr: true });
+  });
+});
+
+describe("proxy hops startup warning (ERR-MCP-004)", () => {
+  it("warns only when PORT is set and hops is 0", () => {
+    expect(proxyHopsWarning({ PORT: "10000" }, 0)).toMatch(/BRIDGE_PROXY_HOPS/);
+    expect(proxyHopsWarning({ PORT: "10000" }, 1)).toBeNull();
+    expect(proxyHopsWarning({}, 0)).toBeNull();
   });
 });

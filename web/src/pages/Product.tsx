@@ -62,7 +62,7 @@ const STORIES: Record<ProductName, Story> = {
     secondary: { text: "Explore the MCP tools", to: "/docs/tools" },
     reality: "The existing open-source Papercliped connector and control-room plugin are available today. Central-account sign-in across all products is being integrated separately.",
     ideas: [
-      { title: "Any compatible AI client", description: "Use the hosted MCP gateway or run the connector locally with your own Paperclip instance." },
+      { title: "Any compatible AI client", description: "Use the hosted MCP gateway if your Paperclip has a public https address, or run the connector locally (stdio) or use ePaperclip's own MCP for a homelab. Remote access through Connect is future." },
       { title: "Choose the scope", description: "Read only or Full control, plus agent, tool and session-level access in the Paperclip plugin." },
       { title: "From question to action", description: "Reports, agent updates, issues, approvals and budgets through a conversational interface." },
       { title: "Your connections stay visible", description: "Review active sessions, change permissions, see blocked tool calls and revoke access." },
@@ -188,7 +188,7 @@ export function Product({ product }: { product: ProductName }) {
         <h2 className="mx-auto max-w-2xl text-4xl font-bold tracking-tighter sm:text-5xl">It all starts with a place to build.</h2>
         <p className="mx-auto mt-4 max-w-xl text-muted">A home for the hardware, an interface for the work, and a companion for everything in between.</p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <ButtonLink to="/epaperclip" size="lg">Use ePaperclip</ButtonLink>
+          {product === "epaperclip" ? <ButtonLink to="https://github.com/OpenSourcx/papercliped-engine" size="lg">Read the install guide</ButtonLink> : <ButtonLink to="/epaperclip" size="lg">Use ePaperclip</ButtonLink>}
           <ButtonLink to="/#platform" size="lg" variant="secondary">Explore the family</ButtonLink>
         </div>
         {product === "papercliped" && <p className="mt-7 text-sm text-muted">Already use Paperclip? <TextLink to="/docs/getting-started">Get connected now.</TextLink></p>}

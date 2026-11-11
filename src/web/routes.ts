@@ -19,7 +19,22 @@ const TYPES: Record<string, string> = {
   ".svg": "image/svg+xml", ".png": "image/png", ".ico": "image/x-icon", ".woff2": "font/woff2", ".xml": "application/xml; charset=utf-8",
   ".txt": "text/plain; charset=utf-8", ".md": "text/plain; charset=utf-8", ".webmanifest": "application/manifest+json", ".zip": "application/zip",
 };
-const HEADERS = { "X-Content-Type-Options": "nosniff", "Referrer-Policy": "strict-origin-when-cross-origin", "X-Frame-Options": "DENY" };
+const PAGE_META: Record<string, { title: string; desc: string }> = {
+  "/": { title: "Papercliped: the power of the Pin", desc: "ePaperclip, Pin, Papercliped and Connect: use your homelab to the fullest. Pin and Connect are pre-release." },
+  "/epaperclip": { title: "ePaperclip", desc: "A Proxmox-native control center for machines, storage, backups, AI workers and projects. Release-candidate software." },
+  "/pin": { title: "Pin", desc: "Pin is the companion we are building for ePaperclip. The demo is scripted; a model-backed Pin is still in development." },
+  "/papercliped": { title: "Papercliped", desc: "Connect Claude, ChatGPT, Codex or another MCP client to your Paperclip, with permissions you choose. Free and open source." },
+  "/connect": { title: "Connect", desc: "Papercliped Connect, managed remote access to your own hardware. Pre-release and not generally available." },
+  "/docs": { title: "Docs", desc: "Guides for connecting an AI app to your Paperclip, permissions, tools and self-hosting." },
+  "/changelog": { title: "Changelog", desc: "What changed in each Papercliped release." },
+  "/prompts": { title: "Prompts", desc: "Prompts to try with Papercliped." },
+  "/community": { title: "Community", desc: "Where to ask questions and follow Papercliped." },
+  "/brand": { title: "Brand", desc: "Papercliped logos, colors and community cards." },
+  "/privacy": { title: "Privacy", desc: "How Papercliped handles your data." },
+  "/terms": { title: "Terms", desc: "The terms for using Papercliped." },
+  "/status": { title: "Status", desc: "Whether the Papercliped service is up." },
+};
+const HEADERS = { "X-Content-Type-Options": "nosniff", "Referrer-Policy": "strict-origin-when-cross-origin", "X-Frame-Options": "DENY", "Strict-Transport-Security": "max-age=31536000", "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()" };
 
 /**
  * Serves the React website and does the host routing:
@@ -59,11 +74,33 @@ export class WebAppRoutes {
   }
 
   /** The page shell, with the host map for the app's links (see web/src/lib/hosts.ts). */
-  private shell(res: ServerResponse, status: number, head: boolean): true {
+  private shell(res: ServerResponse, status: number, head: boolean, path = "/", role: string | null = null): true {
     const map = JSON.stringify({ marketing: this.canonical("marketing"), docs: this.canonical("docs") }).replace(/"/g, "&quot;");
     res.writeHead(status, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-cache", "Content-Security-Policy": SITE_CSP, ...HEADERS });
-    res.end(head ? undefined : this.index.replace('<meta name="pcl-hosts" content="{}" />', `<meta name="pcl-hosts" content="${map}" />`));
+    let html = this.index.replace('<meta name="pcl-hosts" content="{}" />', `<meta name="pcl-hosts" content="${map}" />`);
+    if (status === 200) html = this.withHead(html, path, role);
+    res.end(head ? undefined : html);
     return true;
+  }
+
+  /** Per-route title, description, canonical and og:url, so crawlers and link previews see the right page without running JS. */
+  private withHead(html: string, path: string, role: string | null): string {
+    const docSlug = role === "docs" ? path.slice(1) : path.startsWith("/docs/") ? path.slice(6) : "";
+    const m = PAGE_META[path] ?? (docSlug ? { title: `${docSlug.replace(/-/g, " ").replace(/^./, (c) => c.toUpperCase())} · Papercliped docs`, desc: PAGE_META["/docs"].desc } : null);
+    const base = role === "docs" ? this.canonical("docs") : this.canonical("marketing");
+    const url = base ? `https://${base}${path === "/" ? "/" : path}` : null;
+    const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+    let out = html;
+    if (m) {
+      const title = path === "/" ? m.title : `${m.title.includes("·") ? m.title : `${m.title} · Papercliped`}`;
+      out = out
+        .replace("<title>Papercliped</title>", `<title>${esc(title)}</title>`)
+        .replace(/(<meta name="description" content=")[^"]*"/, `$1${esc(m.desc)}"`)
+        .replace(/(<meta property="og:title" content=")[^"]*"/, `$1${esc(title)}"`)
+        .replace(/(<meta property="og:description" content=")[^"]*"/, `$1${esc(m.desc)}"`);
+    }
+    if (url) out = out.replace(/(<meta property="og:url" content=")[^"]*"/, `$1${esc(url)}"`).replace("</head>", `<link rel="canonical" href="${esc(url)}" /></head>`);
+    return out;
   }
 
   private file(res: ServerResponse, path: string, head: boolean): boolean {
@@ -116,7 +153,7 @@ export class WebAppRoutes {
 
     if (role === "docs") {
       if (isDocs) return this.redirect(res, `/${docsRest}${q}`); // old /docs/x and /topics/x links
-      if (path === "/" || this.docSlugs.has(path.slice(1))) return this.shell(res, 200, head);
+      if (path === "/" || this.docSlugs.has(path.slice(1))) return this.shell(res, 200, head, path, "docs");
       if (this.routes.has(path) && mk) return this.redirect(res, `https://${mk}${path}${q}`);
     } else if (isDocs) {
       // Marketing (or unlisted) host: docs move to the docs host when there is one. /topics is an old spelling.
@@ -125,7 +162,7 @@ export class WebAppRoutes {
     }
 
     if (path !== "/" && this.file(res, raw, head)) return true;
-    if (this.routes.has(path)) return this.shell(res, 200, head);
+    if (this.routes.has(path)) return this.shell(res, 200, head, path, role);
     if (extname(path)) return false; // a missing file: let the bridge answer 404
     return this.shell(res, 404, head); // the app shows its not-found page
   }

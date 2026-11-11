@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **New website (V2).** papercliped.co is redesigned around ePaperclip, Pin, Papercliped and Connect. Pin and Connect are shown as preview and pre-release, and the design kit is no longer served in production.
+- **Central Papercliped account sign-in (OAuth).** Sign-in for connected AI apps can use one central Papercliped account. Pre-release: Connect is not generally available.
+- **Security:** the raw API tool now respects per-agent Off and mode limits and refuses encoded dots, `?`, `#`, backslashes and control characters in its path; the site sends HSTS and a Permissions-Policy; a startup warning appears when `PORT` is set and `BRIDGE_PROXY_HOPS` is 0.
+
 ## v2.7.1 — works with Paperclip 2026.1023.0
 
 - **Works with Paperclip 2026.1023.0.** Checked against a real instance: sign-in, key renewal, every tool and the plugin install. "Wake agent now" now uses Paperclip's current wake route (the old one still works there, but is a legacy alias), and the Papercliped plugin is built against the 2026.1023.0 plugin SDK. A new test pins the list of Paperclip routes the tools call, so a Paperclip release that removes one fails CI instead of failing for you.

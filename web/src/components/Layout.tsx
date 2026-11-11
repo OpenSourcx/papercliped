@@ -113,7 +113,7 @@ function SiteHeader() {
   return (
     <header className="sticky top-0 z-30 border-b border-line/70 bg-bg/80 backdrop-blur-md">
       <a href="#main" className={SKIP}>Skip to content</a>
-      <div className="mx-auto grid h-16 max-w-7xl grid-cols-[1fr_auto] items-center gap-4 px-4 md:grid-cols-[1fr_auto_1fr]">
+      <div className="mx-auto grid h-16 max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 md:grid-cols-[1fr_auto_1fr]">
         <Wordmark className="justify-self-start" />
         <nav aria-label="Main" className="hidden items-center md:flex">
           <Menu {...MENUS[0]} />
@@ -124,7 +124,7 @@ function SiteHeader() {
         <div className="flex items-center justify-self-end gap-2">
           <SearchIconButton />
           <GitHubButton className="hidden lg:inline-flex" />
-          <AppLink to="/epaperclip" className={cx(PILL_CTA, "hidden sm:inline-flex")}>Use ePaperclip</AppLink>
+          <AppLink to="/epaperclip" className={cx(PILL_CTA, "max-lg:hidden")}>Use ePaperclip</AppLink>
           <button type="button" aria-label={mobile ? "Close menu" : "Open menu"} aria-expanded={mobile} aria-controls="mobile-nav" onClick={() => setMobile((m) => !m)}
             className="grid h-9 w-9 place-items-center rounded-full border border-line md:hidden">
             <Icon name={mobile ? "close" : "menu"} size={17} />
@@ -165,7 +165,7 @@ function DocsHeader() {
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-bg/85 backdrop-blur-md">
       <a href="#main" className={SKIP}>Skip to content</a>
-      <div className="mx-auto grid h-14 max-w-[90rem] grid-cols-[1fr_auto] items-center gap-4 px-4 md:grid-cols-[1fr_auto_1fr]">
+      <div className="mx-auto grid h-14 max-w-[90rem] grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 md:grid-cols-[1fr_auto_1fr]">
         <nav aria-label="Site" className="hidden items-center gap-1 text-sm md:flex">
           {DOCS_LINKS.map((l) => <AppLink key={l.label} to={l.to} className="rounded-full px-3 py-1.5 text-muted transition-colors hover:bg-surface hover:text-ink">{l.label}</AppLink>)}
         </nav>

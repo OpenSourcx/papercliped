@@ -146,6 +146,26 @@ export function targetsOf(input: Record<string, unknown>): string[] {
   return [...new Set(ids.map((s) => s.trim()))];
 }
 
+/** The id following `/<word>/` in a raw API path (e.g. /agents/A1/terminate -> A1), decoded. */
+function pathId(path: unknown, word: string): string | null {
+  if (typeof path !== "string") return null;
+  const segs = path.split("/").filter(Boolean);
+  const i = segs.indexOf(word);
+  if (i < 0 || !segs[i + 1]) return null;
+  try {
+    return decodeURIComponent(segs[i + 1]);
+  } catch {
+    return segs[i + 1];
+  }
+}
+const isRaw = (tool: Pick<ToolDef, "name">) => tool.name === "paperclip_api_request";
+const hasOverride = (a: AccountPolicy) => Object.keys(a.agents).length > 0;
+/** The issue a call names: an `issueId` input, or `/issues/{id}` in a raw API path. */
+export function issueIdOf(tool: Pick<ToolDef, "name">, input: Record<string, unknown>): string | null {
+  if (typeof input.issueId === "string") return input.issueId;
+  return isRaw(tool) ? pathId(input.path, "issues") : null;
+}
+
 /** Tools that act on an issue, whose agent is whoever it is assigned to (not named in the call). */
 const BY_ISSUE = new Set(["paperclip_get_issue", "paperclip_update_issue", "paperclip_comment_issue"]);
 /** Tools a session limited to selected agents may still use without naming an agent. */
@@ -153,7 +173,7 @@ const OPEN_TO_LIMITED = new Set(["papercliped_service_status", "paperclip_list_c
 
 /** Does this call need the issue's current assignee looked up before it can be judged? */
 export function needsIssueAgent(p: ExecPolicy, tool: Pick<ToolDef, "name">): boolean {
-  return BY_ISSUE.has(tool.name) && (p.session.agents !== null || Object.keys(p.account.agents).length > 0);
+  return (BY_ISSUE.has(tool.name) || isRaw(tool)) && (p.session.agents !== null || Object.keys(p.account.agents).length > 0);
 }
 
 /** Agents Papercliped may not touch at all: hidden from every result, refused as a target. */
@@ -171,6 +191,17 @@ export function evaluate(p: ExecPolicy, tool: Pick<ToolDef, "name" | "access" | 
   }
   const surface = surfaceOf(tool, input);
   const targets = targetsOf(input);
+  if (isRaw(tool)) {
+    // The raw API names its target in the path. Agent ids come from /agents/{id}; an issue's agent is its assignee.
+    const a = pathId(input.path, "agents");
+    if (a) targets.push(a);
+    const hasIssue = pathId(input.path, "issues") !== null;
+    // A write the bridge cannot attribute to one agent must not slip past per-agent limits.
+    const unresolved = a === null && !(hasIssue && issueAgent !== undefined);
+    if (input.method !== "GET" && (hasOverride(account) || session.agents) && unresolved) {
+      return { code: "mode_blocks", message: `"${label}" can't be used for writes while individual agents have their own settings, because it can't tell which agent the call affects. Use a dedicated tool. ${CONTROL_ROOM}` };
+    }
+  }
   if (typeof issueAgent === "string") targets.push(issueAgent);
   for (const a of new Set(targets)) {
     const eff: AgentMode = account.agents[a] ?? account.mode;
