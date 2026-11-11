@@ -34,7 +34,7 @@ beforeAll(async () => {
   dir = mkdtempSync(join(tmpdir(), "pcl-web-"));
   mkdirSync(join(dir, "assets"));
   mkdirSync(join(dir, "fonts"));
-  writeFileSync(join(dir, "index.html"), '<!doctype html><html><head><meta name="pcl-hosts" content="{}" /></head><body><div id="root"></div></body></html>');
+  writeFileSync(join(dir, "index.html"), '<!doctype html><html><head><title>Papercliped</title><meta name="description" content="x" /><meta property="og:title" content="x" /><meta property="og:description" content="x" /><meta property="og:url" content="https://papercliped.co/" /><meta name="pcl-hosts" content="{}" /></head><body><div id="root"></div></body></html>');
   writeFileSync(join(dir, "routes.json"), JSON.stringify(["/", "/community", "/changelog", "/status", "/docs", "/docs/faq"]));
   writeFileSync(join(dir, "assets", "index-abc.js"), "console.log(1)");
   writeFileSync(join(dir, "fonts", "inter.woff2"), "x");
@@ -74,6 +74,14 @@ describe("website routing", () => {
     expect([d.status, d.headers.get("location")]).toEqual([301, "https://docs.papercliped.co/faq?x=1"]);
     expect((await get(base, "/docs", "papercliped.co")).headers.get("location")).toBe("https://docs.papercliped.co/");
     expect((await get(base, "/topics/faq", "papercliped.co")).headers.get("location")).toBe("https://docs.papercliped.co/faq");
+  });
+  it("serves per-route title, description and canonical (ERR-WEB-001)", async () => {
+    const t = await (await get(base, "/community", "papercliped.co")).text();
+    expect(t).toContain("<title>Community · Papercliped</title>");
+    expect(t).toMatch(/<link rel="canonical" href="https:\/\/papercliped\.co\/community" \/>/);
+    expect(t).not.toContain("not Paperclipped");
+    const d = await (await get(base, "/faq", "docs.papercliped.co")).text();
+    expect(d).toMatch(/rel="canonical" href="https:\/\/docs\.papercliped\.co\/faq"/);
   });
   it("sends HSTS (one year, no subdomains or preload) and a Permissions-Policy (ERR-WEB-004)", async () => {
     const r = await get(base, "/community", "papercliped.co");
