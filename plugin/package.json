@@ -1,6 +1,6 @@
 {
   "name": "papercliped-paperclip-plugin",
-  "version": "2.7.1",
+  "version": "2.8.0",
   "description": "Papercliped inside Paperclip: link your account and manage connected AI apps from a Paperclip page.",
   "license": "MIT",
   "type": "module",
