@@ -12,6 +12,19 @@ import { levelOf, type Prompt } from "../src/pages/Prompts";
 const at = (path: string) => render(<MemoryRouter initialEntries={[path]}><App /></MemoryRouter>);
 afterEach(() => vi.unstubAllGlobals());
 
+describe("sign in", () => {
+  it("the header links to the central account host on desktop and in the phone menu", async () => {
+    at("/");
+    const banner = screen.getByRole("banner");
+    const link = within(banner).getByRole("link", { name: "Sign in" });
+    expect(link).toHaveAttribute("href", "https://auth.papercliped.co/");
+    expect(link.className).toContain("md:inline-flex"); // hidden only below md, where the menu button takes over
+    await userEvent.click(within(banner).getByRole("button", { name: "Open menu" }));
+    const inMenu = within(document.getElementById("mobile-nav")!).getByRole("link", { name: "Sign in" });
+    expect(inMenu).toHaveAttribute("href", "https://auth.papercliped.co/");
+  });
+});
+
 describe("V2 landing", () => {
   it("keeps the product-focused headline and a working ePaperclip CTA", () => {
     at("/");

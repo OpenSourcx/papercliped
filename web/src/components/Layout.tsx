@@ -103,6 +103,9 @@ export function GitHubIcon({ size = 16 }: { size?: number }) {
 }
 
 const SKIP = "sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-50 focus:rounded-full focus:bg-accent focus:px-4 focus:py-2 focus:text-accent-ink";
+/** The one account for Papercliped Connect, the Console and your devices lives on its own host (sign-in, passkeys, Google, GitHub). */
+const SIGN_IN_URL = "https://auth.papercliped.co/";
+const SIGN_IN_LINK = "rounded-full px-3.5 py-2 text-sm font-medium text-muted transition-colors hover:text-ink";
 const PILL_CTA = "inline-flex h-9 items-center rounded-full bg-accent px-4 text-sm font-semibold text-accent-ink transition-transform duration-150 hover:-translate-y-0.5 active:scale-[0.97]";
 
 /** The marketing header: logo left, a short centred nav, search, stars and one call to action on the right. */
@@ -124,6 +127,7 @@ function SiteHeader() {
         <div className="flex items-center justify-self-end gap-2">
           <SearchIconButton />
           <GitHubButton className="hidden lg:inline-flex" />
+          <AppLink to={SIGN_IN_URL} className={cx(SIGN_IN_LINK, "hidden md:inline-flex")}>Sign in</AppLink>
           <AppLink to="/epaperclip" className={cx(PILL_CTA, "max-lg:hidden")}>Use ePaperclip</AppLink>
           <button type="button" aria-label={mobile ? "Close menu" : "Open menu"} aria-expanded={mobile} aria-controls="mobile-nav" onClick={() => setMobile((m) => !m)}
             className="grid h-9 w-9 place-items-center rounded-full border border-line md:hidden">
@@ -136,6 +140,7 @@ function SiteHeader() {
           <ul className="pt-3">
             <li><AppLink to="/docs" className="block rounded-xl px-3 py-2.5 font-semibold hover:bg-surface">Docs</AppLink></li>
             <li><AppLink to="/community" className="block rounded-xl px-3 py-2.5 font-semibold hover:bg-surface">Community</AppLink></li>
+            <li><AppLink to={SIGN_IN_URL} className="block rounded-xl px-3 py-2.5 font-semibold hover:bg-surface">Sign in</AppLink></li>
           </ul>
           {MENUS.map((m) => (
             <div key={m.label} className="pt-3">
