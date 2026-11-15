@@ -34,13 +34,13 @@ export function LineChart({ title, summary, data, series, unit = "", height = 20
   const path = (k: string) => data.map((d, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(Number(d[k]) || 0).toFixed(1)}`).join(" ");
   const first = series[0];
   return (
-    <figure className="rounded-2xl border border-line bg-surface p-4" aria-labelledby={`${id}-t`}>
+    <figure className="rounded-lg border border-line bg-surface p-4" aria-labelledby={`${id}-t`}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h3 id={`${id}-t`} className="font-sans text-base font-bold">{title}</h3>
+          <h3 id={`${id}-t`} className="font-sans text-base font-semibold">{title}</h3>
           <figcaption className="text-sm text-muted">{summary}</figcaption>
         </div>
-        <button type="button" onClick={() => setTable((v) => !v)} aria-pressed={table} className="rounded-lg border border-field px-2 py-1 text-xs font-semibold transition-transform duration-150 hover:-translate-y-0.5">{table ? "Show chart" : "Show as table"}</button>
+        <button type="button" onClick={() => setTable((v) => !v)} aria-pressed={table} className="rounded-lg border border-field px-2 py-1 text-xs font-semibold transition-transform duration-150">{table ? "Show chart" : "Show as table"}</button>
       </div>
       <ul className="mt-2 flex flex-wrap gap-4 text-xs" aria-label="Legend">
         {series.map((s) => (
@@ -98,8 +98,8 @@ export function BarList({ title, items, empty = "Nothing to show yet." }: { titl
   const max = Math.max(1, ...items.map((i) => i.value));
   const shown = items.filter((i) => i.value > 0).sort((a, b) => b.value - a.value);
   return (
-    <figure className="rounded-2xl border border-line bg-surface p-4">
-      <h3 className="font-sans text-base font-bold">{title}</h3>
+    <figure className="rounded-lg border border-line bg-surface p-4">
+      <h3 className="font-sans text-base font-semibold">{title}</h3>
       {shown.length ? (
         <ul className="mt-3 space-y-2">
           {shown.map((i) => (
@@ -119,7 +119,7 @@ export function BarList({ title, items, empty = "Nothing to show yet." }: { titl
 export function Meter({ label, value, hint }: { label: string; value: number | null; hint?: string }) {
   const pct = value == null ? null : Math.round(value * 1000) / 10;
   return (
-    <div className="rounded-2xl border border-line bg-surface p-4">
+    <div className="rounded-lg border border-line bg-surface p-4">
       <div className="text-sm text-muted">{label}</div>
       <div className="font-display text-3xl font-bold tabular-nums">{pct == null ? "—" : `${pct}%`}</div>
       <div className="mt-2 h-2 overflow-hidden rounded-full bg-bg" role="meter" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct ?? undefined} aria-valuetext={pct == null ? "no data" : `${pct}%`}>

@@ -11,3 +11,8 @@ interface ImportMetaEnv {
   readonly VITE_DISCUSSIONS_URL?: string;
   readonly VITE_FORUM_URL?: string;
 }
+declare module "virtual:release" {
+  /** Read from the npm registry when the site is built; null when it could not be read. */
+  const release: { epaperclip: string | null };
+  export default release;
+}

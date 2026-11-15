@@ -13,7 +13,7 @@ export function ThemePicker() {
   return (
     <div className="flex max-w-sm flex-col gap-1 text-sm">
       <label htmlFor="pcl-palette" className="font-medium">Palette</label>
-      <select id="pcl-palette" value={theme} onChange={(e) => setTheme(e.target.value as ThemeChoice)} className="h-10 rounded-full border border-field bg-bg px-3 text-ink">
+      <select id="pcl-palette" value={theme} onChange={(e) => setTheme(e.target.value as ThemeChoice)} className="h-10 rounded-lg border border-field bg-bg px-3 text-ink">
         <option value="season">Follow the season ({today})</option>
         {THEME_IDS.map((id) => <option key={id} value={id}>{PALETTES[id].name}</option>)}
       </select>

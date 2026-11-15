@@ -27,7 +27,7 @@ function Sidebar({ current, onNavigate }: { current?: string; onNavigate?: () =>
       </AppLink>
       {DOCS_GROUPS.map((g) => (
         <div key={g.label} className="mb-6">
-          <p className="mb-2 px-2.5 text-[11px] font-bold uppercase tracking-[0.14em] text-muted">{g.label}</p>
+          <p className="mb-2 px-2.5 text-[11px] font-bold text-muted">{g.label}</p>
           {g.sections.map(({ title, icon }) => {
             const s = secs.get(title);
             if (!s) return null;
@@ -37,14 +37,14 @@ function Sidebar({ current, onNavigate }: { current?: string; onNavigate?: () =>
                 <summary className={cx(item(false), "cursor-pointer list-none font-medium text-ink [&::-webkit-details-marker]:hidden")}>
                   <Icon name={icon} size={16} className="shrink-0 text-muted" />
                   <span className="flex-1">{title}</span>
-                  <span className="rounded-full bg-surface px-1.5 text-[11px] font-semibold tabular-nums text-muted group-hover:bg-bg">{s.docs.length}</span>
+                  <span className="rounded-lg bg-surface px-1.5 text-[11px] font-semibold tabular-nums text-muted group-hover:bg-bg">{s.docs.length}</span>
                   <Icon name="chevron" size={14} className="text-muted transition-transform group-open:rotate-90" />
                 </summary>
                 <ul className="mb-2 ml-[1.15rem] mt-0.5 border-l border-line pl-2.5">
                   {s.docs.map((d) => (
                     <li key={d.slug}>
                       <AppLink to={`/docs/${d.slug}`} onClick={onNavigate} aria-current={current === d.slug ? "page" : undefined}
-                        className={cx("relative block rounded-lg px-2.5 py-1 transition-colors", current === d.slug ? "bg-surface font-semibold text-ink before:absolute before:-left-[11px] before:top-1 before:bottom-1 before:w-0.5 before:rounded-full before:bg-accent" : "text-muted hover:text-ink")}>
+                        className={cx("relative block rounded-lg px-2.5 py-1 transition-colors", current === d.slug ? "bg-surface font-semibold text-ink before:absolute before:-left-[11px] before:top-1 before:bottom-1 before:w-0.5 before:rounded-lg before:bg-accent" : "text-muted hover:text-ink")}>
                         {d.title}
                       </AppLink>
                     </li>
@@ -56,7 +56,7 @@ function Sidebar({ current, onNavigate }: { current?: string; onNavigate?: () =>
         </div>
       ))}
       <div className="mb-6">
-        <p className="mb-2 px-2.5 text-[11px] font-bold uppercase tracking-[0.14em] text-muted">Project</p>
+        <p className="mb-2 px-2.5 text-[11px] font-bold text-muted">Project</p>
         <AppLink to="/changelog" onClick={onNavigate} aria-current={onChangelog ? "page" : undefined} className={item(onChangelog)}>
           <Icon name="clock" size={16} className="shrink-0 text-muted" /><span className="flex-1">Changelog</span>
         </AppLink>
@@ -81,7 +81,7 @@ function Toc({ doc }: { doc: Doc }) {
   if (!doc.headings.length) return null;
   return (
     <nav aria-label="On this page" className="text-sm">
-      <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.14em] text-muted">On this page</p>
+      <p className="mb-3 text-[11px] font-bold text-muted">On this page</p>
       <ul className="space-y-1 border-l border-line">
         {doc.headings.map((h) => (
           <li key={h.id}>
@@ -120,7 +120,7 @@ function CopyLink({ source, edit }: { source?: string; edit?: string }) {
         )}
       </div>
       {open && (
-        <div role="menu" className="animate-toast-in absolute right-0 top-full z-20 mt-2 w-60 rounded-2xl border border-line bg-bg p-1.5 text-sm shadow-2xl">
+        <div role="menu" className="animate-toast-in absolute right-0 top-full z-20 mt-2 w-60 rounded-lg border border-line bg-bg p-1.5 text-sm">
           <button type="button" role="menuitem" onClick={() => { void copy(); setOpen(false); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left hover:bg-surface"><Icon name="link" size={14} /> Copy link to this page</button>
           {source && <a role="menuitem" href={source} rel="noopener noreferrer" className="flex items-center gap-2 rounded-xl px-3 py-2 hover:bg-surface"><Icon name="file" size={14} /> View the Markdown source</a>}
           {edit && <a role="menuitem" href={edit} rel="noopener noreferrer" className="flex items-center gap-2 rounded-xl px-3 py-2 hover:bg-surface"><Icon name="pencil" size={14} /> Suggest an edit</a>}
@@ -145,12 +145,12 @@ export function DocHeader({ crumbs, title, tag, meta, source, edit, children }: 
         </ol>
       </nav>
       <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
-        <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl">{title}</h1>
+        <h1 className="text-4xl font-semibold sm:text-5xl">{title}</h1>
         <CopyLink source={source} edit={edit} />
       </div>
       {(tag || meta) && (
         <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-muted">
-          {tag && <span className="rounded-full border border-line bg-surface px-2.5 py-0.5 text-xs font-semibold text-ink">{tag}</span>}
+          {tag && <span className="rounded-lg border border-line bg-surface px-2.5 py-0.5 text-xs font-semibold text-ink">{tag}</span>}
           {meta}
         </div>
       )}
@@ -164,7 +164,7 @@ export function DocsShell({ current, children, aside }: { current?: string; chil
   return (
     <div className="mx-auto max-w-[90rem] px-4">
       <div className="flex items-center gap-3 border-b border-line py-3 lg:hidden">
-        <button type="button" aria-expanded={menu} aria-controls="docs-drawer" onClick={() => setMenu((m) => !m)} className="inline-flex items-center gap-2 rounded-full border border-line px-3.5 py-1.5 text-sm font-semibold">
+        <button type="button" aria-expanded={menu} aria-controls="docs-drawer" onClick={() => setMenu((m) => !m)} className="inline-flex items-center gap-2 rounded-lg border border-line px-3.5 py-1.5 text-sm font-semibold">
           <Icon name={menu ? "close" : "menu"} size={15} /> Topics
         </button>
       </div>
@@ -195,22 +195,22 @@ export function DocsIndex() {
   return (
     <DocsShell>
       <section aria-labelledby="docs-h" className="border-b border-line pb-10">
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">Documentation</p>
-        <h1 id="docs-h" className="mt-3 text-4xl font-bold tracking-tighter sm:text-5xl">Papercliped docs</h1>
+        <p className="text-xs font-bold text-muted">Documentation</p>
+        <h1 id="docs-h" className="mt-3 text-4xl font-semibold sm:text-5xl">Papercliped docs</h1>
         <p className="mt-4 max-w-2xl text-lg text-muted">Connect your AI app to your Paperclip, choose what it may do, and manage everything from inside Paperclip. {allDocs().length} topics, all searchable.</p>
         <SearchButton label="Search the docs" className="mt-6 h-12 w-full max-w-xl px-5 text-base" />
         <CodeBlock label="Connector address for Claude, ChatGPT and MCP apps" code={MCP_URL} className="mt-6 max-w-xl" />
       </section>
 
       <section aria-labelledby="start-h" className="mt-10">
-        <h2 id="start-h" className="text-2xl font-bold">Start here</h2>
+        <h2 id="start-h" className="text-2xl font-semibold">Start here</h2>
         <ul className="mt-4 grid gap-3 sm:grid-cols-2">
           {START.map(({ slug, icon, blurb }) => {
             const d = getDoc(slug);
             if (!d) return null;
             return (
               <li key={slug}>
-                <AppLink to={`/docs/${slug}`} className="group flex h-full gap-4 rounded-2xl border border-line p-5 transition-[transform,border-color,background-color] duration-150 hover:-translate-y-0.5 hover:border-field hover:bg-surface">
+                <AppLink to={`/docs/${slug}`} className="group flex h-full gap-4 rounded-lg border border-line p-5 transition-[transform,border-color,background-color] duration-150 hover:border-field hover:bg-surface">
                   <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-line bg-surface text-ink"><Icon name={icon} size={18} /></span>
                   <span className="min-w-0">
                     <span className="flex items-center gap-1.5 font-semibold">{d.title}<Icon name="chevron" size={15} className="text-muted transition-transform group-hover:translate-x-0.5" /></span>
@@ -228,8 +228,8 @@ export function DocsIndex() {
         if (!s) return null;
         return (
           <section key={s.title} aria-labelledby={`sec-${s.title}`} className="mt-10">
-            <h2 id={`sec-${s.title}`} className="flex items-center gap-2 text-xl font-bold"><Icon name={icon} size={18} className="text-muted" />{s.title} <span className="text-base font-medium text-muted">({s.docs.length})</span></h2>
-            <ul className="mt-3 divide-y divide-line rounded-2xl border border-line">
+            <h2 id={`sec-${s.title}`} className="flex items-center gap-2 text-xl font-semibold"><Icon name={icon} size={18} className="text-muted" />{s.title} <span className="text-base font-medium text-muted">({s.docs.length})</span></h2>
+            <ul className="mt-3 divide-y divide-line rounded-lg border border-line">
               {s.docs.map((d) => (
                 <li key={d.slug}>
                   <AppLink to={`/docs/${d.slug}`} className="group flex items-center gap-4 px-4 py-3 transition-colors first:rounded-t-2xl last:rounded-b-2xl hover:bg-surface">
@@ -248,7 +248,7 @@ export function DocsIndex() {
 
       <section aria-label="Help" className="mt-12 grid gap-3 sm:grid-cols-3">
         {[{ to: "/docs/troubleshooting", t: "Troubleshooting", d: "Fixes for the common problems." }, { to: "/docs/faq", t: "FAQ", d: "Short answers to common questions." }, { to: "/community", t: "Ask the community", d: "Suggest features, report bugs." }].map((x) => (
-          <AppLink key={x.t} to={x.to} className="rounded-2xl bg-surface p-4 transition-transform duration-150 hover:-translate-y-0.5">
+          <AppLink key={x.t} to={x.to} className="rounded-lg bg-surface p-4 transition-transform duration-150">
             <span className="block font-semibold">{x.t}</span>
             <span className="block text-sm text-muted">{x.d}</span>
           </AppLink>
@@ -324,7 +324,7 @@ export function DocPage() {
       <DocHeader crumbs={[{ to: "/docs", label: "Docs" }, { label: sectionOf(doc.slug) }]} title={doc.title} tag={sectionOf(doc.slug)}
         meta={doc.updated && <span>Last updated <time dateTime={doc.updated}>{new Date(`${doc.updated}T00:00:00Z`).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" })}</time></span>} />
       {doc.headings.length > 2 && (
-        <details className="mt-6 rounded-2xl border border-line p-3 xl:hidden">
+        <details className="mt-6 rounded-lg border border-line p-3 xl:hidden">
           <summary className="cursor-pointer font-semibold">On this page</summary>
           <div className="mt-2"><Toc doc={doc} /></div>
         </details>
@@ -334,8 +334,8 @@ export function DocPage() {
         <span className="text-muted">Something wrong or missing? <AppLink to="/community" className="text-link underline">Tell us</AppLink> or write to <a className="text-link underline" href="mailto:support@papercliped.co">support@papercliped.co</a>.</span>
       </div>
       <nav aria-label="Previous and next" className="mt-6 grid gap-3 sm:grid-cols-2">
-        {prev ? <AppLink to={`/docs/${prev.slug}`} className="rounded-2xl border border-line p-4 transition-[transform,background-color] duration-150 hover:-translate-y-0.5 hover:bg-surface"><span className="text-xs text-muted">← Previous</span><span className="block font-semibold">{prev.title}</span></AppLink> : <span />}
-        {next && <AppLink to={`/docs/${next.slug}`} className="rounded-2xl border border-line p-4 text-right transition-[transform,background-color] duration-150 hover:-translate-y-0.5 hover:bg-surface"><span className="text-xs text-muted">Next →</span><span className="block font-semibold">{next.title}</span></AppLink>}
+        {prev ? <AppLink to={`/docs/${prev.slug}`} className="rounded-lg border border-line p-4 transition-[transform,background-color] duration-150 hover:bg-surface"><span className="text-xs text-muted">← Previous</span><span className="block font-semibold">{prev.title}</span></AppLink> : <span />}
+        {next && <AppLink to={`/docs/${next.slug}`} className="rounded-lg border border-line p-4 text-right transition-[transform,background-color] duration-150 hover:bg-surface"><span className="text-xs text-muted">Next →</span><span className="block font-semibold">{next.title}</span></AppLink>}
       </nav>
     </DocsShell>
   );

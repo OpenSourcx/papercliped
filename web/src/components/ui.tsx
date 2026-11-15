@@ -3,9 +3,9 @@ import { AppLink } from "./AppLink";
 import { cx } from "./cx";
 
 type Variant = "primary" | "secondary" | "ghost";
-const BTN = "inline-flex items-center justify-center gap-2 rounded-full font-semibold select-none transition-[transform,box-shadow,background-color,opacity] duration-150 ease-out hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50";
+const BTN = "inline-flex items-center justify-center gap-2 rounded-lg font-semibold select-none transition-[background-color,border-color,opacity] duration-150 ease-out disabled:pointer-events-none disabled:opacity-50";
 const VARIANT: Record<Variant, string> = {
-  primary: "bg-accent text-accent-ink shadow-sm hover:shadow-lg",
+  primary: "bg-accent text-accent-ink hover:opacity-90",
   secondary: "border border-line bg-bg/40 text-ink hover:border-field hover:bg-surface",
   ghost: "text-ink hover:bg-surface",
 };
@@ -28,17 +28,17 @@ export function TextLink({ to, children, className }: { to: string; children: Re
   return <AppLink to={to} className={cx("text-link underline decoration-1 underline-offset-2 hover:decoration-2", className)}>{children}</AppLink>;
 }
 
-/** A surface. `interactive` adds a small lift-and-tilt on hover (off with reduced motion). */
+/** A surface. `interactive` darkens the border on hover; nothing moves. */
 export function Card({ children, className, interactive = false, as: As = "div" }: { children: ReactNode; className?: string; interactive?: boolean; as?: "div" | "section" | "article" | "li" }) {
-  return <As className={cx("rounded-3xl border border-line bg-surface p-6", interactive && "transition-transform duration-200 ease-out hover:-translate-y-1 hover:-rotate-[0.6deg] hover:shadow-xl", className)}>{children}</As>;
+  return <As className={cx("rounded-lg border border-line bg-surface p-6", interactive && "transition-colors duration-150 hover:border-field", className)}>{children}</As>;
 }
 
 export function Tag({ children, className }: { children: ReactNode; className?: string }) {
-  return <span className={cx("inline-flex items-center rounded-full border border-line px-2.5 py-0.5 text-xs font-medium text-muted", className)}>{children}</span>;
+  return <span className={cx("inline-flex items-center rounded-lg border border-line px-2.5 py-0.5 text-xs font-medium text-muted", className)}>{children}</span>;
 }
 
 export function Badge({ children, tone = "accent", className }: { children: ReactNode; tone?: "accent" | "outline"; className?: string }) {
-  return <span className={cx("inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide", tone === "accent" ? "bg-accent text-accent-ink" : "border border-field text-ink", className)}>{children}</span>;
+  return <span className={cx("inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-semibold", tone === "accent" ? "bg-accent text-accent-ink" : "border border-field text-ink", className)}>{children}</span>;
 }
 
 export interface FieldProps extends InputHTMLAttributes<HTMLInputElement> {

@@ -56,15 +56,15 @@ export function PinStage({ compact = false }: { compact?: boolean }) {
   };
 
   return (
-    <div className={"pin-stage relative isolate overflow-hidden rounded-[2rem] border border-line bg-surface shadow-2xl shadow-black/10 " + (compact ? "p-4 sm:p-5" : "p-4 sm:p-6")}>
+    <div className={"pin-stage relative isolate overflow-hidden rounded-xl border border-line bg-surface " + (compact ? "p-4 sm:p-5" : "p-4 sm:p-6")}>
       <div className="absolute inset-0 pointer-events-none pin-stage-grid" aria-hidden="true" />
       <PinField />
       <div className="relative flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
         <div className="flex items-center gap-2">
           <span aria-hidden="true" className="h-2 w-2 rounded-full bg-accent" />
-          <span className="font-mono text-[11px] uppercase tracking-[.14em] text-muted">ePaperclip · PinView</span>
+          <span className="font-mono text-[11px] text-muted">ePaperclip · PinView</span>
         </div>
-        <span className="rounded-full border border-line bg-bg/80 px-3 py-1 text-[11px] font-semibold text-muted">Interactive demo · Sample data</span>
+        <span className="rounded-lg border border-line bg-bg/80 px-3 py-1 text-[11px] font-semibold text-muted">Interactive demo · Sample data</span>
       </div>
       <div className="relative grid gap-5 pt-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] md:items-center">
         <div className="flex flex-col items-center justify-center text-center">
@@ -78,10 +78,10 @@ export function PinStage({ compact = false }: { compact?: boolean }) {
           </button>
           <p className="mt-4 font-display text-lg font-bold">Hey, I'm Pin.</p>
           <p className="max-w-xs text-sm text-muted">Tap the orb. I have a few ideas.</p>
-          <div role="group" aria-label="Pin demonstration mode" className="mt-5 inline-flex rounded-full border border-line bg-bg p-1">
+          <div role="group" aria-label="Pin demonstration mode" className="mt-5 inline-flex rounded-lg border border-line bg-bg p-1">
             {(["assistant", "agent"] as const).map((m) => (
               <button key={m} type="button" aria-pressed={mode === m} onClick={() => setMode(m)}
-                className={"rounded-full px-3 py-1.5 text-xs font-semibold capitalize transition-colors " + (mode === m ? "bg-accent text-accent-ink" : "text-muted hover:text-ink")}>
+                className={"rounded-lg px-3 py-1.5 text-xs font-semibold capitalize transition-colors " + (mode === m ? "bg-accent text-accent-ink" : "text-muted hover:text-ink")}>
                 {m} mode
               </button>
             ))}
@@ -91,19 +91,19 @@ export function PinStage({ compact = false }: { compact?: boolean }) {
           <div role="tablist" aria-label="Try Pin" onKeyDown={onKey} className="flex flex-wrap gap-2">
             {EXAMPLES.map((it, i) => (
               <button type="button" role="tab" key={it.name} id={`pin-tab-${i}`} aria-controls="pin-panel" ref={(el) => { tabs.current[i] = el; }} tabIndex={i === active ? 0 : -1} aria-selected={i === active} onClick={() => setActive(i)}
-                className={"rounded-full border px-3 py-1.5 text-xs font-medium transition-colors " + (i === active ? "border-accent bg-accent text-accent-ink" : "border-line bg-bg text-muted hover:text-ink")}>
+                className={"rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors " + (i === active ? "border-accent bg-accent text-accent-ink" : "border-line bg-bg text-muted hover:text-ink")}>
                 {it.name}
               </button>
             ))}
           </div>
-          <div role="tabpanel" id="pin-panel" aria-labelledby={`pin-tab-${active}`} className="mt-4 overflow-hidden rounded-2xl border border-line bg-bg">
+          <div role="tabpanel" id="pin-panel" aria-labelledby={`pin-tab-${active}`} className="mt-4 overflow-hidden rounded-lg border border-line bg-bg">
             <div className="flex items-center justify-between border-b border-line px-4 py-2 text-xs">
               <span className="font-semibold">{item.focus}</span>
               <span className="font-mono text-muted">PIN / 01</span>
             </div>
             <div className="min-h-[13rem] space-y-3 p-4" aria-live="polite">
-              <p className="ml-auto w-fit max-w-[94%] rounded-2xl rounded-br-sm bg-accent px-3.5 py-2.5 text-sm text-accent-ink">{item.question}</p>
-              <p className="w-fit max-w-[94%] rounded-2xl rounded-bl-sm border border-line bg-surface px-3.5 py-2.5 text-sm">{mode === "agent" ? item.agentAnswer : item.answer}</p>
+              <p className="ml-auto w-fit max-w-[94%] rounded-lg rounded-br-sm bg-accent px-3.5 py-2.5 text-sm text-accent-ink">{item.question}</p>
+              <p className="w-fit max-w-[94%] rounded-lg rounded-bl-sm border border-line bg-surface px-3.5 py-2.5 text-sm">{mode === "agent" ? item.agentAnswer : item.answer}</p>
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-4 py-3 text-xs text-muted">
               <span>{item.event}</span>

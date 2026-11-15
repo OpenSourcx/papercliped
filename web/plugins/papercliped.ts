@@ -10,7 +10,20 @@ const VIRTUAL = "virtual:themes.css";
 const RESOLVED = "\0virtual:themes.css";
 const DOCS = "virtual:docs";
 const DOCS_RESOLVED = "\0virtual:docs";
+const RELEASE = "virtual:release";
+const RELEASE_RESOLVED = "\0virtual:release";
 const BOOT = "theme-boot.js";
+
+/** The latest published ePaperclip version, read from the npm registry when the site is built. Null when it cannot be read: pages then leave the number out rather than guess. */
+async function latestEpaperclip(): Promise<string | null> {
+  try {
+    const r = await fetch("https://registry.npmjs.org/epaperclip/latest", { signal: AbortSignal.timeout(8000), headers: { accept: "application/json" } });
+    const j = (await r.json()) as { version?: string };
+    return typeof j.version === "string" && /^\d+\.\d+\.\d+$/.test(j.version) ? j.version : null;
+  } catch {
+    return null;
+  }
+}
 
 // The same CSP the bridge sends for these pages, so `vite preview` (and the route check) enforce exactly that.
 export { SITE_CSP } from "../../src/web/csp.ts";
@@ -61,9 +74,10 @@ export function papercliped(): Plugin {
       root = c.root;
     },
     resolveId(id) {
-      return id === VIRTUAL ? RESOLVED : id === DOCS ? DOCS_RESOLVED : null;
+      return id === VIRTUAL ? RESOLVED : id === DOCS ? DOCS_RESOLVED : id === RELEASE ? RELEASE_RESOLVED : null;
     },
     async load(id) {
+      if (id === RELEASE_RESOLVED) return `export default ${JSON.stringify({ epaperclip: await latestEpaperclip() })};`;
       if (id === DOCS_RESOLVED) return `export default ${JSON.stringify(await buildDocs(root, (f) => this.addWatchFile(f)))};`;
       if (id !== RESOLVED) return null;
       for (const f of ["css.ts", "palettes.ts"]) this.addWatchFile(resolve(root, "src/theme", f));

@@ -16,10 +16,10 @@ export function Playground() {
   const [all, setAll] = useState(false); // phones show the first 8 until expanded
   const allowed = useMemo(() => tools.filter((t) => RANK[t.scope as Level] <= RANK[level]).length, [level]);
   return (
-    <div className="rounded-3xl border border-line bg-surface p-4 sm:p-6">
+    <div className="rounded-xl border border-line bg-surface p-4 sm:p-6">
       <div role="radiogroup" aria-label="Access level" className="grid gap-2 sm:grid-cols-2">
         {LEVELS.map((l) => (
-          <label key={l.id} className={cx("cursor-pointer rounded-2xl border p-3 transition-all duration-150 hover:-translate-y-0.5", level === l.id ? "border-accent bg-bg shadow-md" : "border-line")}>
+          <label key={l.id} className={cx("cursor-pointer rounded-lg border p-3 transition-all duration-150", level === l.id ? "border-accent bg-bg shadow-md" : "border-line")}>
             <input type="radio" name="pcl-level" value={l.id} checked={level === l.id} onChange={() => setLevel(l.id)} className="sr-only" />
             <span className="flex items-center gap-2 font-semibold">
               <span aria-hidden="true" className={cx("inline-block h-3 w-3 rounded-full border-2 border-accent", level === l.id && "bg-accent")} />

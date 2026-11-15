@@ -84,11 +84,21 @@ Canonical evidence:
 
 ## Visual grammar
 
-- Reuse the existing Papercliped site theme tokens, self-hosted fonts, CSP, branded mascot and official Pin orb from \`papercliped-engine/brand/pin-orb.svg\`.
-- Spacious editorial headline, tightly edited product copy, quiet card grids, contrast-safe accent use, generous mobile layout.
-- Responsive from 375px to desktop. One \`h1\` per route. Keyboard-accessible tabs and toggles, visible focus rings, labels, informative links.
-- Honor \`prefers-reduced-motion\` and theme variations. All interactions must be real UI state changes, no inert decorative CTAs.
-- Respect the site's no third-party requests, no tracking, and strict CSP.
+A visitor must understand what the software is within one screen, the way a good README reads. The site looks like documentation from an established developer company, not a campaign.
+
+**Type.** One family for headings and text, **Mona Sans** (variable), and **Geist Mono** for code, both self-hosted as Latin-subset `woff2` in `web/public/fonts/` with their licences (the CSP forbids loading fonts from anywhere else). The server-rendered sign-in and consent pages keep Inter so they match the account portals.
+
+- Headings: at most 56px on desktop for the page title, weight 600, letter-spacing no tighter than -0.02em. No `clamp()` hero sizes above that. No gradient or highlighted text.
+- Text: 16px, 1.6 line height, measure 60 to 75 characters.
+- Sentence case everywhere. Say what a thing is and does; no slogan as a heading.
+
+**No decoration that carries no information.** No uppercase tracked eyebrows, no "01 / 04" numbering, no glow or gradient backgrounds, no pill taglines, no hover translations or tilts on cards, no drop shadows (except on real screenshots).
+
+**Shape and colour.** 8px radius for controls and cards, 12px at most for large panels, 1px borders. Keep the theme tokens and palettes; one accent, used for the primary action and links only. 4.5:1 text contrast in every palette.
+
+**Screenshots are real.** Taken from the real console running on demo data, at 1440×900 in the site's dark and light themes, saved under `web/public/screens/` with descriptive names, `alt` text and explicit `width` and `height`, and labelled "Demo data". `npm --prefix web run screens` retakes them after a release. Diagrams are inline SVG that follow the theme.
+
+**Everything else.** Reuse the theme tokens, CSP, mascot and the official Pin orb from `papercliped-engine/brand/pin-orb.svg`. Responsive from 375px to desktop; one `h1` per route; keyboard-accessible tabs and toggles; visible focus; labels; informative links. Honour `prefers-reduced-motion`. Every interaction is a real UI state change, no inert CTAs. No third-party requests, no tracking, strict CSP (`script-src 'self'; style-src 'self'`, no inline code).
 
 ## Engineering source-of-truth and release quality
 

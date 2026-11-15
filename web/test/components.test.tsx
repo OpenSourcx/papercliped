@@ -115,7 +115,7 @@ describe("community links", () => {
 describe("app", () => {
   it("renders the home page and the kit", () => {
     inRouter(<App />);
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("The power");
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("ePaperclip");
   });
   it("renders the design kit with every theme listed", () => {
     inRouter(<App />, "/kit");
@@ -128,12 +128,10 @@ describe("app", () => {
     expect(screen.getByText("Example value, not live data")).toBeInTheDocument();
     expect(document.head.querySelector('meta[name="robots"]')?.getAttribute("content")).toContain("noindex");
   });
-  it("home cards mark Pin and Connect as not finished (ERR-WEB-003)", () => {
+  it("the home family table marks Pin and Connect as previews, not finished (ERR-WEB-003)", () => {
     inRouter(<App />);
-    expect(screen.getByText("Preview")).toBeInTheDocument();
-    expect(screen.getByText("Pre-release")).toBeInTheDocument();
-    expect(screen.getByText(/no real-model Pin chat yet/)).toBeInTheDocument();
-    expect(screen.getByText(/Not generally available yet/)).toBeInTheDocument();
+    expect(screen.getAllByText("Preview").length).toBe(2);
+    expect(screen.getByText("Planned")).toBeInTheDocument();
   });
   it("papercliped page says the hosted gateway needs a public https address (ERR-MCP-003)", () => {
     inRouter(<App />, "/papercliped");

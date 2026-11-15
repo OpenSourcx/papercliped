@@ -8,7 +8,7 @@ export function Placeholder({ title, note }: { title: string; note: string }) {
   return (
     <section className="mx-auto max-w-2xl px-4 py-20 text-center">
       <Mascot size={80} />
-      <h1 className="mt-4 text-4xl font-bold">{title}</h1>
+      <h1 className="mt-4 text-4xl font-semibold">{title}</h1>
       <p className="mt-3 text-muted">{note}</p>
       <div className="mt-6 flex justify-center gap-3">
         <ButtonLink to="/">Home</ButtonLink>

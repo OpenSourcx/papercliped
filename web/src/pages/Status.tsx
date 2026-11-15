@@ -30,20 +30,20 @@ export function Status() {
     <div className="mx-auto max-w-6xl px-4 py-12 sm:py-16">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-bold sm:text-5xl">Status</h1>
+          <h1 className="text-4xl font-semibold sm:text-5xl">Status</h1>
           <p className="mt-2 max-w-2xl text-muted">Live numbers for the hosted service at papercliped.co. Aggregate only: nothing here identifies anyone. Read them yourself through the <TextLink to="/docs/public-api">public API</TextLink>.</p>
         </div>
         <div role="group" aria-label="Time window" className="flex flex-wrap gap-2">
           {WINDOWS.map((w) => (
-            <button key={w.id} type="button" aria-pressed={win === w.id} onClick={() => setWin(w.id)} className={cx("rounded-full border px-3 py-1 text-sm font-medium transition-all duration-150 hover:-translate-y-0.5", win === w.id ? "border-accent bg-accent text-accent-ink" : "border-field")}>{w.label}</button>
+            <button key={w.id} type="button" aria-pressed={win === w.id} onClick={() => setWin(w.id)} className={cx("rounded-lg border px-3 py-1 text-sm font-medium transition-all duration-150", win === w.id ? "border-accent bg-accent text-accent-ink" : "border-field")}>{w.label}</button>
           ))}
         </div>
       </div>
 
-      <section aria-live="polite" className={cx("mt-8 flex flex-wrap items-center gap-4 rounded-3xl border p-5 sm:p-6", st === "ok" ? "border-line bg-surface" : st ? "border-accent bg-surface" : "border-line")}>
-        <span aria-hidden="true" className={cx("grid h-12 w-12 place-items-center rounded-full text-xl font-bold", st ? "bg-accent text-accent-ink" : "border border-field", st === "ok" && "animate-pulse-dot")}>{st ? STATUS_TEXT[st].icon : "…"}</span>
+      <section aria-live="polite" className={cx("mt-8 flex flex-wrap items-center gap-4 rounded-xl border p-5 sm:p-6", st === "ok" ? "border-line bg-surface" : st ? "border-accent bg-surface" : "border-line")}>
+        <span aria-hidden="true" className={cx("grid h-12 w-12 place-items-center rounded-lg text-xl font-bold", st ? "bg-accent text-accent-ink" : "border border-field", st === "ok" && "animate-pulse-dot")}>{st ? STATUS_TEXT[st].icon : "…"}</span>
         <div className="flex-1">
-          <h2 className="text-2xl font-bold">{st ? STATUS_TEXT[st].title : error ? "Status unavailable" : "Checking…"}</h2>
+          <h2 className="text-2xl font-semibold">{st ? STATUS_TEXT[st].title : error ? "Status unavailable" : "Checking…"}</h2>
           <p className="text-sm text-muted">
             {status ? <>Version {status.version} · up {uptime(status.uptimeSeconds)} · checked {new Date(status.checkedAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}</> : error ?? "Loading the latest numbers."}
           </p>
