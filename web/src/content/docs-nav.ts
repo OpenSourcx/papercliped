@@ -1,7 +1,7 @@
 /** The docs table of contents. Every page in site/docs/*.md must be listed exactly once (test/docs.test.ts checks). */
 export const DOCS_NAV: { title: string; slugs: string[] }[] = [
   { title: "Get started", slugs: ["what-is-papercliped", "getting-started", "signup", "your-account"] },
-  { title: "Install ePaperclip", slugs: ["install-epaperclip"] },
+  { title: "Install ePaperclip", slugs: ["install-epaperclip", "link-a-device"] },
   { title: "Host your Paperclip", slugs: ["hosting", "connect-your-paperclip", "host-vps", "host-railway", "host-render", "host-fly", "host-coolify"] },
   { title: "Connect your AI app", slugs: ["claude", "chatgpt", "codex", "other-ai-apps"] },
   { title: "Guides", slugs: ["prompts", "permissions", "control-room", "access-modes", "manage", "paperclip-plugin", "anonymous-mode", "self-hosting"] },

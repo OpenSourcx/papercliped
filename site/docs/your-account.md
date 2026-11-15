@@ -37,6 +37,9 @@ To disconnect one, choose **Remove**, then **Disconnect**. You'll be asked to co
 
 If the section says **Not available yet**, it is being switched on for your account. Your existing connections keep working.
 
+## Link a computer
+To add a computer running ePaperclip to your account, or to link your account to your Proxmox user on it, see [Link a computer to your account](/docs/link-a-device). You enter a short code at `https://link.papercliped.co`.
+
 ## Billing (Connect)
 Papercliped Connect, the managed remote address for your ePaperclip machine, is in pre-release. It is billed per device per month (US$5.99 per device), through Stripe.
 

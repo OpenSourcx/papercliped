@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v2.11.0 — Guide: link a computer to your account
+
+- **New guide: Link a computer to your account.** How to link a computer running ePaperclip with a short code (`epaperclip login`, then enter the code at link.papercliped.co), how to link your account to your Proxmox user and offer "Sign in with Papercliped", what administrators approve, and what to do if a code does not match. It needs an ePaperclip release newer than 1.0.0. The install and account guides link to it.
+
 ## v2.10.1 — A cleaner sign-in and consent screen
 
 - **A cleaner sign-in and consent screen.** When an AI app asks to connect, the login and "Allow" pages now match the Papercliped account portal: a centred card, the same colours in light and dark, and clearer buttons. Nothing about how connecting works has changed.

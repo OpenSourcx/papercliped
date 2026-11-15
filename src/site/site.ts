@@ -28,6 +28,7 @@ const NAV: { slug: string; title: string }[] = [
   { slug: "signup", title: "Create your account" },
   { slug: "your-account", title: "Your Papercliped account" },
   { slug: "install-epaperclip", title: "Install ePaperclip" },
+  { slug: "link-a-device", title: "Link a computer to your account" },
   { slug: "hosting", title: "Host your Paperclip" },
   { slug: "connect-your-paperclip", title: "At home, with a tunnel" },
   { slug: "host-vps", title: "VPS with Docker" },

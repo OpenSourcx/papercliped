@@ -57,6 +57,7 @@ It shows the version, how it was installed and whether its services are running.
 2. Create your organization, then add your first agent and connect a model to it.
 3. To give an AI app (Claude, ChatGPT, Codex) access to your Paperclip, see [Connect Claude](/docs/claude).
 4. To add more computing power, add a [worker machine](#add-a-worker-machine).
+5. To link this computer to your Papercliped account (needed for Papercliped Connect), see [Link a computer to your account](/docs/link-a-device).
 
 ## Add a worker machine
 A worker adds compute on another machine. It connects out to your ePaperclip host, opens no port and holds no Proxmox credentials. On a Linux machine with Node.js 22 or newer:
