@@ -1282,3 +1282,63 @@ describe("hosted MCP: central Papercliped account required before client consent
    } finally { central?.close(); original.close(); }
  });
 });
+
+describe("hosted MCP: connected AI apps on the account page", () => {
+  it("lists and revokes only the signed-in account's own grants, with one-use single-action assertions from Connect", async () => {
+    const original = await rig();
+    let central: Rig | undefined;
+    try {
+      await newUser(original, "tenant-apps.example.com", "apps.user1", { level: "paperclip:read" });
+      await newUser(original, "tenant-apps2.example.com", "apps.user2", { level: "paperclip:control" });
+      const mine = (await original.store.getAccountByKey("apps.user1"))!, other = (await original.store.getAccountByKey("apps.user2"))!;
+      const pair = generateKeyPairSync("ed25519");
+      central = await rig({ accountApi: { publicKey: pair.publicKey.export({ type: "spki", format: "pem" }).toString() } }, { store: original.store });
+      expect(central.oauth.centralAuth ?? null).toBeNull(); // the login flow is untouched: this does not need central auth
+      const enc = (o: unknown) => Buffer.from(JSON.stringify(o)).toString("base64url");
+      const iat = () => Math.floor(central!.clock.t / 1000);
+      const mint = (sub: string, purpose: string, extra: Record<string, unknown> = {}, typ = "PCD-MCP-ACCOUNT", aud = "https://mcp.papercliped.co/account") => {
+        const t = iat(), body = enc({ alg: "EdDSA", typ, kid: "pcd-mcp-1", v: 1 }) + "." + enc({ iss: "https://connect.papercliped.co", aud, sub, purpose, iat: t, exp: t + 60, jti: randomBytes(24).toString("base64url"), ...extra });
+        return body + "." + sign(null, Buffer.from(body), pair.privateKey).toString("base64url");
+      };
+      const call = (path: string, payload: unknown, o: { origin?: string; type?: string } = {}) => fetch(central!.base + path, { method: "POST", headers: { "Content-Type": o.type ?? "application/json", Origin: o.origin ?? "https://auth.papercliped.co" }, body: JSON.stringify(payload) });
+
+      // preflight: only the account site, POST only, no credentials
+      const pre = await fetch(central.base + "/account/apps", { method: "OPTIONS", headers: { Origin: "https://auth.papercliped.co", "Access-Control-Request-Method": "POST" } });
+      expect(pre.status).toBe(204); expect(pre.headers.get("access-control-allow-origin")).toBe("https://auth.papercliped.co"); expect(pre.headers.get("access-control-allow-credentials")).toBeNull();
+      expect((await fetch(central.base + "/account/apps", { method: "OPTIONS", headers: { Origin: "https://evil.example" } })).status).toBe(403);
+
+      // list: their own app only, nothing sensitive
+      const a = mint(mine.id, "apps.list");
+      expect((await call("/account/apps", { assertion: a }, { origin: "https://evil.example" })).status).toBe(403);
+      expect((await call("/account/apps", { assertion: a }, { type: "text/plain" })).status).toBe(415);
+      const listed = await call("/account/apps", { assertion: a });
+      expect(listed.status).toBe(200);
+      const apps = (await listed.json()).apps as { id: string; client: string; level: string; createdAt: number }[];
+      expect(apps).toHaveLength(1); expect(apps[0].level).toBe("read");
+      expect(JSON.stringify(apps)).not.toMatch(/sealed|credential|instance|tenant-apps|token/i);
+      expect((await call("/account/apps", { assertion: a })).status).toBe(409); // one use
+
+      // the wrong kind of token, the wrong action and the wrong audience are all refused
+      expect((await call("/account/apps", { assertion: mint(mine.id, "apps.list", {}, "PCD-MCP-HANDOFF") })).status).toBe(403);
+      expect((await call("/account/apps", { assertion: mint(mine.id, "apps.revoke", { gid: apps[0].id }) })).status).toBe(403);
+      expect((await call("/account/apps", { assertion: mint(mine.id, "apps.list", {}, "PCD-MCP-ACCOUNT", "https://mcp.papercliped.co/mcp") })).status).toBe(403);
+      expect((await call("/account/apps", { assertion: mint(mine.id, "apps.list", { gid: "x".repeat(16) }) })).status).toBe(403);
+      expect((await call("/account/apps", { assertion: "not.a.token" })).status).toBe(403);
+
+      // revoke: needs the exact grant named in the signed assertion; someone else's grant is indistinguishable from a missing one
+      const theirs = ((await (await call("/account/apps", { assertion: mint(other.id, "apps.list") })).json()).apps as { id: string }[])[0].id;
+      expect((await call("/account/apps/revoke", { assertion: mint(mine.id, "apps.revoke", { gid: theirs }), grantId: theirs })).status).toBe(404);
+      expect((await call("/account/apps/revoke", { assertion: mint(mine.id, "apps.revoke", { gid: theirs }), grantId: apps[0].id })).status).toBe(403); // named a different grant than the one asked for
+      const gone = await call("/account/apps/revoke", { assertion: mint(mine.id, "apps.revoke", { gid: apps[0].id }), grantId: apps[0].id });
+      expect(gone.status).toBe(200);
+      expect(((await (await call("/account/apps", { assertion: mint(mine.id, "apps.list") })).json()).apps as unknown[])).toHaveLength(0);
+      expect(((await (await call("/account/apps", { assertion: mint(other.id, "apps.list") })).json()).apps as unknown[])).toHaveLength(1); // theirs untouched
+      expect((await call("/account/apps/revoke", { assertion: mint(mine.id, "apps.revoke", { gid: apps[0].id }), grantId: apps[0].id })).status).toBe(404); // already gone
+    } finally { central?.close(); original.close(); }
+  });
+
+  it("does not exist without its own key (central auth alone does not enable it)", async () => {
+    const r = await rig();
+    try { expect((await fetch(r.base + "/account/apps", { method: "POST", headers: { "Content-Type": "application/json", Origin: "https://auth.papercliped.co" }, body: "{}" })).status).toBe(404); } finally { r.close(); }
+  });
+});

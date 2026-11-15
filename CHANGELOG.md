@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v2.9.0 — Connected AI apps API for the account page
+
+- **Connected AI apps on your account page (pre-release).** The hosted gateway can now list the AI apps connected to your Papercliped account and disconnect one, for the account page to show. Off until the operator turns it on; how apps connect does not change. See `docs/ACCOUNT-APPS-API.md`.
+
 ## v2.8.0 — Sign in from the website, and the new V2 site
 
 - **Sign in from the website.** The header (and the phone menu) now has a Sign in link to your Papercliped account, where you can sign in with an email code, Google, GitHub or a passkey.

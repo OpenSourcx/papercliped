@@ -8,7 +8,7 @@ import { PaperclipClient } from "../client.js";
 import { hostAllowed, type BridgeConfig, type OAuthConfig } from "../config.js";
 import { UnsafeUrlError, createSafeFetch, parseInstanceUrl } from "../net/safe-fetch.js";
 import { Keyring, isValidCodeChallenge, randomToken, safeEqual, sha256Hex, verifyPkce } from "./crypto.js";
-import { centralHandoffKey, verifyCentralHandoff, CENTRAL_AUTH_URL } from "./central-handoff.js";
+import { centralHandoffKey, verifyCentralHandoff, verifyAccountAssertion, ACCOUNT_ORIGIN, CENTRAL_AUTH_URL, type AccountPurpose } from "./central-handoff.js";
 import type { KeyObject } from "node:crypto";
 import { approvePage, choosePage, consentPage, errorPage, instancePage, scopePage, secretPage, usernamePage, welcomePage } from "./pages.js";
 import { LoginError, PAPERCLIP_KEY_TTL_MS, PaperclipLogin, type Challenge } from "./paperclip-login.js";
@@ -112,6 +112,7 @@ export class OAuthProvider {
   private multi: boolean;
   private accounts: boolean;
   private centralPublicKey: KeyObject | null;
+  private accountApiKey: KeyObject | null;
   /** Key rotations under way in this process, by holder: callers wait for one instead of starting another. */
   private rotations = new Map<string, Promise<string | null>>();
   /** Holder → when this process may try a failed rotation again. */
@@ -124,6 +125,7 @@ export class OAuthProvider {
     this.multi = deps.oauth.mode === "multi";
     this.accounts = deps.oauth.accounts && this.multi;
     this.centralPublicKey = deps.oauth.centralAuth?.publicKey ? centralHandoffKey(deps.oauth.centralAuth.publicKey) : null;
+    this.accountApiKey = this.accounts && deps.oauth.accountApi?.publicKey ? centralHandoffKey(deps.oauth.accountApi.publicKey) : null;
     this.safeFetch = deps.safeFetch ?? createSafeFetch({ timeoutMs: deps.config.timeoutMs, maxBytes: 2_000_000 });
     this.installFetch = deps.safeFetch ?? createSafeFetch({ timeoutMs: PLUGIN_INSTALL_MS, maxBytes: 200_000 });
     this.resource = `${deps.oauth.issuer}/mcp`;
@@ -672,6 +674,7 @@ export class OAuthProvider {
       if (m === "GET" && (p === "/.well-known/oauth-protected-resource" || p === "/.well-known/oauth-protected-resource/mcp"))
         return this.json(res, 200, this.protectedResourceMetadata());
       if (m === "GET" && p === "/.well-known/oauth-authorization-server") return this.json(res, 200, this.serverMetadata());
+      if (p === "/account/apps" || p === "/account/apps/revoke") return await this.accountApps(req, res, p);
       if (m === "POST" && p === "/register") return await this.register(req, res);
       if (m === "GET" && p === "/authorize") return await this.authorize(req, res, url);
       if (m === "GET" && p === "/authorize/status") return await this.authorizeStatus(req, res, url);
@@ -1012,6 +1015,40 @@ export class OAuthProvider {
     res.writeHead(303, { Location:u.href, "Cache-Control":"no-store", "Referrer-Policy":"no-referrer" });
     res.end();
     return true;
+  }
+
+  /**
+   * The signed-in person's connected AI apps, for their account page (auth.papercliped.co). Needs the multi-tenant bridge and its own BRIDGE_ACCOUNT_API_PUBLIC_KEY (not tied to central auth). Each call
+   * carries a one-use assertion signed by Connect for that account and that single action (revoking names the grant); there is no
+   * cookie and no bearer, the only allowed Origin is the account site, and a person can only ever see or revoke their own grants.
+   * What comes back never includes a credential, an instance address or a token.
+   */
+  private async accountApps(req: IncomingMessage, res: ServerResponse, path: string): Promise<true> {
+    const cors = { "Access-Control-Allow-Origin": ACCOUNT_ORIGIN, Vary: "Origin", "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type", "Access-Control-Max-Age": "600" };
+    const out = (status: number, body: unknown): true => { res.writeHead(status, { "Content-Type": "application/json", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff", ...cors }); res.end(JSON.stringify(body)); return true; };
+    if (!this.accountApiKey) return this.json(res, 404, { error: "not_found" });
+    if (req.headers.origin !== ACCOUNT_ORIGIN) return this.json(res, 403, { error: "invalid_origin" });
+    if (req.method === "OPTIONS") { res.writeHead(204, { "Cache-Control": "no-store", ...cors }); res.end(); return true; }
+    if (req.method !== "POST") return out(405, { error: "method_not_allowed" });
+    if (!(await this.limit(`acct-apps:${this.ip(req)}`, 30))) return out(429, { error: "rate_limited" });
+    if (!(req.headers["content-type"] ?? "").toLowerCase().startsWith("application/json")) return out(415, { error: "json_required" });
+    let body: { assertion?: unknown; grantId?: unknown } = {};
+    try { body = JSON.parse(await this.readBody(req)); } catch { return out(400, { error: "invalid_request" }); }
+    const purpose: AccountPurpose = path === "/account/apps/revoke" ? "apps.revoke" : "apps.list";
+    const gid = purpose === "apps.revoke" ? (typeof body.grantId === "string" ? body.grantId : "") : null;
+    const att = verifyAccountAssertion(typeof body.assertion === "string" ? body.assertion : "", this.accountApiKey, purpose, gid, this.now());
+    if (!att) return out(403, { error: "verification_failed" });
+    if (!(await this.store.hit(`central-jti:${att.jti}`, 1, 120_000))) return out(409, { error: "already_used" });
+    const acct = await this.store.getAccount(att.accountId);
+    if (!acct || acct.disabled) return out(403, { error: "account_unavailable" });
+    const mine = (await this.store.listAccountGrants(acct.id)).filter((g) => !g.revoked);
+    if (purpose === "apps.list") {
+      return out(200, { apps: mine.map((g) => ({ id: g.id, client: g.clientName.slice(0, 80), level: g.scopes.includes("paperclip:control") ? "full" : "read", session: g.policy?.label ? String(g.policy.label).slice(0, 60) : null, createdAt: g.createdAt, lastUsedAt: g.lastUsedAt })) });
+    }
+    // Someone else's grant, a missing one and an already-revoked one all look the same.
+    if (!mine.some((g) => g.id === gid)) return out(404, { error: "not_found" });
+    await this.revokeGrant(gid as string);
+    return out(200, { ok: true });
   }
 
   /** Post-login, POST-only central handoff. Never accepts username/email or a browser bearer. */

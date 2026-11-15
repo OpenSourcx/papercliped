@@ -34,5 +34,11 @@ describe("hosted MCP central authorization handoff",()=>{
       BRIDGE_MODE:"multi",BRIDGE_SECRET:"s".repeat(40),BRIDGE_CENTRAL_AUTH:"true"} as any,
       "https://mcp.papercliped.co",null)).toThrow();
     expect(CENTRAL_AUTH_URL).toBe("https://auth.papercliped.co/mcp/authorize");
+    // the account-page API has its own key; it needs the multi-tenant bridge and does not turn central auth on
+    const base={BRIDGE_OAUTH:"true",BRIDGE_PUBLIC_URL:"https://mcp.papercliped.co",BRIDGE_MODE:"multi",BRIDGE_SECRET:"s".repeat(40),BRIDGE_ALLOW_EPHEMERAL:"1"} as any;
+    const c=readOAuthConfig({...base,BRIDGE_ACCOUNT_API_PUBLIC_KEY:pub} as any,"https://mcp.papercliped.co",null);
+    expect(c.accountApi?.publicKey).toBe(pub.trim()); expect(c.centralAuth).toBeNull();
+    expect(readOAuthConfig(base,"https://mcp.papercliped.co",null).accountApi).toBeNull();
+    expect(()=>readOAuthConfig({...base,BRIDGE_MODE:"single",BRIDGE_ACCOUNT_API_PUBLIC_KEY:pub} as any,"https://mcp.papercliped.co",null)).toThrow(/multi/);
   });
 });
