@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { THEME, approvePage, choosePage, consentPage, errorPage, instancePage, scopePage, secretPage, usernamePage, welcomePage } from "../src/oauth/pages.js";
+import { PORTAL, THEME, approvePage, choosePage, consentPage, errorPage, instancePage, scopePage, secretPage, usernamePage, welcomePage } from "../src/oauth/pages.js";
 
 const lum = (hex: string) => {
   const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
@@ -9,6 +9,18 @@ const contrast = (a: string, b: string) => {
   const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
   return (x + 0.05) / (y + 0.05);
 };
+
+describe("sign-in page palette (WCAG, both schemes)", () => {
+  for (const [name, p] of [["light", PORTAL.light], ["dark", PORTAL.dark]] as const) {
+    it(`${name}: text, links, button, errors and notes clear AA`, () => {
+      for (const bg of [p.bg, p.surface, p.surface2]) for (const fg of [p.ink, p.ink2, p.muted, p.link]) expect(contrast(fg, bg)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(p.accentInk, p.accent)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(p.errInk, p.errBg)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(p.warnInk, p.warnBg)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(p.field, p.bg)).toBeGreaterThanOrEqual(3);
+    });
+  }
+});
 
 describe("theme accessibility (WCAG)", () => {
   it("text on the cream background clears AA/AAA", () => {
@@ -58,7 +70,7 @@ describe.each(pages)("%s page", (_name, html) => {
     expect(html).toMatch(/^<!doctype html>/);
     expect(html).toContain('name="viewport"');
     expect(html).toMatch(/<title>[^<]+· Papercliped<\/title>/);
-    expect(html).toContain("#fffddc");
+    expect(html).toContain("#151410");
   });
 });
 

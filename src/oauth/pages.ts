@@ -25,44 +25,51 @@ export const THEME_DARK = { bg: "#16150f", ink: "#f4f1d6", ink2: "#e9e4b0", mute
 
 export const THEME = { bg: "#fffddc", ink: "#0b0a07", ink2: "#47463c", muted: "#6b6959", line: "#b0a993", btn: "#47463c", btnText: "#fffddc", disabled: "#8c8a77", errBg: "#fde8e3", errInk: "#8a1f11", warnBg: "#fff1c2" };
 
+/**
+ * The sign-in and consent pages share the Papercliped account portal's look (auth.papercliped.co): the ePaperclip design-system
+ * tokens, a centred card under the logo, Inter throughout. Contrast is asserted in test/pages.test.ts.
+ */
+export const PORTAL = {
+  light: { bg: "#ffffff", surface: "#ffffff", surface2: "#f5f4f1", ink: "#0d0c0a", ink2: "#3f3d38", muted: "#66635c", line: "#e6e4df", field: "#8d897f", accent: "#1a1915", accentInk: "#fafaf7", link: "#9a5b0a", errBg: "#fdecec", errInk: "#991b1b", errLine: "#f1b4b4", warnBg: "#fdf3dc", warnInk: "#7a3e06", warnLine: "#e8c982", off: "#8d897f" },
+  dark: { bg: "#151410", surface: "#1d1c18", surface2: "#26251f", ink: "#f4f2ea", ink2: "#c8c4b7", muted: "#a29e91", line: "#2f2d27", field: "#767268", accent: "#ecebe3", accentInk: "#151410", link: "#e8b25c", errBg: "#2c1818", errInk: "#fca5a5", errLine: "#5a2a2a", warnBg: "#2b2412", warnInk: "#fbd38d", warnLine: "#5a4a1f", off: "#5b5850" },
+};
+const vars = (t: typeof PORTAL.light) => `--bg:${t.bg};--surface:${t.surface};--surface2:${t.surface2};--ink:${t.ink};--ink2:${t.ink2};--muted:${t.muted};--line:${t.line};--field:${t.field};--accent:${t.accent};--accentink:${t.accentInk};--link:${t.link};--errbg:${t.errBg};--errink:${t.errInk};--errline:${t.errLine};--warnbg:${t.warnBg};--warnink:${t.warnInk};--warnline:${t.warnLine};--off:${t.off}`;
+
 const CSS = `${FONTS_CSS}
-:root{--bg:${THEME.bg};--ink:${THEME.ink};--ink2:${THEME.ink2};--muted:${THEME.muted};--line:${THEME.line};--btn:${THEME.btn};--btntext:${THEME.btnText};--off:${THEME.disabled};color-scheme:light}
-@media (prefers-color-scheme:dark){:root{--bg:${THEME_DARK.bg};--ink:${THEME_DARK.ink};--ink2:${THEME_DARK.ink2};--muted:${THEME_DARK.muted};--line:${THEME_DARK.line};--btn:${THEME_DARK.btn};--btntext:${THEME_DARK.btnText};--off:${THEME_DARK.disabled};color-scheme:dark}}
+:root{${vars(PORTAL.light)};color-scheme:light}
+@media (prefers-color-scheme:dark){:root{${vars(PORTAL.dark)};color-scheme:dark}}
 *{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
-body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font:15px/1.55 ${SANS};position:relative;overflow-x:hidden}
-body::before{content:"";position:fixed;right:5vw;top:5vh;width:min(26vw,300px);height:min(48vh,420px);pointer-events:none;opacity:.55;
-background-image:radial-gradient(var(--line) 1.1px,transparent 1.3px);background-size:13px 13px;-webkit-mask-image:linear-gradient(135deg,#000 0%,transparent 75%);mask-image:linear-gradient(135deg,#000 0%,transparent 75%)}
-@media (max-width:900px){body::before{display:none}}
-main{position:relative;width:min(400px,100% - 40px);margin:9vh 0 6vh max(20px,min(14vw,240px))}
-@media (max-width:900px){main{margin:6vh auto}}
-.brand{display:flex;align-items:center;gap:8px;font-family:${DISPLAY};font-weight:700;font-size:19px;text-transform:lowercase;margin-bottom:34px}.brand svg{width:20px;height:20px}
-h1{font-family:${DISPLAY};font-size:24px;line-height:1.2;font-weight:700;letter-spacing:-.01em;margin:0 0 6px}
-p.lede{margin:0 0 20px;color:var(--muted)}
-label.f{display:block;font-size:12px;color:var(--muted);margin:14px 0 5px}
-input[type=text],input[type=password]{width:100%;height:42px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--ink);font:inherit}
-input:focus-visible,button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--ink2);outline-offset:2px}
-.btn{display:block;width:100%;height:42px;margin-top:18px;border:1px solid var(--btn);border-radius:8px;background:var(--btn);color:var(--btntext);font:inherit;font-weight:600;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease}.btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,0,0,.12)}.btn:active{transform:translateY(0) scale(.98)}@media (prefers-reduced-motion:reduce){.btn{transition:none}.btn:hover{transform:none}}
-.btn:hover{filter:brightness(1.15)}.btn:disabled{background:var(--off);border-color:var(--off);cursor:not-allowed;filter:none}
-.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}.btn.ghost:hover{background:rgba(71,70,60,.07);filter:none}
-.row{display:flex;gap:10px}.row .btn{margin-top:18px}
-.or{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:12px;margin:22px 0 4px}.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
-.note{background:var(--warnBg,#fff1c2);border:1px solid #e5cf7a;border-radius:8px;padding:10px 12px;margin:14px 0;font-size:14px}
-.err{background:#fde8e3;border:1px solid #e9a99c;color:#8a1f11;border-radius:8px;padding:10px 12px;margin:14px 0;font-size:14px}
-.opt{display:block;border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:8px 0;cursor:pointer}.opt:has(input:checked){border-color:var(--ink2);box-shadow:0 0 0 1px var(--ink2)}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font:14px/22px ${SANS};-webkit-font-smoothing:antialiased}
+main{width:min(420px,100% - 32px);margin:0 auto;padding:40px 0 48px}
+.brand{display:flex;align-items:center;justify-content:center;gap:8px;font-weight:600;font-size:15px;letter-spacing:-.01em;margin-bottom:28px}.brand svg{width:22px;height:22px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:24px}
+h1{font-size:20px;line-height:28px;font-weight:600;letter-spacing:-.01em;margin:0 0 4px}
+p{margin:0 0 12px}p.lede{margin:0 0 20px;color:var(--muted)}
+label.f{display:block;font-size:13px;font-weight:500;color:var(--ink2);margin:16px 0 6px}
+input[type=text],input[type=password]{width:100%;height:36px;padding:0 12px;border:1px solid var(--field);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit}
+input:focus-visible,button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.btn{display:block;width:100%;height:36px;margin-top:16px;border:1px solid var(--accent);border-radius:6px;background:var(--accent);color:var(--accentink);font:inherit;font-weight:600;cursor:pointer}
+.btn:hover{opacity:.9}.btn:disabled{background:var(--off);border-color:var(--off);cursor:not-allowed;opacity:1}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--field)}.btn.ghost:hover{background:var(--surface2);opacity:1}
+.row{display:flex;gap:8px}.row .btn{margin-top:16px}
+.or{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:12px;margin:20px 0 4px}.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.note{background:var(--warnbg);border:1px solid var(--warnline);color:var(--warnink);border-radius:6px;padding:10px 12px;margin:14px 0;font-size:13px}
+.err{background:var(--errbg);border:1px solid var(--errline);color:var(--errink);border-radius:6px;padding:10px 12px;margin:14px 0;font-size:13px}
+.opt{display:block;border:1px solid var(--line);border-radius:6px;padding:10px 12px;margin:8px 0;cursor:pointer}.opt:hover{background:var(--surface2)}.opt:has(input:checked){border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
 .opt strong{font-weight:600}.opt small{display:block;color:var(--muted);margin-top:2px;font-size:13px}
-small.hint{display:block;color:var(--muted);font-size:12.5px;margin-top:6px}
+small.hint{display:block;color:var(--muted);font-size:12px;margin-top:6px}
 code,.mono{font-family:${MONO}}
-.secret{display:block;margin:14px 0 8px;padding:14px 12px;border:1px dashed var(--ink2);border-radius:8px;font-size:13px;letter-spacing:0;overflow-wrap:normal;background:rgba(255,255,255,.35);user-select:all}
-a{color:var(--ink)}
-.fine{color:var(--muted);font-size:12.5px;margin-top:22px}
-.chk{display:flex;gap:10px;align-items:flex-start;margin:14px 0 0;font-size:14px}.chk input{margin-top:4px}
+.secret{display:block;margin:14px 0 8px;padding:14px 12px;border:1px dashed var(--field);border-radius:6px;font-size:13px;letter-spacing:0;overflow-wrap:normal;background:var(--surface2);user-select:all}
+a{color:var(--link)}
+.fine{color:var(--muted);font-size:12px;margin-top:20px;text-align:center}
+.chk{display:flex;gap:10px;align-items:flex-start;margin:14px 0 0;font-size:13px}.chk input{margin-top:4px}
 ul.rules{margin:8px 0 0;padding-left:18px;color:var(--muted);font-size:13px}
 `;
 
 const CLIP = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>`;
 
 function shell(title: string, body: string, nonce?: string, script?: string) {
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><title>${esc(title)} · Papercliped</title>${FAVICON_LINK}<style>${CSS}</style></head><body><main><div class="brand">${CLIP}<span>Papercliped</span></div>${body}</main>${script ? `<script nonce="${nonce}">${script}</script>` : ""}</body></html>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><title>${esc(title)} · Papercliped</title>${FAVICON_LINK}<style>${CSS}</style></head><body><main><div class="brand">${CLIP}<span>Papercliped</span></div><div class="card">${body}</div></main>${script ? `<script nonce="${nonce}">${script}</script>` : ""}</body></html>`;
 }
 
 const hidden = (rid: string, csrf: string) => `<input type="hidden" name="rid" value="${esc(rid)}"><input type="hidden" name="csrf" value="${esc(csrf)}">`;

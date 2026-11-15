@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v2.10.1 — A cleaner sign-in and consent screen
+
+- **A cleaner sign-in and consent screen.** When an AI app asks to connect, the login and "Allow" pages now match the Papercliped account portal: a centred card, the same colours in light and dark, and clearer buttons. Nothing about how connecting works has changed.
+
 ## v2.10.0 — Install ePaperclip on the page, and guides on the docs site
 
 - **Install ePaperclip, on the page.** The ePaperclip page now has an install section in the style of python.org and nodejs.org: what you need, the command for your situation (apt, npm, one command, or a worker machine) with copy buttons, how to check it worked and what to do next. Its buttons no longer send you to GitHub.
