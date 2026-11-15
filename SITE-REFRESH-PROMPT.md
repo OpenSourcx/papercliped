@@ -114,6 +114,37 @@ Take them from the real console, not mock-ups: run `papercliped-engine`'s consol
 - Update `docs/SITE-V2-PRODUCT-CONTRACT.md`: new homepage order, the type and style rules, the screenshot rule (real, labelled demo data).
 - `CHANGELOG.md` entry under `## Unreleased`. The owner runs the release.
 
+## 9. Performance on phones
+
+The owner ran Lighthouse 13.5 on the live home page on 15 November 2026. Scores: Accessibility, Best Practices and SEO 100 on both. Performance **99 on desktop, 82 on mobile** (simulated mid-range phone, 4x CPU slowdown).
+
+| Mobile metric | Measured | Target after this work |
+| --- | --- | --- |
+| First Contentful Paint | 2.2 s | under 1.8 s |
+| Largest Contentful Paint | 2.7 s | under 2.5 s |
+| Total Blocking Time | 470 ms | under 200 ms |
+| Cumulative Layout Shift | 0.001 | keep under 0.1 |
+
+Both runs had browser extensions active (an ad blocker and an assistant extension), which add main-thread time. **Re-measure first in a clean profile** (`npx lighthouse https://papercliped.co --preset=perf --form-factor=mobile` in headless Chromium, three runs, take the median) and record the baseline in the pull request before changing anything.
+
+What the reports show, in order of effect:
+
+1. **The page is empty until JavaScript runs.** The HTML is 2 KB; the largest element is the headline text, and it waits about 1 s for script ("element render delay" 1,007 ms of a 1,129 ms observed LCP; server response is 120 ms). **Prerender the public pages at build time** (home, `/epaperclip`, `/pin`, `/roadmap`, community, docs pages) so the headline, description and install command are in the HTML, then hydrate. Verify the CSP still passes with no inline script or style.
+2. **One 820 KB script (223 KB transferred) for every page, 28% unused on home.** There is no code splitting. Split by route with `React.lazy`, and load the docs renderer, search index and the Pin demo only on the pages that use them.
+3. **The home page runs the Pin canvas demo.** It causes forced reflows and long tasks of 93 to 181 ms after load. Section 2 already moves it to `/pin`; on `/pin`, start it only when it scrolls into view and never under `prefers-reduced-motion`.
+4. **Fonts:** three files, 112 KB. The code font is found late through the stylesheet (it finishes at 1.3 s on desktop). With Geist (section 1) ship two variable files, preload only the text font, keep `font-display: swap`, and subset to Latin.
+5. **`theme-boot.js` blocks rendering (about 150 ms on mobile) and, with `brand/pin-orb.svg`, is cached for one hour.** Keep it external and blocking (it prevents a theme flash and the CSP forbids inlining it), but give it and the other files in `web/public/` a content hash or a long `Cache-Control` in `src/web/routes.ts` (line 127 sets `max-age=3600` for everything not under `/assets/`).
+6. **New screenshots must not undo this.** Serve AVIF or WebP with a fallback, `width` and `height` set, `loading="lazy"` for everything below the first screen, and `fetchpriority="high"` on the one above it. Keep each under 150 KB.
+
+Smaller items from the same reports:
+
+- **Accessible name mismatch** on the GitHub star link in the header: it shows "Star 13" but its `aria-label` is "Star Papercliped on GitHub, 13 stars". Make the label begin with the visible text.
+- **Security headers** (`HEADERS` in `src/web/routes.ts`): the reports flag no `Cross-Origin-Opener-Policy` and an HSTS header without `includeSubDomains`. Add `Cross-Origin-Opener-Policy: same-origin`. Propose `includeSubDomains` to the owner rather than adding it: it affects every subdomain of papercliped.co. Do not add `preload` without the owner's decision.
+- **No `/llms.txt`.** Add a short one (what Papercliped and ePaperclip are, links to the docs pages) so AI tools that read the site describe it correctly.
+- The home page is about 12,700 px tall on a phone. The shorter structure in section 2 should bring it under 6,000 px.
+
+Add `npm --prefix web run check:perf` (a script that fails when the home page's built JavaScript exceeds 120 KB gzipped) so the bundle cannot grow back unnoticed, and say in the pull request what the three clean-profile mobile runs score after the change.
+
 ## Rules
 
 - **CSP stays as it is:** `script-src 'self'; style-src 'self'`, no inline code, no third-party loads, no analytics. Fonts and images are self-hosted.
