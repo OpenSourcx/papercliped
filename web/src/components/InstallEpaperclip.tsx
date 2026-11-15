@@ -109,12 +109,12 @@ export function InstallEpaperclip() {
   return (
     <section id="install" className="scroll-mt-20 border-b border-line bg-surface">
       <div className="mx-auto max-w-7xl px-4 py-20 sm:py-24">
-        <p className="text-xs font-bold uppercase tracking-[.2em] text-muted">Install</p>
-        <h2 className="mt-3 text-4xl font-bold tracking-tighter sm:text-5xl">Get ePaperclip running in a few minutes.</h2>
+        <p className="text-xs font-bold text-muted">Install</p>
+        <h2 className="mt-3 text-4xl font-semibold sm:text-5xl">Get ePaperclip running in a few minutes.</h2>
         <p className="mt-4 max-w-2xl text-muted">It installs on your Proxmox host and never reimages or repartitions anything. Try it on a test node first if you can.</p>
         <div className="mt-10 grid gap-8 lg:grid-cols-[18rem_1fr]">
-          <aside aria-label="What you need" className="h-fit rounded-3xl border border-line bg-bg p-6">
-            <h3 className="text-lg font-bold">What you need</h3>
+          <aside aria-label="What you need" className="h-fit rounded-xl border border-line bg-bg p-6">
+            <h3 className="text-lg font-semibold">What you need</h3>
             <dl className="mt-4 space-y-3 text-sm">
               {REQUIREMENTS.map((r) => (
                 <div key={r.label}>
@@ -124,7 +124,7 @@ export function InstallEpaperclip() {
               ))}
             </dl>
           </aside>
-          <div className="min-w-0 rounded-3xl border border-line bg-bg p-6 sm:p-8">
+          <div className="min-w-0 rounded-xl border border-line bg-bg p-6 sm:p-8">
             <Tabs label="How to install ePaperclip" tabs={tabs} />
             <p className="mt-6 border-t border-line pt-5 text-sm text-muted">
               Updating, rolling back, uninstalling and fixing problems are in the <AppLink to="/docs/install-epaperclip" className="font-medium text-link underline">full install guide</AppLink>. Want to connect Claude, ChatGPT or Codex to your Paperclip? See <AppLink to="/docs/claude" className="font-medium text-link underline">Connect your AI app</AppLink>.

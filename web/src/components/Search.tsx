@@ -33,7 +33,7 @@ export function SearchDialog({ open, onClose }: { open: boolean; onClose: () => 
   };
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 pt-[12vh]" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div role="dialog" aria-modal="true" aria-label="Search the docs" className="animate-pop w-full max-w-xl overflow-hidden rounded-2xl border border-line bg-bg shadow-2xl">
+      <div role="dialog" aria-modal="true" aria-label="Search the docs" className="animate-pop w-full max-w-xl overflow-hidden rounded-lg border border-line bg-bg">
         <div className="flex items-center gap-2 border-b border-line px-4">
           <span aria-hidden="true">⌕</span>
           <input ref={input} autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search the docs" aria-label="Search the docs" role="combobox" aria-expanded={hits.length > 0} aria-controls={`${id}-list`} aria-activedescendant={hits[active] ? `${id}-${active}` : undefined}
@@ -88,7 +88,7 @@ export function SearchHost() {
 /** A button that opens the search dialog. Any number of these can be on a page. */
 export function SearchButton({ className, label = "Search docs" }: { className?: string; label?: string }) {
   return (
-    <button type="button" onClick={() => window.dispatchEvent(new Event(OPEN_EVENT))} className={cx("flex h-9 items-center gap-2 rounded-full border border-line bg-surface px-3.5 text-sm text-muted transition-colors hover:border-field hover:text-ink", className)}>
+    <button type="button" onClick={() => window.dispatchEvent(new Event(OPEN_EVENT))} className={cx("flex h-9 items-center gap-2 rounded-lg border border-line bg-surface px-3.5 text-sm text-muted transition-colors hover:border-field hover:text-ink", className)}>
       <Icon name="search" size={15} /><span>{label}</span>
       <kbd className="ml-auto rounded-md border border-line bg-bg px-1.5 font-sans text-xs">{isMac() ? "⌘" : "Ctrl"} K</kbd>
     </button>
@@ -98,7 +98,7 @@ export function SearchButton({ className, label = "Search docs" }: { className?:
 /** Just the magnifier, for tight headers. */
 export function SearchIconButton({ className }: { className?: string }) {
   return (
-    <button type="button" aria-label="Search docs" onClick={() => window.dispatchEvent(new Event(OPEN_EVENT))} className={cx("grid h-9 w-9 place-items-center rounded-full text-muted transition-colors hover:bg-surface hover:text-ink", className)}>
+    <button type="button" aria-label="Search docs" onClick={() => window.dispatchEvent(new Event(OPEN_EVENT))} className={cx("grid h-9 w-9 place-items-center rounded-lg text-muted transition-colors hover:bg-surface hover:text-ink", className)}>
       <Icon name="search" size={17} />
     </button>
   );

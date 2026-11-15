@@ -40,19 +40,19 @@ export function Community() {
       <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center">
         <Mascot size={96} hopOnClick />
         <div>
-          <h1 className="text-4xl font-bold sm:text-5xl">Community</h1>
+          <h1 className="text-4xl font-semibold sm:text-5xl">Community</h1>
           <p className="mt-2 max-w-2xl text-lg text-muted">Papercliped is built in the open. Join in, ask questions, suggest what we should build next.</p>
         </div>
       </div>
 
       <section aria-labelledby="ch-h" className="mt-12">
-        <h2 id="ch-h" className="text-2xl font-bold">Where to find us</h2>
+        <h2 id="ch-h" className="text-2xl font-semibold">Where to find us</h2>
         <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {CHANNELS.map((c) => {
             const href = community[c.key];
             return (
               <Card as="li" interactive={!!href} key={c.key} className="flex flex-col">
-                <h3 className="font-sans text-lg font-bold">{c.title}</h3>
+                <h3 className="font-sans text-lg font-semibold">{c.title}</h3>
                 <p className="mt-1 flex-1 text-muted">{c.desc}</p>
                 <div className="mt-4">
                   {href ? <ButtonLink to={href} size="sm" variant="secondary">Open {c.title}</ButtonLink> : <span className="inline-flex h-8 items-center rounded-lg border border-dashed border-field px-3 text-sm text-muted">Coming soon</span>}
@@ -64,17 +64,17 @@ export function Community() {
       </section>
 
       <div className="mt-12 grid gap-6 lg:grid-cols-2">
-        <section id="suggest" aria-labelledby="sg-h" className="scroll-mt-24 rounded-3xl border border-line bg-surface p-6">
-          <h2 id="sg-h" className="text-2xl font-bold">Suggest a feature</h2>
+        <section id="suggest" aria-labelledby="sg-h" className="scroll-mt-24 rounded-xl border border-line bg-surface p-6">
+          <h2 id="sg-h" className="text-2xl font-semibold">Suggest a feature</h2>
           <p className="mt-1 text-muted">Tell us what would make Papercliped more useful for you.</p>
           <Suggest />
         </section>
-        <section aria-labelledby="bug-h" className="rounded-3xl border border-line bg-surface p-6">
-          <h2 id="bug-h" className="text-2xl font-bold">Report a bug</h2>
+        <section aria-labelledby="bug-h" className="rounded-xl border border-line bg-surface p-6">
+          <h2 id="bug-h" className="text-2xl font-semibold">Report a bug</h2>
           <p className="mt-1 text-muted">Something broken or confusing? Open an issue with what you did, what you expected and what happened.</p>
           <p className="mt-2 text-sm text-muted">Never include your secret key, Paperclip keys or tokens. Security problems go privately to <TextLink to={`mailto:${community.email}`}>{community.email}</TextLink>.</p>
           <div className="mt-4"><ButtonLink to={community.newIssue}>Open an issue</ButtonLink></div>
-          <h2 className="mt-8 text-2xl font-bold">Contribute</h2>
+          <h2 className="mt-8 text-2xl font-semibold">Contribute</h2>
           <p className="mt-1 text-muted">Code, docs, translations and design are all welcome. Start with the contributing guide and our code of conduct.</p>
           <div className="mt-4 flex flex-wrap gap-3">
             <ButtonLink to={`${REPO_URL}/blob/main/CONTRIBUTING.md`} variant="secondary" size="sm">Contributing guide</ButtonLink>

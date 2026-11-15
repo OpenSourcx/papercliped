@@ -31,26 +31,26 @@ export function Kit() {
       <div className="flex flex-wrap items-center gap-4">
         <Mascot size={72} />
         <div>
-          <h1 className="text-4xl font-bold">Design kit</h1>
+          <h1 className="text-4xl font-semibold">Design kit</h1>
           <p className="text-muted">Components, type and every theme. It's {season} now, so the site rotates through the {season} palettes.</p>
         </div>
       </div>
 
       <section className="mt-10" aria-labelledby="k-theme">
-        <h2 id="k-theme" className="text-2xl font-bold">Theme</h2>
+        <h2 id="k-theme" className="text-2xl font-semibold">Theme</h2>
         <div className="mt-3"><ThemePicker /></div>
       </section>
 
       <section className="mt-10" aria-labelledby="k-type">
-        <h2 id="k-type" className="text-2xl font-bold">Type</h2>
+        <h2 id="k-type" className="text-2xl font-semibold">Type</h2>
         <p className="mt-2 font-display text-5xl font-bold lowercase">papercliped</p>
-        <p className="font-display text-3xl font-semibold">Bricolage Grotesque for headlines</p>
+        <p className="font-display text-3xl font-semibold">Mona Sans for headlines</p>
         <p className="text-lg">Inter for body text and the interface. The quick brown fox jumps over the lazy dog.</p>
-        <p className="font-mono">JetBrains Mono for code and keys: pcs_ABCD-EFGH-1234</p>
+        <p className="font-mono">Geist Mono for code and keys: pcs_ABCD-EFGH-1234</p>
       </section>
 
       <section className="mt-10" aria-labelledby="k-buttons">
-        <h2 id="k-buttons" className="text-2xl font-bold">Buttons, links, tags</h2>
+        <h2 id="k-buttons" className="text-2xl font-semibold">Buttons, links, tags</h2>
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <Button>Primary</Button>
           <Button variant="secondary">Secondary</Button>
@@ -68,13 +68,13 @@ export function Kit() {
 
       <section className="mt-10 grid gap-4 md:grid-cols-3" aria-labelledby="k-cards">
         <h2 id="k-cards" className="sr-only">Cards and stats</h2>
-        <Card><h3 className="text-lg font-bold">Card</h3><p className="text-muted">Surfaces sit on the page background with a hairline border.</p></Card>
+        <Card><h3 className="text-lg font-semibold">Card</h3><p className="text-muted">Surfaces sit on the page background with a hairline border.</p></Card>
         <Stat label="Users (example)" value="42" hint="Example value, not live data" />
         <Stat label="Tools" value={String(tools.length)} hint="One catalogue for every surface" />
       </section>
 
       <section className="mt-10 max-w-md" aria-labelledby="k-form">
-        <h2 id="k-form" className="text-2xl font-bold">Fields</h2>
+        <h2 id="k-form" className="text-2xl font-semibold">Fields</h2>
         <div className="mt-3 space-y-4">
           <Field label="Your Paperclip's address" placeholder="https://workforce.example.com" hint="Public https:// address only." />
           <Field label="Username" defaultValue="og" error="Usernames need at least 6 characters." />
@@ -82,14 +82,14 @@ export function Kit() {
       </section>
 
       <section className="mt-10" aria-labelledby="k-callouts">
-        <h2 id="k-callouts" className="text-2xl font-bold">Callouts</h2>
+        <h2 id="k-callouts" className="text-2xl font-semibold">Callouts</h2>
         <Callout kind="note">Read only is the default level.</Callout>
         <Callout kind="tip">Use a dedicated Paperclip user for the connection.</Callout>
         <Callout kind="warning">Your secret key is shown once.</Callout>
       </section>
 
       <section className="mt-10" aria-labelledby="k-code">
-        <h2 id="k-code" className="text-2xl font-bold">Code</h2>
+        <h2 id="k-code" className="text-2xl font-semibold">Code</h2>
         <CodeBlock label="Claude Code" code="claude mcp add --transport http papercliped https://mcp.papercliped.co/mcp" />
         <Tabs label="Install" tabs={[
           { id: "claude", label: "Claude", content: <p>Settings → Connectors → Add custom connector → <code className="font-mono">https://mcp.papercliped.co/mcp</code></p> },
@@ -99,12 +99,12 @@ export function Kit() {
       </section>
 
       <section className="mt-10" aria-labelledby="k-faq">
-        <h2 id="k-faq" className="text-2xl font-bold">Accordion</h2>
+        <h2 id="k-faq" className="text-2xl font-semibold">Accordion</h2>
         <div className="mt-3"><Accordion items={[{ q: "Is it free?", a: "Yes. Papercliped is free and open source (MIT)." }, { q: "Does it read my Paperclip?", a: "Only what your connected AI app asks for, at the level you chose." }]} /></div>
       </section>
 
       <section className="mt-10" aria-labelledby="k-palettes">
-        <h2 id="k-palettes" className="text-2xl font-bold">Palettes</h2>
+        <h2 id="k-palettes" className="text-2xl font-semibold">Palettes</h2>
         <p className="text-muted">Every pair used for text is at least 4.5:1, and every control or focus colour at least 3:1 (checked in CI).</p>
         <div className="mt-4">
           <Table caption="Themes and their ink contrast" head={["Theme", "Season", "Light swatches", "Dark swatches", "Ink on page"]} rows={THEME_IDS.map((id) => {

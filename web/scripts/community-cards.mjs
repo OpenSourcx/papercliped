@@ -42,19 +42,19 @@ const CARDS = {
 const page = (c, mode) => {
   const p = PALETTE[mode];
   return `<!doctype html><html><head><meta charset="utf-8"><style>
-@font-face{font-family:Brico;src:url(${font("bricolage-grotesque-latin-wght-normal.woff2")});font-weight:200 800}
-@font-face{font-family:Inter;src:url(${font("inter-latin-wght-normal.woff2")});font-weight:100 900}
-@font-face{font-family:Mono;src:url(${font("jetbrains-mono-latin-400-normal.woff2")})}
+@font-face{font-family:Mona;src:url(${font("mona-sans-latin-wght-normal.woff2")});font-weight:200 900}
+
+@font-face{font-family:Mono;src:url(${font("geist-mono-latin-wght-normal.woff2")});font-weight:100 900}
 :root{${Object.entries(p).map(([k, v]) => `--${k}:${v}`).join(";")}}
 html,body{margin:0}
-#frame{width:1600px;height:900px;background:var(--bg);color:var(--ink);font-family:Inter;position:relative;overflow:hidden;display:flex;align-items:center;box-sizing:border-box;padding:0 110px;gap:80px}
+#frame{width:1600px;height:900px;background:var(--bg);color:var(--ink);font-family:Mona;position:relative;overflow:hidden;display:flex;align-items:center;box-sizing:border-box;padding:0 110px;gap:80px}
 .dots{position:absolute;inset:0;background-image:radial-gradient(var(--line) 1.6px,transparent 1.6px);background-size:36px 36px;opacity:.7;mask-image:radial-gradient(ellipse at 85% 15%,#000 0,transparent 55%)}
 .mascot{width:340px;height:340px;flex:none;border-radius:84px;background:var(--surface);border:3px solid var(--line);display:grid;place-items:center;position:relative;transform:rotate(-4deg)}
 .mascot svg{width:300px;height:300px}
 .badge{position:absolute;top:-30px;right:-34px;font-size:84px;transform:rotate(14deg)}
 .text{position:relative;flex:1}
 .kicker{font-family:Mono;font-size:28px;color:var(--muted);margin-bottom:22px}
-h1{font-family:Brico;font-weight:800;font-size:100px;line-height:.98;letter-spacing:-.025em;margin:0 0 30px}
+h1{font-family:Mona;font-weight:650;font-size:100px;line-height:.98;letter-spacing:-.025em;margin:0 0 30px}
 h1 span{display:inline-block;background:var(--accent);color:var(--accentInk);padding:0 22px 8px;border-radius:24px;margin-top:10px}
 p{font-size:34px;line-height:1.35;color:var(--muted);margin:0 0 36px;max-width:920px}
 p b{color:var(--ink);font-weight:600}
@@ -79,16 +79,16 @@ const BANNERS = [
 const banner = (mode, b) => {
   const p = PALETTE[mode];
   return `<!doctype html><html><head><meta charset="utf-8"><style>
-@font-face{font-family:Brico;src:url(${font("bricolage-grotesque-latin-wght-normal.woff2")});font-weight:200 800}
-@font-face{font-family:Inter;src:url(${font("inter-latin-wght-normal.woff2")});font-weight:100 900}
+@font-face{font-family:Mona;src:url(${font("mona-sans-latin-wght-normal.woff2")});font-weight:200 900}
+
 :root{${Object.entries(p).map(([k, v]) => `--${k}:${v}`).join(";")}}
 html,body{margin:0}
-#frame{width:${b.w}px;height:${b.h}px;background:var(--bg);color:var(--ink);font-family:Inter;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:36px}
+#frame{width:${b.w}px;height:${b.h}px;background:var(--bg);color:var(--ink);font-family:Mona;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:36px}
 .dots{position:absolute;inset:0;background-image:radial-gradient(var(--line) 2px,transparent 2px);background-size:28px 28px;${b.app ? "" : "mask-image:linear-gradient(90deg,#000 0,transparent 32%,transparent 68%,#000 100%)"}}
 .mascot{position:relative;width:${b.app ? 150 : 164}px;height:${b.app ? 150 : 164}px;flex:none;border-radius:${b.app ? 40 : 44}px;background:var(--surface);border:3px solid var(--line);display:grid;place-items:center;transform:rotate(-4deg)}
 .mascot svg{width:${b.app ? 132 : 142}px;height:${b.app ? 132 : 142}px}
 .text{position:relative}
-h1{font-family:Brico;font-weight:800;font-size:96px;line-height:1;letter-spacing:-.025em;margin:0;white-space:nowrap}
+h1{font-family:Mona;font-weight:650;font-size:96px;line-height:1;letter-spacing:-.025em;margin:0;white-space:nowrap}
 h1 span{background:var(--accent);color:var(--accentInk);padding:0 16px 6px;border-radius:20px;margin-left:4px}
 p{font-size:30px;color:var(--muted);margin:22px 0 0;white-space:nowrap}
 p b{color:var(--ink);font-weight:600}
@@ -113,15 +113,15 @@ const discordBanner = (mode) => {
   const p = PALETTE[mode];
   const c = OS_COLOURS[mode];
   return `<!doctype html><html><head><meta charset="utf-8"><style>
-@font-face{font-family:Brico;src:url(${font("bricolage-grotesque-latin-wght-normal.woff2")});font-weight:200 800}
-@font-face{font-family:Mono;src:url(${font("jetbrains-mono-latin-400-normal.woff2")})}
+@font-face{font-family:Mona;src:url(${font("mona-sans-latin-wght-normal.woff2")});font-weight:200 900}
+@font-face{font-family:Mono;src:url(${font("geist-mono-latin-wght-normal.woff2")});font-weight:100 900}
 :root{${Object.entries(p).map(([k, v]) => `--${k}:${v}`).join(";")}}
 html,body{margin:0}
 #frame{width:1920px;height:1080px;background:var(--bg);color:var(--ink);position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:56px}
 .dots{position:absolute;inset:0;background-image:radial-gradient(var(--line) 3px,transparent 3px);background-size:48px 48px;mask-image:radial-gradient(ellipse at center,transparent 35%,#000 80%)}
 .mark{position:relative;width:340px;height:340px;border-radius:84px;background:var(--surface);border:5px solid var(--line);display:grid;place-items:center;transform:rotate(-4deg)}
 .mark svg{width:306px;height:306px}
-h1{position:relative;font-family:Brico;font-weight:800;font-size:176px;line-height:1;letter-spacing:-.025em;margin:0}
+h1{position:relative;font-family:Mona;font-weight:650;font-size:176px;line-height:1;letter-spacing:-.025em;margin:0}
 h1 span{background:var(--accent);color:var(--accentInk);padding:0 28px 10px;border-radius:36px;margin-left:6px}
 .sub{position:relative;font-family:Mono;font-size:44px;color:var(--muted)}
 </style></head><body><div id="frame"><div class="dots"></div>
@@ -136,8 +136,8 @@ const xHeader = (mode) => {
   const p = PALETTE[mode];
   const c = OS_COLOURS[mode];
   return `<!doctype html><html><head><meta charset="utf-8"><style>
-@font-face{font-family:Brico;src:url(${font("bricolage-grotesque-latin-wght-normal.woff2")});font-weight:200 800}
-@font-face{font-family:Mono;src:url(${font("jetbrains-mono-latin-400-normal.woff2")})}
+@font-face{font-family:Mona;src:url(${font("mona-sans-latin-wght-normal.woff2")});font-weight:200 900}
+@font-face{font-family:Mono;src:url(${font("geist-mono-latin-wght-normal.woff2")});font-weight:100 900}
 :root{${Object.entries(p).map(([k, v]) => `--${k}:${v}`).join(";")}}
 html,body{margin:0}
 #frame{width:1500px;height:500px;background:var(--bg);color:var(--ink);position:relative;overflow:hidden}
@@ -145,7 +145,7 @@ html,body{margin:0}
 .row{position:absolute;right:120px;top:50%;transform:translateY(-55%);display:flex;align-items:center;gap:40px}
 .mark{width:200px;height:200px;flex:none;border-radius:50px;background:var(--surface);border:3px solid var(--line);display:grid;place-items:center;transform:rotate(-4deg)}
 .mark svg{width:180px;height:180px}
-h1{font-family:Brico;font-weight:800;font-size:112px;line-height:1;letter-spacing:-.025em;margin:0;white-space:nowrap}
+h1{font-family:Mona;font-weight:650;font-size:112px;line-height:1;letter-spacing:-.025em;margin:0;white-space:nowrap}
 h1 span{background:var(--accent);color:var(--accentInk);padding:0 18px 8px;border-radius:24px;margin-left:4px}
 .sub{font-family:Mono;font-size:26px;color:var(--muted);margin-top:22px}
 </style></head><body><div id="frame"><div class="dots"></div><div class="row">

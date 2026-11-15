@@ -33,19 +33,19 @@ function PromptCard({ p }: { p: Prompt }) {
   };
   const level = levelOf(p);
   return (
-    <li className="flex flex-col rounded-2xl border border-line bg-surface p-5">
+    <li className="flex flex-col rounded-lg border border-line bg-surface p-5">
       <div className="flex items-start justify-between gap-3">
         <h3 className="font-semibold">{p.title}</h3>
-        <span className={cx("shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide", level === "Full control" ? "bg-accent text-accent-ink" : "border border-field text-ink")}>{level}</span>
+        <span className={cx("shrink-0 rounded-lg px-2 py-0.5 text-[11px] font-bold", level === "Full control" ? "bg-accent text-accent-ink" : "border border-field text-ink")}>{level}</span>
       </div>
       <p className="mt-3 flex-1 whitespace-pre-line rounded-xl border border-line bg-bg px-4 py-3 text-[15px] leading-relaxed">{p.prompt}</p>
       {p.note && <p className="mt-2 text-sm text-muted">{p.note}</p>}
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
         <details className="text-xs text-muted">
           <summary className="cursor-pointer select-none">{p.tools.length} {p.tools.length === 1 ? "tool" : "tools"}</summary>
-          <ul className="mt-1 flex flex-wrap gap-1">{p.tools.map((t) => <li key={t} className="rounded-full border border-line px-2 py-0.5 font-mono">{t}</li>)}</ul>
+          <ul className="mt-1 flex flex-wrap gap-1">{p.tools.map((t) => <li key={t} className="rounded-lg border border-line px-2 py-0.5 font-mono">{t}</li>)}</ul>
         </details>
-        <button type="button" onClick={copy} aria-label={`Copy prompt: ${p.title}`} className="rounded-full border border-field bg-bg px-3 py-1 text-sm font-medium text-ink hover:bg-surface">
+        <button type="button" onClick={copy} aria-label={`Copy prompt: ${p.title}`} className="rounded-lg border border-field bg-bg px-3 py-1 text-sm font-medium text-ink hover:bg-surface">
           {state === "copied" ? "Copied" : state === "failed" ? "Select & copy" : "Copy"}
         </button>
       </div>
@@ -64,11 +64,11 @@ export function Prompts() {
     const needle = q.trim().toLowerCase();
     return PROMPTS.filter((p) => (cat === "all" || p.category === cat) && (level === "all" || levelOf(p) === level) && (!needle || `${p.title} ${p.prompt}`.toLowerCase().includes(needle)));
   }, [cat, level, q]);
-  const chip = (on: boolean) => cx("shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors", on ? "bg-accent text-accent-ink" : "border border-line text-muted hover:text-ink");
+  const chip = (on: boolean) => cx("shrink-0 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors", on ? "bg-accent text-accent-ink" : "border border-line text-muted hover:text-ink");
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12 sm:py-16">
-      <h1 className="text-4xl font-bold sm:text-5xl">Prompt gallery</h1>
+      <h1 className="text-4xl font-semibold sm:text-5xl">Prompt gallery</h1>
       <p className="mt-3 max-w-3xl text-lg text-muted">
         Run your Paperclip by talking to Claude, ChatGPT or Codex. No clicking through the dashboard to make a task, wake an agent or answer an approval. Copy a prompt, replace the parts in [brackets], and send it.
       </p>
@@ -80,7 +80,7 @@ export function Prompts() {
         <label className="relative block max-w-md">
           <span className="sr-only">Search prompts</span>
           <Icon name="search" size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-          <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search prompts" className="h-10 w-full rounded-full border border-field bg-transparent pl-9 pr-4 text-ink" />
+          <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search prompts" className="h-10 w-full rounded-lg border border-field bg-transparent pl-9 pr-4 text-ink" />
         </label>
         <div role="group" aria-label="Category" className="flex gap-2 overflow-x-auto pb-1">
           <button type="button" aria-pressed={cat === "all"} onClick={() => setCat("all")} className={chip(cat === "all")}>All</button>
@@ -101,7 +101,7 @@ export function Prompts() {
         if (!list.length) return null;
         return (
           <section key={c.id} aria-labelledby={`cat-${c.id}`} className="mt-8">
-            <h2 id={`cat-${c.id}`} className="text-2xl font-bold">{c.title}</h2>
+            <h2 id={`cat-${c.id}`} className="text-2xl font-semibold">{c.title}</h2>
             <p className="mt-1 text-muted">{c.intro}</p>
             <ul className="mt-4 grid gap-4 md:grid-cols-2">{list.map((p) => <PromptCard key={p.title} p={p} />)}</ul>
           </section>
@@ -109,8 +109,8 @@ export function Prompts() {
       })}
       {!shown.length && <p className="mt-6">Nothing matches. Try another word, or ask your AI app "What can you do with my Paperclip?"</p>}
 
-      <div className="mt-14 rounded-3xl border border-line bg-surface p-6 sm:p-8">
-        <h2 className="text-xl font-bold">Have a prompt that works well?</h2>
+      <div className="mt-14 rounded-xl border border-line bg-surface p-6 sm:p-8">
+        <h2 className="text-xl font-semibold">Have a prompt that works well?</h2>
         <p className="mt-2 text-muted">Share it with the community, or add it to <code className="font-mono text-sm">web/src/content/prompts.json</code> in a pull request.</p>
         <div className="mt-4 flex flex-wrap gap-3">
           <ButtonLink to="/community">Community</ButtonLink>

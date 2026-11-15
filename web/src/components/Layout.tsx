@@ -54,11 +54,11 @@ function Menu({ label, items }: { label: string; items: MenuItem[] }) {
   const id = `menu-${label.toLowerCase()}`;
   return (
     <div ref={box} className="relative">
-      <button type="button" aria-expanded={open} aria-controls={id} onClick={() => setOpen((o) => !o)} className={cx("flex items-center gap-1 rounded-full px-3.5 py-2 text-sm font-medium transition-colors hover:text-ink", open ? "text-ink" : "text-muted")}>
+      <button type="button" aria-expanded={open} aria-controls={id} onClick={() => setOpen((o) => !o)} className={cx("flex items-center gap-1 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors hover:text-ink", open ? "text-ink" : "text-muted")}>
         {label} <Icon name="down" size={14} className={cx("transition-transform", open && "rotate-180")} />
       </button>
       {open && (
-        <div id={id} className="animate-toast-in absolute left-1/2 top-full z-40 mt-3 w-80 -translate-x-1/2 rounded-2xl border border-line bg-bg p-2 shadow-2xl">
+        <div id={id} className="animate-toast-in absolute left-1/2 top-full z-40 mt-3 w-80 -translate-x-1/2 rounded-lg border border-line bg-bg p-2">
           <ul>
             {items.map((it) => (
               <li key={it.title}>
@@ -87,7 +87,7 @@ export function GitHubButton({ className }: { className?: string }) {
   const shown = stars != null && stars > 0;
   return (
     <a href={REPO_URL} rel="noopener noreferrer" aria-label={shown ? `Star Papercliped on GitHub, ${stars} stars` : "Star Papercliped on GitHub"}
-      className={cx("inline-flex h-9 items-center gap-2 rounded-full border border-line px-3.5 text-sm font-medium transition-[transform,border-color] duration-150 hover:-translate-y-0.5 hover:border-field", className)}>
+      className={cx("inline-flex h-9 items-center gap-2 rounded-lg border border-line px-3.5 text-sm font-medium transition-[transform,border-color] duration-150 hover:border-field", className)}>
       <GitHubIcon /><span>Star</span>
       {shown && <span className="flex items-center gap-1 border-l border-line pl-2 tabular-nums text-muted" aria-hidden="true"><Icon name="star" size={13} />{compact(stars)}</span>}
     </a>
@@ -102,11 +102,11 @@ export function GitHubIcon({ size = 16 }: { size?: number }) {
   );
 }
 
-const SKIP = "sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-50 focus:rounded-full focus:bg-accent focus:px-4 focus:py-2 focus:text-accent-ink";
+const SKIP = "sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-50 focus:rounded-lg focus:bg-accent focus:px-4 focus:py-2 focus:text-accent-ink";
 /** The one account for Papercliped Connect, the Console and your devices lives on its own host (sign-in, passkeys, Google, GitHub). */
 const SIGN_IN_URL = "https://auth.papercliped.co/";
-const SIGN_IN_LINK = "rounded-full px-3.5 py-2 text-sm font-medium text-muted transition-colors hover:text-ink";
-const PILL_CTA = "inline-flex h-9 items-center rounded-full bg-accent px-4 text-sm font-semibold text-accent-ink transition-transform duration-150 hover:-translate-y-0.5 active:scale-[0.97]";
+const SIGN_IN_LINK = "rounded-lg px-3.5 py-2 text-sm font-medium text-muted transition-colors hover:text-ink";
+const PILL_CTA = "inline-flex h-9 items-center rounded-lg bg-accent px-4 text-sm font-semibold text-accent-ink transition-transform duration-150 active:scale-[0.97]";
 
 /** The marketing header: logo left, a short centred nav, search, stars and one call to action on the right. */
 function SiteHeader() {
@@ -120,9 +120,9 @@ function SiteHeader() {
         <Wordmark className="justify-self-start" />
         <nav aria-label="Main" className="hidden items-center md:flex">
           <Menu {...MENUS[0]} />
-          <AppLink to="/docs" className="rounded-full px-3.5 py-2 text-sm font-medium text-muted transition-colors hover:text-ink">Docs</AppLink>
+          <AppLink to="/docs" className="rounded-lg px-3.5 py-2 text-sm font-medium text-muted transition-colors hover:text-ink">Docs</AppLink>
           <Menu {...MENUS[1]} />
-          <AppLink to="/community" className="rounded-full px-3.5 py-2 text-sm font-medium text-muted transition-colors hover:text-ink">Community</AppLink>
+          <AppLink to="/community" className="rounded-lg px-3.5 py-2 text-sm font-medium text-muted transition-colors hover:text-ink">Community</AppLink>
         </nav>
         <div className="flex items-center justify-self-end gap-2">
           <SearchIconButton />
@@ -130,7 +130,7 @@ function SiteHeader() {
           <AppLink to={SIGN_IN_URL} className={cx(SIGN_IN_LINK, "hidden md:inline-flex")}>Sign in</AppLink>
           <AppLink to="/epaperclip" className={cx(PILL_CTA, "max-lg:hidden")}>Use ePaperclip</AppLink>
           <button type="button" aria-label={mobile ? "Close menu" : "Open menu"} aria-expanded={mobile} aria-controls="mobile-nav" onClick={() => setMobile((m) => !m)}
-            className="grid h-9 w-9 place-items-center rounded-full border border-line md:hidden">
+            className="grid h-9 w-9 place-items-center rounded-lg border border-line md:hidden">
             <Icon name={mobile ? "close" : "menu"} size={17} />
           </button>
         </div>
@@ -144,7 +144,7 @@ function SiteHeader() {
           </ul>
           {MENUS.map((m) => (
             <div key={m.label} className="pt-3">
-              <p className="px-3 text-xs font-bold uppercase tracking-widest text-muted">{m.label}</p>
+              <p className="px-3 text-xs font-boldst text-muted">{m.label}</p>
               <ul>{m.items.map((it) => <li key={it.title}><NavItem item={it} /></li>)}</ul>
             </div>
           ))}
@@ -172,7 +172,7 @@ function DocsHeader() {
       <a href="#main" className={SKIP}>Skip to content</a>
       <div className="mx-auto grid h-14 max-w-[90rem] grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 md:grid-cols-[1fr_auto_1fr]">
         <nav aria-label="Site" className="hidden items-center gap-1 text-sm md:flex">
-          {DOCS_LINKS.map((l) => <AppLink key={l.label} to={l.to} className="rounded-full px-3 py-1.5 text-muted transition-colors hover:bg-surface hover:text-ink">{l.label}</AppLink>)}
+          {DOCS_LINKS.map((l) => <AppLink key={l.label} to={l.to} className="rounded-lg px-3 py-1.5 text-muted transition-colors hover:bg-surface hover:text-ink">{l.label}</AppLink>)}
         </nav>
         <AppLink to="/docs" className="flex items-center gap-2 justify-self-start rounded-lg md:justify-self-center" aria-label="papercliped docs home">
           <Mascot size={26} interactive={false} title="" />
@@ -222,7 +222,7 @@ function SocialIcons() {
       {items.map((s) => (
         <li key={s.key}>
           <AppLink to={s.href || "/community"} aria-label={s.href ? s.label : `${s.label} (coming soon)`} title={s.href ? undefined : "Coming soon"}
-            className="grid h-9 w-9 place-items-center rounded-full border border-line text-muted transition-[color,border-color,transform] duration-150 hover:-translate-y-0.5 hover:border-field hover:text-ink">
+            className="grid h-9 w-9 place-items-center rounded-lg border border-line text-muted transition-[color,border-color,transform] duration-150 hover:border-field hover:text-ink">
             <svg aria-hidden="true" viewBox="0 0 24 24" width={16} height={16} fill="currentColor"><path d={BRAND[s.key]} /></svg>
           </AppLink>
         </li>
@@ -242,7 +242,7 @@ export function Footer() {
         </div>
         {FOOTER.map((col) => (
           <div key={col.title}>
-            <h2 className="font-sans text-sm font-bold">{col.title}</h2>
+            <h2 className="font-sans text-sm font-semibold">{col.title}</h2>
             <ul className="mt-3 space-y-2 text-sm">
               {col.links.map((l) => (
                 <li key={l.label}>

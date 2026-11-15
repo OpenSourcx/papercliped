@@ -37,7 +37,7 @@ export function Changelog() {
       <div role="group" aria-label="Filter changes" className="mt-6 flex flex-wrap gap-2">
         {(["all", "new", "improved", "fixed"] as const).map((k) => (
           <button key={k} type="button" aria-pressed={filter === k} onClick={() => setFilter(k)}
-            className={cx("rounded-full border px-3.5 py-1 text-sm font-medium transition-all duration-150 hover:-translate-y-0.5", filter === k ? "border-accent bg-accent text-accent-ink" : "border-line hover:border-field")}>
+            className={cx("rounded-lg border px-3.5 py-1 text-sm font-medium transition-all duration-150", filter === k ? "border-accent bg-accent text-accent-ink" : "border-line hover:border-field")}>
             {k === "all" ? "Everything" : KIND[k]}
           </button>
         ))}
@@ -49,13 +49,13 @@ export function Changelog() {
           const counts = (["new", "improved", "fixed"] as const).map((k) => [k, r.entries.filter((e) => e.kind === k).length] as const).filter(([, n]) => n);
           return (
             <li key={r.version} id={r.anchor} className="scroll-mt-20">
-              <details open={idx < 2} className="group rounded-2xl border border-line bg-bg transition-colors open:bg-surface/40 hover:border-field">
+              <details open={idx < 2} className="group rounded-lg border border-line bg-bg transition-colors open:bg-surface/40 hover:border-field">
                 <summary className="flex cursor-pointer list-none flex-wrap items-center gap-x-3 gap-y-2 p-5 [&::-webkit-details-marker]:hidden">
                   <Icon name="chevron" size={16} className="shrink-0 text-muted transition-transform group-open:rotate-90" />
-                  <h2 className="text-xl font-bold">{r.unreleased ? "In progress" : r.version}</h2>
+                  <h2 className="text-xl font-semibold">{r.unreleased ? "In progress" : r.version}</h2>
                   {r.unreleased ? <Badge tone="outline">Unreleased</Badge> : r.date ? <time dateTime={r.date} className="text-sm text-muted">{fmt(r.date)}</time> : <span className="text-sm text-muted">date not recorded</span>}
                   <span className="ml-auto flex flex-wrap gap-1.5 text-xs text-muted">
-                    {counts.map(([k, n]) => <span key={k} className="rounded-full border border-line px-2 py-0.5">{n} {KIND[k].toLowerCase()}</span>)}
+                    {counts.map(([k, n]) => <span key={k} className="rounded-lg border border-line px-2 py-0.5">{n} {KIND[k].toLowerCase()}</span>)}
                   </span>
                   {r.title && <p className="w-full pl-7 font-semibold">{r.title}</p>}
                 </summary>
@@ -64,7 +64,7 @@ export function Changelog() {
                   <ul className="mt-4 space-y-3">
                     {entries.map((e, i) => (
                       <li key={i} className="flex gap-3">
-                        <span className={cx("mt-0.5 h-fit shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold uppercase", e.kind === "new" ? "bg-accent text-accent-ink" : "border border-field")}>{KIND[e.kind]}</span>
+                        <span className={cx("mt-0.5 h-fit shrink-0 rounded-lg px-2 py-0.5 text-[11px] font-bold ", e.kind === "new" ? "bg-accent text-accent-ink" : "border border-field")}>{KIND[e.kind]}</span>
                         <span className="prose-papercliped min-w-0" dangerouslySetInnerHTML={{ __html: inline(e.text) }} />
                       </li>
                     ))}

@@ -15,11 +15,10 @@ export const esc = (s: string) =>
  * bridge (web/dist); otherwise the system fallbacks are used.
  */
 export const FONTS_CSS = `@font-face{font-family:"Inter Variable";font-style:normal;font-display:swap;font-weight:100 900;src:url(/fonts/inter-latin-wght-normal.woff2) format("woff2-variations")}
-@font-face{font-family:"Bricolage Grotesque Variable";font-style:normal;font-display:swap;font-weight:200 800;src:url(/fonts/bricolage-grotesque-latin-wght-normal.woff2) format("woff2-variations")}
-@font-face{font-family:"JetBrains Mono";font-style:normal;font-display:swap;font-weight:400;src:url(/fonts/jetbrains-mono-latin-400-normal.woff2) format("woff2")}`;
+@font-face{font-family:"Geist Mono Variable";font-style:normal;font-display:swap;font-weight:100 900;src:url(/fonts/geist-mono-latin-wght-normal.woff2) format("woff2-variations")}`;
 export const SANS = `"Inter Variable",Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif`;
-export const DISPLAY = `"Bricolage Grotesque Variable","Inter Variable",ui-sans-serif,system-ui,sans-serif`;
-export const MONO = `"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace`;
+export const DISPLAY = SANS;
+export const MONO = `"Geist Mono Variable",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace`;
 /** The default "clip" theme in dark mode (same values as web/src/theme/palettes.ts). */
 export const THEME_DARK = { bg: "#16150f", ink: "#f4f1d6", ink2: "#e9e4b0", muted: "#bdb99f", line: "#5c5a49", btn: "#e9e4b0", btnText: "#16150f", disabled: "#7d7a64" };
 
