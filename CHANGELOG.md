@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## v2.10.0 — Install ePaperclip on the page, and guides on the docs site
+
+- **Install ePaperclip, on the page.** The ePaperclip page now has an install section in the style of python.org and nodejs.org: what you need, the command for your situation (apt, npm, one command, or a worker machine) with copy buttons, how to check it worked and what to do next. Its buttons no longer send you to GitHub.
+- **New guides on docs.papercliped.co.** Install ePaperclip, Your Papercliped account (sign-in methods, passkeys, linking Google and GitHub, connected AI apps, billing and cancelling), Connect Claude and Connect Codex. Help links in the guides point to support and the community page instead of GitHub, and the docs pages no longer show "Edit on GitHub".
+
 ## v2.9.0 — Connected AI apps API for the account page
 
 - **Connected AI apps on your account page (pre-release).** The hosted gateway can now list the AI apps connected to your Papercliped account and disconnect one, for the account page to show. Off until the operator turns it on; how apps connect does not change. See `docs/ACCOUNT-APPS-API.md`.

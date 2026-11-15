@@ -52,13 +52,14 @@ describe("docs pages", () => {
     expect(within(start).getAllByRole("link")).toHaveLength(4);
     expect(screen.getByRole("heading", { name: /Reference \(7\)/ })).toBeInTheDocument();
   });
-  it("a topic page has breadcrumb, title, contents, edit link and prev/next", () => {
+  it("a topic page has breadcrumb, title, contents, a help line (no GitHub links) and prev/next", () => {
     at("/docs/permissions");
     expect(screen.getByRole("heading", { level: 1, name: "Permissions" })).toBeInTheDocument();
     const crumbs = screen.getByRole("navigation", { name: "Breadcrumb" });
     expect(within(crumbs).getByText("Guides")).toBeInTheDocument();
     expect(screen.getAllByRole("navigation", { name: "On this page" }).length).toBeGreaterThan(0);
-    expect(screen.getByRole("link", { name: "Edit this page on GitHub" })).toHaveAttribute("href", "https://github.com/OpenSourcx/papercliped/edit/main/site/docs/permissions.md");
+    expect(screen.getByRole("link", { name: "support@papercliped.co" })).toHaveAttribute("href", "mailto:support@papercliped.co");
+    expect(within(screen.getByRole("main")).queryByRole("link", { name: /GitHub/ })).toBeNull(); // the guide itself keeps readers on the docs site; help goes to support and the community page
     const pn = screen.getByRole("navigation", { name: "Previous and next" });
     expect(within(pn).getByText("Prompt gallery")).toBeInTheDocument(); // previous in the nav order
     expect(within(pn).getByText("The control room")).toBeInTheDocument(); // next
@@ -90,14 +91,14 @@ describe("docs pages", () => {
 });
 
 describe("docs layout", () => {
-  it("has the docs header, grouped sidebar and a copy-link menu", async () => {
+  it("has the docs header, grouped sidebar and a copy-link button", async () => {
     render(<MemoryRouter initialEntries={["/docs/permissions"]}><App /></MemoryRouter>);
     expect(screen.getByRole("link", { name: "papercliped docs home" })).toBeInTheDocument();
     const side = screen.getAllByRole("navigation", { name: "Docs" })[0];
     for (const g of ["Learn", "Reference", "Project"]) expect(within(side).getAllByText(g).length).toBeGreaterThan(0);
     expect(within(side).getByRole("link", { name: "All docs" })).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "More page options" }));
-    expect(screen.getByRole("menuitem", { name: /View the Markdown source/ })).toHaveAttribute("href", "https://github.com/OpenSourcx/papercliped/blob/main/site/docs/permissions.md");
+    expect(screen.getByRole("button", { name: /Copy link/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "More page options" })).toBeNull(); // no menu of GitHub links for readers
   });
   it("the site header has no light/dark switch", () => {
     render(<MemoryRouter initialEntries={["/"]}><App /></MemoryRouter>);

@@ -7,7 +7,7 @@ import { CodeBlock } from "../components/CodeBlock";
 import { Icon } from "../components/Icons";
 import { SearchButton } from "../components/Search";
 import { useDismiss } from "../components/useDismiss";
-import { DOCS_GROUPS, editUrl, sectionOf, sourceUrl } from "../content/docs-nav";
+import { DOCS_GROUPS, sectionOf } from "../content/docs-nav";
 import { allDocs, getDoc, neighbours, sections, type Doc } from "../lib/docs";
 import { NotFound } from "./Placeholder";
 import { usePageTitle } from "./usePageTitle";
@@ -322,7 +322,6 @@ export function DocPage() {
   return (
     <DocsShell current={doc.slug} aside={<Toc doc={doc} />}>
       <DocHeader crumbs={[{ to: "/docs", label: "Docs" }, { label: sectionOf(doc.slug) }]} title={doc.title} tag={sectionOf(doc.slug)}
-        source={sourceUrl(doc.slug)} edit={editUrl(doc.slug)}
         meta={doc.updated && <span>Last updated <time dateTime={doc.updated}>{new Date(`${doc.updated}T00:00:00Z`).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" })}</time></span>} />
       {doc.headings.length > 2 && (
         <details className="mt-6 rounded-2xl border border-line p-3 xl:hidden">
@@ -332,8 +331,7 @@ export function DocPage() {
       )}
       <div ref={body} onClick={onClick} className="prose-papercliped docs-body mt-8" dangerouslySetInnerHTML={{ __html: doc.html }} />
       <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-6 text-sm">
-        <a href={editUrl(doc.slug)} rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-link underline"><Icon name="pencil" size={13} />Edit this page on GitHub</a>
-        <span className="text-muted">Something wrong? <AppLink to="/community" className="text-link underline">Tell us</AppLink></span>
+        <span className="text-muted">Something wrong or missing? <AppLink to="/community" className="text-link underline">Tell us</AppLink> or write to <a className="text-link underline" href="mailto:support@papercliped.co">support@papercliped.co</a>.</span>
       </div>
       <nav aria-label="Previous and next" className="mt-6 grid gap-3 sm:grid-cols-2">
         {prev ? <AppLink to={`/docs/${prev.slug}`} className="rounded-2xl border border-line p-4 transition-[transform,background-color] duration-150 hover:-translate-y-0.5 hover:bg-surface"><span className="text-xs text-muted">← Previous</span><span className="block font-semibold">{prev.title}</span></AppLink> : <span />}

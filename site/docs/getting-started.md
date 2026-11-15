@@ -6,6 +6,9 @@ Papercliped connects Claude, ChatGPT, Codex and any MCP app to **your** Papercli
 - A Paperclip that is reachable over the internet at an `https://` address (for example `https://workforce.example.com`). Private, local and `http://` addresses are refused on purpose. No public address yet? See [Host your Paperclip](/docs/hosting).
 - An AI app that can add a remote MCP server: Claude (web, desktop or mobile), Claude Code, ChatGPT, Codex, or [another app](/docs/other-ai-apps).
 
+## Before you start
+If you also run ePaperclip on a Proxmox host, [install it first](/docs/install-epaperclip). Your Papercliped account (email code, passkey, Google or GitHub) is explained in [Your account](/docs/your-account).
+
 ## Connect from Claude
 1. In Claude open **Settings → Connectors → Add custom connector**.
 2. Use the address `{{MCP}}/mcp` and click **Connect**.
@@ -15,12 +18,16 @@ Papercliped connects Claude, ChatGPT, Codex and any MCP app to **your** Papercli
 6. Ask Claude something like *"Catch me up on my Paperclip."* Then try more from the [prompt gallery](/docs/prompts).
 
 ## Claude Code
+(Full steps: [Connect Claude](/docs/claude).)
+
 ```
 claude mcp add --transport http papercliped {{MCP}}/mcp
 ```
 Or install the plugin: `/plugin marketplace add OpenSourcx/papercliped`, then `/plugin install papercliped@papercliped`.
 
 ## Codex
+(Full steps: [Connect Codex](/docs/codex).)
+
 ```
 codex plugin marketplace add OpenSourcx/papercliped
 codex plugin add papercliped@papercliped

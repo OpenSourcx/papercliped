@@ -12,6 +12,31 @@ import { levelOf, type Prompt } from "../src/pages/Prompts";
 const at = (path: string) => render(<MemoryRouter initialEntries={[path]}><App /></MemoryRouter>);
 afterEach(() => vi.unstubAllGlobals());
 
+describe("ePaperclip install section", () => {
+  it("tells people how to install it on the page, not by sending them to GitHub", async () => {
+    at("/epaperclip");
+    const main = screen.getByRole("main");
+    const install = main.querySelector("#install") as HTMLElement;
+    expect(install).not.toBeNull();
+    expect(within(install).getByRole("heading", { level: 2, name: /Get ePaperclip running/ })).toBeInTheDocument();
+    for (const t of ["apt (recommended)", "npm", "One command", "Add a worker machine"]) expect(within(install).getByRole("tab", { name: t })).toBeInTheDocument();
+    expect(install.textContent).toContain("apt install epaperclip");
+    expect(install.textContent).toContain("2DC0 0D1A 1A87 1018 F797 E7CE F565 5E1B 9FA7 5813"); // the key fingerprint, to check before trusting the repository
+    expect(install.textContent).toContain("epaperclip status");
+    expect(within(install).getByText("What you need")).toBeInTheDocument();
+    await userEvent.click(within(install).getByRole("tab", { name: "npm" }));
+    expect(install.textContent).toContain("npx epaperclip install");
+    expect(within(install).getByRole("link", { name: "full install guide" })).toHaveAttribute("href", expect.stringMatching(/\/docs\/install-epaperclip$/));
+  });
+  it("the page's buttons go to the install section and the docs, never to GitHub guides", () => {
+    at("/epaperclip");
+    const main = screen.getByRole("main");
+    expect(within(main).getAllByRole("link", { name: /Install ePaperclip/ })[0]).toHaveAttribute("href", expect.stringMatching(/#install$/));
+    expect(within(main).getByRole("link", { name: /Read the install guide/ })).toHaveAttribute("href", expect.stringMatching(/\/docs\/install-epaperclip$/));
+    for (const a of within(main).getAllByRole("link")) expect(a.getAttribute("href") ?? "").not.toMatch(/github\.com\/OpenSourcx\/papercliped-engine\/(blob|$)/);
+  });
+});
+
 describe("sign in", () => {
   it("the header links to the central account host on desktop and in the phone menu", async () => {
     at("/");
@@ -78,9 +103,10 @@ describe("V2 product routes", () => {
     await userEvent.click(within(main).getByRole("radio", { name: /Full control/ }));
     expect(main.textContent).toContain(`${tools.length} of ${tools.length}`);
   });
-  it("links to the real release-candidate installation guide", () => {
+  it("sends people to the install section and the docs site for installation (not to GitHub)", () => {
     at("/epaperclip");
-    expect(screen.getByRole("link", { name: /Try ePaperclip/ })).toHaveAttribute("href", "https://github.com/OpenSourcx/papercliped-engine/blob/main/docs/USER-GUIDE.md");
+    expect(screen.getAllByRole("link", { name: /Install ePaperclip/ })[0]).toHaveAttribute("href", expect.stringMatching(/#install$/));
+    expect(screen.getByRole("main").textContent).toContain("Version 1.0 is published as a signed package");
   });
   it("describes dual-approval sign-in without claiming a live login", () => {
     at("/connect");

@@ -40,7 +40,13 @@ Disconnect the session in the [control room](/docs/control-room), revoke the key
 Choose **Connect your Paperclip** when signing in and approve in Paperclip: you keep your account and can make a new key.
 
 ## Does it work with ChatGPT?
-Yes, through ChatGPT's MCP connectors or GPT Actions. See [ChatGPT setup](/docs/chatgpt).
+Yes, through ChatGPT's MCP connectors or GPT Actions. See [ChatGPT setup](/docs/chatgpt). Claude and Codex have their own pages too: [Connect Claude](/docs/claude) and [Connect Codex](/docs/codex).
+
+## How do I install ePaperclip?
+On your Proxmox host: `apt install epaperclip` after adding the signed repository, or `npx epaperclip install`. The steps are in [Install ePaperclip](/docs/install-epaperclip).
+
+## How do I sign in, add a passkey or disconnect an app?
+See [Your Papercliped account](/docs/your-account).
 
 ## Where do I report a bug or suggest something?
-On GitHub: [open an issue](https://github.com/OpenSourcx/papercliped/issues), or use the community page on papercliped.co. Security problems go privately to support@papercliped.co.
+Use the community page at papercliped.co/community for bugs and ideas, or write to support@papercliped.co. Security problems go privately to support@papercliped.co.

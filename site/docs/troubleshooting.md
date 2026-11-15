@@ -22,4 +22,6 @@
 
 **My username is rejected.** It needs 6 to 32 characters including at least one number or one of `.` `#` `_`, and only letters, numbers and those symbols. It may also be taken.
 
-**Still stuck?** Open an issue at https://github.com/OpenSourcx/papercliped/issues. Never include your secret key or Paperclip keys.
+**Still stuck?** Write to support@papercliped.co, or ask on the community page at papercliped.co/community. Say what you did, what you expected and what happened. Never include your secret key, passkeys, codes or Paperclip keys.
+
+For ePaperclip install problems see [Install ePaperclip](/docs/install-epaperclip). For sign-in, passkeys, billing and connected apps see [Your account](/docs/your-account).

@@ -2,6 +2,7 @@ import { AppLink } from "../components/AppLink";
 import { PinStage } from "../components/PinStage";
 import { Playground } from "../components/Playground";
 import { HeroDemo } from "../components/HeroDemo";
+import { InstallEpaperclip } from "../components/InstallEpaperclip";
 import { ButtonLink, TextLink } from "../components/ui";
 import { usePageTitle } from "./usePageTitle";
 
@@ -26,9 +27,9 @@ const STORIES: Record<ProductName, Story> = {
     title: "Use your homelab to the fullest.",
     intro: "The system built around the machine you already own. One beautiful interface for Proxmox, projects, AI agents, and the work waiting to happen.",
     hero: "Make your server feel like your space.",
-    primary: { text: "Try ePaperclip", to: "https://github.com/OpenSourcx/papercliped-engine/blob/main/docs/USER-GUIDE.md" },
-    secondary: { text: "Installation and release candidates", to: "https://github.com/OpenSourcx/papercliped-engine/blob/main/docs/INSTALL.md" },
-    reality: "Release candidate. The installation path is documented, but complete real-host validation and live company/agent integration are still in progress. Follow the version-specific guide before installation.",
+    primary: { text: "Install ePaperclip", to: "#install" },
+    secondary: { text: "Read the install guide", to: "/docs/install-epaperclip" },
+    reality: "Version 1.0 is published as a signed package. It is new and hasn't had long real-world use, so install it on a host you can recover, and try it on a test node first if you can.",
     ideas: [
       { title: "Your machines, in focus", description: "A single place to explore VMs, containers, storage, backups, networking and host activity." },
       { title: "Work has a home", description: "Companies, agents, projects and approvals are designed to live beside the machines that make them possible." },
@@ -43,7 +44,7 @@ const STORIES: Record<ProductName, Story> = {
     intro: "A little more personality for a very powerful machine. Pin helps you understand your infrastructure, think through the next move, and keep an eye on the things that matter.",
     hero: "Curious. Capable. On your side.",
     primary: { text: "Explore ePaperclip", to: "/epaperclip" },
-    secondary: { text: "Read the Pin vision", to: "https://github.com/OpenSourcx/papercliped-engine/blob/main/docs/PIN.md" },
+    secondary: { text: "Install ePaperclip", to: "/epaperclip#install" },
     reality: "The interactive demo is scripted. Pin's deterministic automations and interface exist; the full model-backed, persistent assistant and agent runtime remain in development.",
     ideas: [
       { title: "Assistant when you need context", description: "Start with questions, explanations, summaries, and suggestions. You decide what happens next." },
@@ -135,6 +136,8 @@ export function Product({ product }: { product: ProductName }) {
         </div>
       </section>
 
+      {product === "epaperclip" && <InstallEpaperclip />}
+
       <section className="mx-auto max-w-7xl px-4 py-20 sm:py-28">
         <p className="text-xs font-bold uppercase tracking-[.2em] text-muted">Designed around your world</p>
         <h2 className="mt-4 max-w-3xl text-4xl font-bold leading-tight tracking-tighter sm:text-5xl">
@@ -188,7 +191,7 @@ export function Product({ product }: { product: ProductName }) {
         <h2 className="mx-auto max-w-2xl text-4xl font-bold tracking-tighter sm:text-5xl">It all starts with a place to build.</h2>
         <p className="mx-auto mt-4 max-w-xl text-muted">A home for the hardware, an interface for the work, and a companion for everything in between.</p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          {product === "epaperclip" ? <ButtonLink to="https://github.com/OpenSourcx/papercliped-engine" size="lg">Read the install guide</ButtonLink> : <ButtonLink to="/epaperclip" size="lg">Use ePaperclip</ButtonLink>}
+          {product === "epaperclip" ? <ButtonLink to="#install" size="lg">Install ePaperclip</ButtonLink> : <ButtonLink to="/epaperclip" size="lg">Use ePaperclip</ButtonLink>}
           <ButtonLink to="/#platform" size="lg" variant="secondary">Explore the family</ButtonLink>
         </div>
         {product === "papercliped" && <p className="mt-7 text-sm text-muted">Already use Paperclip? <TextLink to="/docs/getting-started">Get connected now.</TextLink></p>}
