@@ -173,3 +173,7 @@
 @media (prefers-reduced-motion: reduce) {
   .pin-orb-button, .pin-orb-bop { animation: none; }
 }
+
+.docs-body figure.shot, .prose-papercliped figure.shot { margin: 0 0 1rem; }
+.docs-body figure.shot img, .prose-papercliped figure.shot img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 0.5rem; box-shadow: 0 1px 8px rgb(0 0 0 / 0.12); }
+.docs-body figure.shot figcaption, .prose-papercliped figure.shot figcaption { margin-top: 0.4rem; font-size: 0.85rem; color: var(--muted); }

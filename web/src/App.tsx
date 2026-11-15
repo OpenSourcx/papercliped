@@ -6,6 +6,8 @@ import { Brand } from "./pages/Brand";
 import { Changelog } from "./pages/Changelog";
 import { Community } from "./pages/Community";
 import { DocPage, DocsIndex } from "./pages/Docs";
+import { Epaperclip } from "./pages/Epaperclip";
+import { Roadmap } from "./pages/Roadmap";
 import { Home } from "./pages/Home";
 import { Product } from "./pages/Product";
 import { Legal } from "./pages/Legal";
@@ -37,7 +39,8 @@ export function App() {
       <Layout>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/epaperclip" element={<Product product="epaperclip" />} />
+          <Route path="/epaperclip" element={<Epaperclip />} />
+          <Route path="/roadmap" element={<Roadmap />} />
           <Route path="/pin" element={<Product product="pin" />} />
           <Route path="/papercliped" element={<Product product="papercliped" />} />
           <Route path="/connect" element={<Product product="connect" />} />

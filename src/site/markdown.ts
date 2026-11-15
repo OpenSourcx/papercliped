@@ -20,6 +20,11 @@ function inline(src: string): string {
   return s.replace(/\u0000(\d+)\u0000/g, (_m, i) => codes[Number(i)]);
 }
 
+/** Real console screenshots (web/scripts/screens.mjs). Only these names render, as the same AVIF/WebP, dark/light picture the site uses; nothing else can become an image. */
+export const SCREENS = ["overview", "machines", "backups", "storage", "organization", "pin"] as const;
+const shot = (alt: string, name: string) =>
+  `<figure class="shot"><picture><source type="image/avif" media="(prefers-color-scheme: light)" srcset="/screens/${name}-light.avif"><source type="image/webp" media="(prefers-color-scheme: light)" srcset="/screens/${name}-light.webp"><source type="image/avif" srcset="/screens/${name}-dark.avif"><img src="/screens/${name}-dark.webp" width="1440" height="900" alt="${esc(alt)}" loading="lazy" decoding="async"></picture><figcaption>Demo data</figcaption></figure>`;
+
 const cells = (line: string) => line.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((c) => c.trim());
 
 export function renderMarkdown(md: string): string {
@@ -37,6 +42,8 @@ export function renderMarkdown(md: string): string {
       out.push(`<pre><code>${esc(buf.join("\n"))}</code></pre>`);
       continue;
     }
+    const img = /^!\[([^\]]*)\]\(screen:([a-z]+)\)\s*$/.exec(line);
+    if (img && (SCREENS as readonly string[]).includes(img[2])) { out.push(shot(img[1], img[2])); i++; continue; }
     const h = /^(#{1,3})\s+(.*)$/.exec(line);
     if (h) {
       const text = h[2];

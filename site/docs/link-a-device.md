@@ -8,7 +8,7 @@ Linking connects a computer running ePaperclip to your Papercliped account. You 
 Linking never changes a Proxmox permission, and the computer keeps working locally if Papercliped can't be reached.
 
 ## What you need
-- ePaperclip newer than 1.0.0 on the Proxmox host. Update with `apt update && apt install --only-upgrade epaperclip`, or `epaperclip update`.
+- ePaperclip newer than 1.0.0 on the Proxmox host. Update with `apt update && apt install --only-upgrade epaperclip` on an apt install, or `epaperclip update` on an npm or release-download install.
 - A Papercliped account ([create one](/docs/signup) if you don't have one yet).
 - A root shell on the Proxmox host (the web shell works).
 

@@ -20,11 +20,12 @@ const TYPES: Record<string, string> = {
   ".txt": "text/plain; charset=utf-8", ".md": "text/plain; charset=utf-8", ".webmanifest": "application/manifest+json", ".zip": "application/zip",
 };
 const PAGE_META: Record<string, { title: string; desc: string }> = {
-  "/": { title: "Papercliped: the power of the Pin", desc: "ePaperclip, Pin, Papercliped and Connect: use your homelab to the fullest. Pin and Connect are pre-release." },
-  "/epaperclip": { title: "ePaperclip", desc: "A Proxmox-native control center for machines, storage, backups, AI workers and projects. Release-candidate software." },
-  "/pin": { title: "Pin", desc: "Pin is the companion we are building for ePaperclip. The demo is scripted; a model-backed Pin is still in development." },
+  "/": { title: "ePaperclip: a web console for your Proxmox host", desc: "A free, open-source web console you install on your Proxmox host: VMs, containers, storage and backups in one place, with optional AI agents in their own containers." },
+  "/epaperclip": { title: "ePaperclip", desc: "Install ePaperclip on your Proxmox host: what it is, how it works, what it runs as and what it can touch. MIT licensed." },
+  "/roadmap": { title: "What we're building", desc: "Each part of Papercliped and where it stands: available, preview, in progress or planned." },
+  "/pin": { title: "Pin", desc: "Pin is an optional assistant inside ePaperclip. Preview: the demo is scripted and the model-backed Pin is still in development." },
   "/papercliped": { title: "Papercliped", desc: "Connect Claude, ChatGPT, Codex or another MCP client to your Paperclip, with permissions you choose. Free and open source." },
-  "/connect": { title: "Connect", desc: "Papercliped Connect, managed remote access to your own hardware. Pre-release and not generally available." },
+  "/connect": { title: "Connect", desc: "Papercliped Connect: one account and managed remote access for your own hardware. Preview; not yet a finished public service." },
   "/docs": { title: "Docs", desc: "Guides for connecting an AI app to your Paperclip, permissions, tools and self-hosting." },
   "/changelog": { title: "Changelog", desc: "What changed in each Papercliped release." },
   "/prompts": { title: "Prompts", desc: "Prompts to try with Papercliped." },

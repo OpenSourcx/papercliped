@@ -28,12 +28,13 @@ describe("ePaperclip install section", () => {
     expect(install.textContent).toContain("npx epaperclip install");
     expect(within(install).getByRole("link", { name: "full install guide" })).toHaveAttribute("href", expect.stringMatching(/\/docs\/install-epaperclip$/));
   });
-  it("the page's buttons go to the install section and the docs, never to GitHub guides", () => {
+  it("the page's links go to the install section, the docs and the source, never to GitHub guides", () => {
     at("/epaperclip");
     const main = screen.getByRole("main");
-    expect(within(main).getAllByRole("link", { name: /Install ePaperclip/ })[0]).toHaveAttribute("href", expect.stringMatching(/#install$/));
-    expect(within(main).getByRole("link", { name: /Read the install guide/ })).toHaveAttribute("href", expect.stringMatching(/\/docs\/install-epaperclip$/));
-    for (const a of within(main).getAllByRole("link")) expect(a.getAttribute("href") ?? "").not.toMatch(/github\.com\/OpenSourcx\/papercliped-engine\/(blob|$)/);
+    expect(within(main).getAllByRole("link", { name: "Install" })[0]).toHaveAttribute("href", "#install");
+    expect(within(main).getAllByRole("link", { name: /Docs|install guide/ })[0]).toHaveAttribute("href", expect.stringMatching(/\/docs\/install-epaperclip$/));
+    expect(within(main).getByRole("link", { name: "Source" })).toHaveAttribute("href", "https://github.com/OpenSourcx/papercliped-engine");
+    for (const a of within(main).getAllByRole("link")) expect(a.getAttribute("href") ?? "").not.toMatch(/github\.com\/OpenSourcx\/papercliped-engine\/blob/);
   });
 });
 
@@ -50,68 +51,132 @@ describe("sign in", () => {
   });
 });
 
-describe("V2 landing", () => {
-  it("keeps the product-focused headline and a working ePaperclip CTA", () => {
+describe("home page", () => {
+  it("says what ePaperclip is in one sentence, shows a real screenshot and gives the install command", () => {
     at("/");
     const main = screen.getByRole("main");
-    expect(within(main).getByRole("heading", { level: 1 }).textContent).toMatch(/The power.*of the Pin\./);
-    expect(main.textContent).toContain("Use your homelab to the fullest.");
-    expect(within(main).getAllByRole("link", { name: /Use ePaperclip/ })[0]).toHaveAttribute("href", "/epaperclip");
+    expect(within(main).getByRole("heading", { level: 1 }).textContent).toBe("ePaperclip");
+    expect(main.textContent).toContain("ePaperclip is a free, open-source web console you install on your Proxmox host: one place for your VMs, containers, storage and backups, with optional AI agents that run in their own containers.");
+    const shot = within(main).getAllByRole("img", { name: /overview page/ })[0] as HTMLImageElement;
+    expect(shot).toHaveAttribute("width", "1440"); expect(shot).toHaveAttribute("height", "900");
+    expect(shot).toHaveAttribute("loading", "eager"); expect(shot).toHaveAttribute("fetchpriority", "high"); // the one above the fold
+    expect(shot.closest("figure")!.textContent).toContain("Demo data");
+    const install = main.querySelector("#install") as HTMLElement;
+    expect(install.textContent).toContain("apt install epaperclip");
+    expect(within(install).getByRole("link", { name: "install guide" })).toHaveAttribute("href", expect.stringMatching(/\/docs\/install-epaperclip$/));
   });
-  it("explains the whole product family instead of just the MCP bridge", () => {
+  it("states the three facts and links the source", () => {
     at("/");
     const main = screen.getByRole("main");
-    for (const name of ["ePaperclip", "Pin", "Papercliped", "Connect"]) {
-      expect(within(main).getByRole("heading", { level: 3, name })).toBeInTheDocument();
-    }
-    expect(main.textContent).toContain("release-candidate software");
+    expect(main.textContent).toContain("Open source, MIT");
+    expect(main.textContent).toContain("never reimages or repartitions");
+    expect(main.textContent).toContain("Proxmox keeps working on port 8006");
+    expect(within(main).getByRole("link", { name: "Read the source" })).toHaveAttribute("href", "https://github.com/OpenSourcx/papercliped-engine");
   });
-  it("Pin's demo offers real interactions without passing them off as live host changes", async () => {
+  it("shows only the first screenshot eagerly; the rest wait until they are near the screen", () => {
     at("/");
+    const imgs = screen.getByRole("main").querySelectorAll("img");
+    expect(imgs.length).toBeGreaterThanOrEqual(5);
+    const eager = [...imgs].filter((i) => i.getAttribute("loading") === "eager");
+    expect(eager).toHaveLength(1);
+    for (const i of imgs) { expect(i.getAttribute("alt")).toBeTruthy(); expect(i.getAttribute("width")).toBeTruthy(); expect(i.getAttribute("height")).toBeTruthy(); }
+  });
+  it("lists the product family with a plain status for each, and marks Pin and Connect as not finished (ERR-WEB-003)", () => {
+    at("/");
+    const table = screen.getByRole("table", { name: "Papercliped products and their status" });
+    const rows = within(table).getAllByRole("row").slice(1);
+    const status = (name: string) => within(rows.find((r) => within(r).queryByRole("link", { name }))!).getAllByRole("cell").at(-1)!.textContent;
+    expect(status("ePaperclip")).toBe("Available");
+    expect(status("Pin")).toBe("Preview");
+    expect(status("Papercliped MCP")).toBe("Available");
+    expect(status("Papercliped Connect")).toBe("Preview");
+    expect(status("PinOS")).toBe("Planned");
+  });
+  it("does not run the Pin demo on the home page", () => {
+    at("/");
+    expect(screen.queryAllByRole("tab")).toHaveLength(0);
+    expect(screen.getByRole("main").textContent).not.toContain("Interactive demo");
+  });
+  it("uses no slogans, eyebrows or numbering as headings", () => {
+    at("/");
+    const text = screen.getByRole("main").textContent ?? "";
+    for (const gone of ["The power of the Pin", "Four parts", "01 / 04", "THE SYSTEM", "Meet ePaperclip and Pin"]) expect(text).not.toContain(gone);
+  });
+});
+
+describe("product routes", () => {
+  for (const [path, heading] of [
+    ["/epaperclip", "ePaperclip"],
+    ["/pin", "Pin"],
+    ["/papercliped", "Papercliped MCP"],
+    ["/connect", "Papercliped Connect"],
+    ["/roadmap", "What we're building"],
+  ]) {
+    it(`renders ${path} with one h1`, () => {
+      at(path);
+      expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+      expect(screen.getByRole("heading", { level: 1, name: heading })).toBeInTheDocument();
+    });
+  }
+  it("/epaperclip reads like a README: status line, screenshot, install, what you get, how it works, trust, without AI", () => {
+    at("/epaperclip");
     const main = screen.getByRole("main");
-    const tabs = within(main).getAllByRole("tab");
+    expect(main.textContent).toContain("MIT licence · Free and open source");
+    for (const h of ["What you get", "How it works", "What it runs as and what it can touch", "Without AI", "Requirements, updating and removing"]) expect(within(main).getByRole("heading", { level: 2, name: h })).toBeInTheDocument();
+    expect(within(main).getByRole("img", { name: /How ePaperclip works/ })).toBeInTheDocument(); // the diagram
+    expect(main.textContent).not.toMatch(/release-candidate/i);
+  });
+  it("the trust section answers the sceptic's questions with the facts the engine states", () => {
+    at("/epaperclip");
+    const trust = screen.getByRole("main").querySelector("#trust") as HTMLElement;
+    for (const q of ["Is it installed as root?", "What does run as root?", "What can it do on Proxmox?", "What does the installer change, and never touch?", "Where do agents run?", "Are releases signed?", "How do I remove it?"]) expect(within(trust).getByText(q)).toBeInTheDocument();
+    for (const fact of ["epaperclip-engine", "NoNewPrivileges", "ProtectSystem=strict", "port 8006", "unprivileged Proxmox containers", "host bind mounts", "2DC0 0D1A 1A87 1018 F797 E7CE F565 5E1B 9FA7 5813", "nested Proxmox VM"]) expect(trust.textContent).toContain(fact);
+    expect(within(trust).getByRole("link", { name: "security page" })).toHaveAttribute("href", expect.stringMatching(/\/docs\/epaperclip-security$/));
+  });
+  it("Pin's demo is on /pin, labelled a scripted preview, with real interactions that do not pass for live host changes", async () => {
+    at("/pin");
+    const main = screen.getByRole("main");
+    expect(main.textContent).toContain("A scripted preview");
+    expect(main.textContent).toContain("Preview. Pin's automations and interface exist");
+    const tabs = await within(main).findAllByRole("tab");
     expect(tabs).toHaveLength(3);
     expect(main.textContent).toContain("Interactive demo");
     await userEvent.click(tabs[1]);
     expect(tabs[1]).toHaveAttribute("aria-selected", "true");
-    expect(main.textContent).toContain("coding workspace");
     await userEvent.click(within(main).getByRole("button", { name: /agent mode/i }));
     expect(main.textContent).toContain("does not execute anything");
-    await userEvent.click(within(main).getByRole("button", { name: "Ask Pin another example" }));
-    expect(tabs[2]).toHaveAttribute("aria-selected", "true");
   });
-});
-
-describe("V2 product routes", () => {
-  for (const [path, heading] of [
-    ["/epaperclip", "Use your homelab to the fullest."],
-    ["/pin", "The power of the Pin."],
-    ["/papercliped", "The AI app you love. The agents you run."],
-    ["/connect", "Your homelab. Wherever life takes you."],
-  ]) {
-    it(`renders ${path}`, () => {
-      at(path);
-      expect(screen.getByRole("heading", { level: 1, name: heading })).toBeInTheDocument();
-    });
-  }
   it("keeps the MCP permission playground available on the Papercliped page", async () => {
     at("/papercliped");
     const main = screen.getByRole("main");
     const read = tools.filter((t) => t.scope === "paperclip:read").length;
-    expect(main.textContent).toContain("tools available at this level");
+    expect(await within(main).findByText(/tools available at this level/)).toBeInTheDocument();
     expect(main.textContent).toContain(`${read} of ${tools.length}`);
     await userEvent.click(within(main).getByRole("radio", { name: /Full control/ }));
     expect(main.textContent).toContain(`${tools.length} of ${tools.length}`);
   });
-  it("sends people to the install section and the docs site for installation (not to GitHub)", () => {
-    at("/epaperclip");
-    expect(screen.getAllByRole("link", { name: /Install ePaperclip/ })[0]).toHaveAttribute("href", expect.stringMatching(/#install$/));
-    expect(screen.getByRole("main").textContent).toContain("Version 1.0 is published as a signed package");
-  });
-  it("describes dual-approval sign-in without claiming a live login", () => {
+  it("describes linking without claiming a finished service", () => {
     at("/connect");
-    expect(screen.getByRole("heading", { name: /One account. Two approvals./ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "How linking works" })).toBeInTheDocument();
     expect(screen.getByRole("main").textContent).toContain("not yet offered as a finished public service");
+  });
+});
+
+describe("roadmap", () => {
+  it("lists every area with a status from the allowed set and a link for each row", () => {
+    at("/roadmap");
+    const main = screen.getByRole("main");
+    const rows = main.querySelectorAll("tbody tr");
+    expect(rows.length).toBeGreaterThan(15);
+    for (const r of rows) {
+      expect(["Available", "Preview", "In progress", "Planned"]).toContain(r.querySelectorAll("td")[0]!.textContent);
+      expect(r.querySelector("a")!.getAttribute("href")).toBeTruthy();
+    }
+    expect(main.textContent).toContain("We don't give dates we haven't committed to.");
+  });
+  it("does not promise a forum that does not exist", () => {
+    at("/roadmap");
+    expect(screen.getByRole("main").textContent).toContain("Waiting for GitHub Discussions to be switched on.");
   });
 });
 
